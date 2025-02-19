@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de CV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container-fluid py-5">
+        <div class="row">
+            <!-- Formulario -->
+            <div class="col-md-6 p-4">
+                <h2 class="text-center mb-4">Crea tu Currículum Vitae</h2>
+                
+                <form id="cvForm">
+                    <!-- Selector de plantilla -->
+                    <div class="form-section">
+                        <h3>Elige tu Plantilla</h3>
+                        <div class="template-selector">
+                            <label class="template-option">
+                                <input type="radio" name="template_type" value="basico" checked>
+                                <div class="template-card">
+                                    <img src="/static/img/template-basic.jpg" alt="Plantilla Básica">
+                                    <h3>Plantilla Básica</h3>
+                                    <p>Diseño limpio y profesional</p>
+                                </div>
+                            </label>
+                            <label class="template-option">
+                                <input type="radio" name="template_type" value="profesional">
+                                <div class="template-card">
+                                    <img src="/static/img/template-pro.jpg" alt="Plantilla Profesional">
+                                    <h3>Plantilla Profesional</h3>
+                                    <p>Diseño moderno y destacado</p>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Foto de perfil -->
+                    <div class="form-section">
+                        <h3>Foto de Perfil</h3>
+                        <div class="profile-upload">
+                            <div class="profile-preview">
+                                <img id="previewImage" src="/static/img/default-profile.png" alt="Vista previa">
+                            </div>
+                            <div class="upload-button">
+                                <button type="button" class="btn btn-outline-primary">
+                                    <i class="fas fa-upload"></i> Seleccionar Foto
+                                </button>
+                                <input type="file" id="profileImageInput" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Personal -->
+                    <div class="form-section">
+                        <h3>Información Personal</h3>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="nombre" name="nombre" placeholder=" ">
+                            <label for="nombre">Nombre Completo</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="dni" name="dni" placeholder=" ">
+                            <label for="dni">DNI</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento">
+                            <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="number" class="form-control" id="edad" name="edad" placeholder=" ">
+                            <label for="edad">Edad</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="email" class="form-control" id="email" name="email" placeholder=" ">
+                            <label for="email">Email</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="tel" class="form-control" id="telefono" name="telefono" placeholder=" ">
+                            <label for="telefono">Teléfono</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="direccion" name="direccion" placeholder=" ">
+                            <label for="direccion">Dirección</label>
+                        </div>
+                    </div>
+
+                    <!-- Educación -->
+                    <div class="form-section">
+                        <h3>Educación</h3>
+                        <div id="educacionContainer">
+                            <div class="educacion-item">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="titulo">Título</label>
+                                        <input type="text" class="form-control" name="titulo[]" placeholder="Título obtenido">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="institucion">Institución</label>
+                                        <input type="text" class="form-control" name="institucion[]" placeholder="Nombre de la institución">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fecha_inicio_edu">Fecha de Inicio</label>
+                                        <input type="date" class="form-control" name="fecha_inicio_edu[]">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fecha_fin_edu">Fecha de Fin</label>
+                                        <input type="date" class="form-control" name="fecha_fin_edu[]">
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" name="en_curso[]">
+                                            <label class="form-check-label">En curso</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarEducacion()">Agregar Educación</button>
+                        </div>
+                    </div>
+
+                    <!-- Experiencia Laboral -->
+                    <div class="form-section">
+                        <h3>Experiencia Laboral</h3>
+                        <div id="experienciaContainer">
+                            <div class="experiencia-item">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="empresa">Empresa</label>
+                                        <input type="text" class="form-control" name="empresa[]" placeholder="Nombre de la empresa">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="cargo">Cargo</label>
+                                        <input type="text" class="form-control" name="cargo[]" placeholder="Tu cargo">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fecha_inicio">Fecha de Inicio</label>
+                                        <input type="date" class="form-control" name="fecha_inicio[]">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fecha_fin">Fecha de Fin</label>
+                                        <input type="date" class="form-control" name="fecha_fin[]">
+                                        <div class="form-check mt-2">
+                                            <input class="form-check-input" type="checkbox" name="trabajo_actual[]">
+                                            <label class="form-check-label">Trabajo actual</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label for="descripcion">Descripción</label>
+                                        <textarea class="form-control" name="descripcion[]" rows="3" placeholder="Describe tus responsabilidades"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarExperiencia()">Agregar Experiencia</button>
+                        </div>
+                    </div>
+
+                    <!-- Habilidades -->
+                    <div class="form-section">
+                        <h3>Habilidades</h3>
+                        <div id="habilidadesContainer">
+                            <!-- Los elementos de habilidades se agregarán aquí -->
+                        </div>
+                        <button type="button" class="btn-add" onclick="agregarHabilidad()">
+                            <i class="fas fa-plus"></i> Agregar Habilidad
+                        </button>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="procesarPago()">
+                            Generar CV
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Vista Previa -->
+            <div class="col-md-6 p-4">
+                <div class="sticky-top" style="top: 20px;">
+                    <h2 class="text-center mb-4">Vista Previa</h2>
+                    <div id="cvPreview" class="border rounded p-4 bg-white shadow-sm">
+                        <!-- La vista previa se generará aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
