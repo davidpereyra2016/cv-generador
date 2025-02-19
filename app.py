@@ -3,105 +3,76 @@ import mercadopago
 import os
 from dotenv import load_dotenv
 import pdfkit
-import json
 from datetime import datetime
 import base64
 
+# Cargar variables de entorno
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(24)
 
-# Crear directorios necesarios si no existen
-os.makedirs('static/img', exist_ok=True)
+# Crear directorios necesarios
 os.makedirs('bd_pdf', exist_ok=True)
 os.makedirs('static/uploads', exist_ok=True)
 
 # Configuración de wkhtmltopdf para Vercel
-config = None
 if os.environ.get('VERCEL_ENV') == 'production':
-    config = pdfkit.configuration(wkhtmltopdf='/opt/bin/wkhtmltopdf')
+    WKHTMLTOPDF_PATH = os.environ.get('WKHTMLTOPDF_PATH', '/usr/local/bin/wkhtmltopdf')
+    config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
 else:
     config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
 
 # Configuración de MercadoPago
-sdk = mercadopago.SDK(os.getenv('MP_ACCESS_TOKEN'))
+mp_access_token = os.getenv('MP_ACCESS_TOKEN')
+if not mp_access_token:
+    raise ValueError("MP_ACCESS_TOKEN no está configurado en las variables de entorno")
+
+sdk = mercadopago.SDK(mp_access_token)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/crear_preferencia', methods=['POST'])
-def crear_preferencia():
+@app.route('/create_preference', methods=['POST'])
+def create_preference():
     try:
-        data = request.get_json()
-        template_type = data.get('template_type', 'basico')
-        
-        # Definir precio según el tipo de plantilla
-        precios = {
-            'basico': 1000,  # 1000 pesos argentinos
-            'profesional': 2000  # 2000 pesos argentinos
-        }
-        
-        precio = precios[template_type]
-        
         preference_data = {
             "items": [
                 {
-                    "title": f"CV {template_type.capitalize()}",
+                    "title": "Generador de CV",
                     "quantity": 1,
                     "currency_id": "ARS",
-                    "unit_price": precio
+                    "unit_price": 2000
                 }
             ],
             "back_urls": {
-                "success": url_for('success', _external=True),
-                "failure": url_for('failure', _external=True),
-                "pending": url_for('pending', _external=True)
+                "success": request.host_url + "success",
+                "failure": request.host_url + "failure",
+                "pending": request.host_url + "pending"
             },
             "auto_return": "approved"
         }
-        
-        # Crear preferencia en MercadoPago
-        preference = sdk.preference().create(preference_data)
-        
-        return jsonify({
-            "init_point": preference["response"]["init_point"],
-            "template_type": template_type,
-            "precio": precio
-        })
-        
+
+        preference_response = sdk.preference().create(preference_data)
+        preference = preference_response["response"]
+
+        return jsonify({"id": preference["id"]})
     except Exception as e:
+        app.logger.error(f"Error creating preference: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/success')
 def success():
-    # Obtener el ID del pago y el estado
-    payment_id = request.args.get('payment_id')
-    status = request.args.get('status')
-    
-    if status == 'approved':
-        # Verificar el pago con MercadoPago
-        payment_info = sdk.payment().get(payment_id)
-        payment_amount = payment_info["response"]["transaction_amount"]
-        
-        # Determinar el tipo de plantilla según el monto pagado
-        template_type = 'profesional' if payment_amount >= 2000 else 'basico'
-        
-        return render_template('success.html', 
-                            payment_id=payment_id, 
-                            status=status,
-                            template_type=template_type)
-    else:
-        return redirect(url_for('failure'))
+    template_type = request.args.get('template_type', 'basico')
+    return render_template('success.html', template_type=template_type)
 
 @app.route('/failure')
 def failure():
-    return render_template('failure.html')
+    return "El pago falló"
 
 @app.route('/pending')
 def pending():
-    return render_template('pending.html')
+    return "El pago está pendiente"
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
@@ -109,6 +80,9 @@ def generate_pdf():
         data = request.get_json()
         template_type = data.get('template_type')
         cv_data = data.get('cv_data')
+
+        if not template_type or not cv_data:
+            return jsonify({'error': 'Datos incompletos'}), 400
 
         # Asegurarse de que la carpeta bd_pdf existe
         if not os.path.exists('bd_pdf'):
@@ -153,8 +127,9 @@ def generate_pdf():
         return response
 
     except Exception as e:
-        print(f"Error generando PDF: {str(e)}")
+        app.logger.error(f"Error generando PDF: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
