@@ -17,15 +17,12 @@ os.makedirs('static/img', exist_ok=True)
 os.makedirs('bd_pdf', exist_ok=True)
 os.makedirs('static/uploads', exist_ok=True)
 
-# Configuración de wkhtmltopdf
-if os.name == 'nt':  # Windows
-    path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-    if os.path.exists(path_wkhtmltopdf):
-        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
-    else:
-        raise Exception("wkhtmltopdf no está instalado. Por favor, instálalo desde https://wkhtmltopdf.org/downloads.html")
-else:  # Linux/Unix
-    config = pdfkit.configuration()
+# Configuración de wkhtmltopdf para Vercel
+config = None
+if os.environ.get('VERCEL_ENV') == 'production':
+    config = pdfkit.configuration(wkhtmltopdf='/opt/bin/wkhtmltopdf')
+else:
+    config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
 
 # Configuración de MercadoPago
 sdk = mercadopago.SDK(os.getenv('MP_ACCESS_TOKEN'))
@@ -142,7 +139,6 @@ def generate_pdf():
         }
 
         # Generar PDF
-        config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
         pdfkit.from_string(html, pdf_path, options=options, configuration=config)
 
         # Leer el archivo PDF generado
@@ -161,4 +157,4 @@ def generate_pdf():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
