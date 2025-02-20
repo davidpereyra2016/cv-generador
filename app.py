@@ -52,7 +52,7 @@ def create_preference():
                     "title": "Generador de CV Profesional",
                     "quantity": 1,
                     "currency_id": "ARS",
-                    "unit_price": 2000
+                    "unit_price": 10
                 }
             ],
             "back_urls": {
