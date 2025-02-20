@@ -2,10 +2,11 @@ from flask import Flask, render_template, request, jsonify, send_file, redirect,
 import mercadopago
 import os
 from dotenv import load_dotenv
-from weasyprint import HTML
 from datetime import datetime
 import base64
 import tempfile
+from xhtml2pdf import pisa
+from io import BytesIO
 
 # Cargar variables de entorno
 load_dotenv()
@@ -68,6 +69,23 @@ def failure():
 def pending():
     return "El pago está pendiente"
 
+def html_to_pdf(html_content):
+    # Crear un buffer de memoria para el PDF
+    result = BytesIO()
+    
+    # Convertir HTML a PDF
+    pisa.CreatePDF(
+        html_content,
+        dest=result,
+        encoding='utf-8'
+    )
+    
+    # Obtener el contenido del buffer
+    pdf_content = result.getvalue()
+    result.close()
+    
+    return pdf_content
+
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
     try:
@@ -84,17 +102,8 @@ def generate_pdf():
         # Renderizar el HTML
         html_content = render_template(template, cv_data=cv_data)
         
-        # Crear un archivo temporal para el PDF
-        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-            # Generar el PDF usando WeasyPrint
-            HTML(string=html_content, base_url=request.host_url).write_pdf(tmp.name)
-            
-            # Leer el contenido del PDF
-            with open(tmp.name, 'rb') as pdf_file:
-                pdf_content = pdf_file.read()
-            
-            # Eliminar el archivo temporal
-            os.unlink(tmp.name)
+        # Convertir HTML a PDF
+        pdf_content = html_to_pdf(html_content)
 
         # Crear respuesta con el PDF
         response = make_response(pdf_content)

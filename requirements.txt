@@ -1,5 +1,6 @@
 Flask==3.0.0
 mercadopago==2.2.0
-WeasyPrint==60.1
+reportlab==4.1.0
 python-dotenv==1.0.0
 Werkzeug==3.0.1
+xhtml2pdf==0.2.13
