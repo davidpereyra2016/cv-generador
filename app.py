@@ -104,45 +104,129 @@ def generate_pdf_content(cv_data):
     # Configuración de fuentes
     pdf.set_font('Arial', 'B', 24)
     
+    # Determinar el estilo de plantilla
+    template_type = cv_data.get('template_type', 'basico')
+    is_professional = template_type == 'profesional'
+    
+    # Configurar colores según la plantilla
+    if is_professional:
+        pdf.set_text_color(26, 73, 113)  # #1a4971
+    else:
+        pdf.set_text_color(51, 51, 51)  # #333333
+    
+    # Agregar imagen de perfil si existe
+    if 'imagen_perfil' in cv_data and cv_data['imagen_perfil']:
+        try:
+            # Decodificar la imagen base64
+            image_data = cv_data['imagen_perfil'].split(',')[1]
+            image_bytes = base64.b64decode(image_data)
+            
+            # Guardar temporalmente la imagen
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_img:
+                tmp_img.write(image_bytes)
+                img_path = tmp_img.name
+            
+            # Calcular posición de la imagen
+            if is_professional:
+                pdf.image(img_path, x=170, y=15, w=30, h=30)  # Más pequeña para diseño profesional
+            else:
+                pdf.image(img_path, x=160, y=15, w=40, h=40)  # Más grande para diseño básico
+            
+            # Limpiar archivo temporal
+            os.remove(img_path)
+        except Exception as e:
+            app.logger.error(f"Error al procesar la imagen: {str(e)}")
+    
     # Nombre
-    pdf.cell(0, 20, cv_data['nombre'], ln=True, align='C')
+    pdf.set_xy(10, 20)
+    pdf.cell(0, 20, cv_data['nombre'], ln=True, align='L')
     
     # Información de contacto
     pdf.set_font('Arial', '', 12)
-    pdf.cell(0, 10, f"Email: {cv_data['email']}", ln=True)
-    pdf.cell(0, 10, f"Teléfono: {cv_data['telefono']}", ln=True)
+    if is_professional:
+        pdf.set_text_color(44, 62, 80)  # #2c3e50
+    else:
+        pdf.set_text_color(102, 102, 102)  # #666666
+    
+    if cv_data.get('email'):
+        pdf.cell(0, 10, f"Email: {cv_data['email']}", ln=True)
+    if cv_data.get('telefono'):
+        pdf.cell(0, 10, f"Teléfono: {cv_data['telefono']}", ln=True)
+    if cv_data.get('direccion'):
+        pdf.cell(0, 10, f"Dirección: {cv_data['direccion']}", ln=True)
+    if cv_data.get('dni'):
+        pdf.cell(0, 10, f"DNI: {cv_data['dni']}", ln=True)
+    if cv_data.get('fecha_nacimiento'):
+        pdf.cell(0, 10, f"Fecha de nacimiento: {cv_data['fecha_nacimiento']}", ln=True)
     pdf.ln(10)
     
     # Experiencia laboral
     pdf.set_font('Arial', 'B', 16)
-    pdf.cell(0, 10, 'Experiencia Laboral', ln=True)
+    if is_professional:
+        pdf.set_text_color(26, 73, 113)
+        pdf.set_fill_color(240, 242, 245)
+    else:
+        pdf.set_text_color(51, 51, 51)
+        pdf.set_fill_color(248, 249, 250)
+    
+    pdf.cell(0, 10, 'Experiencia Laboral', ln=True, fill=True)
     pdf.ln(5)
     
     pdf.set_font('Arial', '', 12)
+    if is_professional:
+        pdf.set_text_color(44, 62, 80)
+    else:
+        pdf.set_text_color(102, 102, 102)
+    
     for exp in cv_data.get('experiencia', []):
+        pdf.set_font('Arial', 'B', 12)
         pdf.cell(0, 10, f"{exp['empresa']} - {exp['cargo']}", ln=True)
+        pdf.set_font('Arial', 'I', 10)
         pdf.cell(0, 10, exp['periodo'], ln=True)
+        pdf.set_font('Arial', '', 11)
         pdf.multi_cell(0, 10, exp['descripcion'])
         pdf.ln(5)
     
     # Educación
     pdf.set_font('Arial', 'B', 16)
-    pdf.cell(0, 10, 'Educación', ln=True)
+    if is_professional:
+        pdf.set_text_color(26, 73, 113)
+    else:
+        pdf.set_text_color(51, 51, 51)
+    
+    pdf.cell(0, 10, 'Educación', ln=True, fill=True)
     pdf.ln(5)
     
     pdf.set_font('Arial', '', 12)
+    if is_professional:
+        pdf.set_text_color(44, 62, 80)
+    else:
+        pdf.set_text_color(102, 102, 102)
+    
     for edu in cv_data.get('educacion', []):
+        pdf.set_font('Arial', 'B', 12)
         pdf.cell(0, 10, f"{edu['institucion']} - {edu['titulo']}", ln=True)
+        pdf.set_font('Arial', 'I', 10)
         pdf.cell(0, 10, edu['periodo'], ln=True)
         pdf.ln(5)
     
     # Habilidades
     if cv_data.get('habilidades'):
         pdf.set_font('Arial', 'B', 16)
-        pdf.cell(0, 10, 'Habilidades', ln=True)
+        if is_professional:
+            pdf.set_text_color(26, 73, 113)
+        else:
+            pdf.set_text_color(51, 51, 51)
+            
+        pdf.cell(0, 10, 'Habilidades', ln=True, fill=True)
         pdf.ln(5)
         
         pdf.set_font('Arial', '', 12)
+        if is_professional:
+            pdf.set_text_color(44, 62, 80)
+        else:
+            pdf.set_text_color(102, 102, 102)
+            
         for skill in cv_data['habilidades']:
             pdf.cell(0, 10, f"• {skill}", ln=True)
     

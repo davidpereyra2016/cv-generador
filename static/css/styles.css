@@ -197,6 +197,147 @@ h2 {
     margin: 10px 0 0;
 }
 
+/* Estilos para la vista previa del CV */
+#cvPreview {
+    font-family: Arial, sans-serif;
+    padding: 30px;
+}
+
+#cvPreview h1 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+#cvPreview h2 {
+    color: #34495e;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+    margin-top: 20px;
+}
+
+#cvPreview .contact-info {
+    margin: 15px 0;
+    color: #7f8c8d;
+}
+
+#cvPreview .education-item,
+#cvPreview .experience-item {
+    margin: 15px 0;
+}
+
+#cvPreview .skills-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#cvPreview .skill-item {
+    background-color: #e1f5fe;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+/* Estilos base compartidos */
+.cv-preview {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+/* Estilos para plantilla básica */
+.template-basic .header-section {
+    background-color: #f8f9fa;
+    color: #333;
+    padding: 20px;
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.template-basic .profile-info h1 {
+    color: #333;
+    font-size: 1.8em;
+}
+
+.template-basic .profile-image {
+    width: 120px;
+    height: 120px;
+    margin-left: 20px;
+}
+
+.template-basic .profile-image img {
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.template-basic h2 {
+    color: #333;
+    border-bottom: 1px solid #dee2e6;
+    font-size: 1.4em;
+}
+
+.template-basic .skill-item {
+    background-color: #e9ecef;
+    color: #333;
+    padding: 4px 12px;
+    border-radius: 4px;
+}
+
+/* Estilos para plantilla profesional */
+.template-professional .header-section {
+    background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
+    color: white;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.template-professional .profile-info h1 {
+    font-size: 2.2em;
+    margin-bottom: 15px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+.template-professional .profile-image {
+    width: 180px;
+    height: 180px;
+    margin-left: 30px;
+}
+
+.template-professional .profile-image img {
+    border-radius: 50%;
+    border: 4px solid rgba(255,255,255,0.8);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.template-professional h2 {
+    color: #1a4971;
+    border-bottom: 3px solid #1a4971;
+    font-size: 1.6em;
+    padding-bottom: 8px;
+    margin-top: 30px;
+}
+
+.template-professional .experience-item,
+.template-professional .education-item {
+    background-color: #ffffff;
+    border-left: 4px solid #1a4971;
+    padding: 15px;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.template-professional .skill-item {
+    background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 /* Estilos para el formulario principal */
 .form-section {
     background: white;
@@ -328,47 +469,4 @@ h2 {
     .skills-section {
         justify-content: center;
     }
-}
-
-/* Estilos para la vista previa del CV */
-#cvPreview {
-    font-family: Arial, sans-serif;
-    padding: 30px;
-}
-
-#cvPreview h1 {
-    color: #2c3e50;
-    margin-bottom: 20px;
-}
-
-#cvPreview h2 {
-    color: #34495e;
-    border-bottom: 2px solid #3498db;
-    padding-bottom: 5px;
-    margin-top: 20px;
-}
-
-#cvPreview .contact-info {
-    margin: 15px 0;
-    color: #7f8c8d;
-}
-
-#cvPreview .education-item,
-#cvPreview .experience-item {
-    margin: 15px 0;
-}
-
-#cvPreview .skills-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-#cvPreview .skill-item {
-    background-color: #e1f5fe;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 14px;
 }

@@ -124,67 +124,140 @@ function updatePreview() {
 
 function generateBasicTemplate(data) {
     return `
-    <div class="cv-preview">
-        <div class="header">
-            ${data.profile_image ? `<img src="${data.profile_image}" alt="Foto de perfil" class="profile-image">` : ''}
-            <div class="header-info">
-                <h1>${data.nombre || ''}</h1>
-                <div class="contact-info">
-                    ${data.email ? `<p>📧 ${data.email}</p>` : ''}
-                    ${data.telefono ? `<p>📱 ${data.telefono}</p>` : ''}
-                    ${data.direccion ? `<p>📍 ${data.direccion}</p>` : ''}
-                    ${data.dni ? `<p>🆔 DNI: ${data.dni}</p>` : ''}
-                    ${data.fecha_nacimiento ? `<p>📅 ${data.fecha_nacimiento}</p>` : ''}
+    <div class="cv-preview template-basic">
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-md-9">
+                    <div class="profile-info">
+                        <h1>${data.nombre || ''}</h1>
+                        <div class="contact-info">
+                            ${data.email ? `<p>${data.email}</p>` : ''}
+                            ${data.telefono ? `<p>${data.telefono}</p>` : ''}
+                            ${data.direccion ? `<p>${data.direccion}</p>` : ''}
+                            ${data.dni ? `<p>DNI: ${data.dni}</p>` : ''}
+                            ${data.fecha_nacimiento ? `<p>${data.fecha_nacimiento}</p>` : ''}
+                        </div>
+                    </div>
                 </div>
+                ${data.profile_image ? `
+                <div class="col-md-3">
+                    <div class="profile-image">
+                        <img src="${data.profile_image}" alt="Foto de perfil" class="img-fluid">
+                    </div>
+                </div>
+                ` : ''}
             </div>
         </div>
 
-        ${data.experiencia && data.experiencia.length ? `
-            <div class="section">
-                <h2>Experiencia Laboral</h2>
-                ${data.experiencia.map(exp => `
-                    <div class="experience-item">
-                        <div class="info-principal">
-                            <div class="empresa">${exp.empresa}</div>
-                            <div class="cargo">${exp.cargo}</div>
-                            ${exp.descripcion ? `<div class="descripcion">${exp.descripcion}</div>` : ''}
+        <div class="content-section">
+            ${data.experiencia && data.experiencia.length ? `
+                <section class="mb-4">
+                    <h2>Experiencia Laboral</h2>
+                    ${data.experiencia.map(exp => `
+                        <div class="experience-item">
+                            <h3>${exp.cargo}</h3>
+                            <div class="company">${exp.empresa}</div>
+                            <div class="period">${exp.periodo}</div>
+                            ${exp.descripcion ? `<div class="description">${exp.descripcion}</div>` : ''}
                         </div>
-                        <div class="periodo">${exp.periodo}</div>
-                    </div>
-                `).join('')}
-            </div>
-        ` : ''}
-
-        ${data.educacion && data.educacion.length ? `
-            <div class="section">
-                <h2>Educación</h2>
-                ${data.educacion.map(edu => `
-                    <div class="education-item">
-                        <div class="info-principal">
-                            <div class="empresa">${edu.institucion}</div>
-                            <div class="cargo">${edu.titulo}</div>
-                        </div>
-                        <div class="periodo">${edu.año}</div>
-                    </div>
-                `).join('')}
-            </div>
-        ` : ''}
-
-        ${data.habilidades && data.habilidades.length ? `
-            <div class="section">
-                <h2>Habilidades</h2>
-                <div class="skills">
-                    ${data.habilidades.map(skill => `
-                        <span class="skill">${skill}</span>
                     `).join('')}
-                </div>
-            </div>
-        ` : ''}
+                </section>
+            ` : ''}
+
+            ${data.educacion && data.educacion.length ? `
+                <section class="mb-4">
+                    <h2>Educación</h2>
+                    ${data.educacion.map(edu => `
+                        <div class="education-item">
+                            <h3>${edu.titulo}</h3>
+                            <div class="institution">${edu.institucion}</div>
+                            <div class="year">${edu.año}</div>
+                        </div>
+                    `).join('')}
+                </section>
+            ` : ''}
+
+            ${data.habilidades && data.habilidades.length ? `
+                <section class="mb-4">
+                    <h2>Habilidades</h2>
+                    <div class="skills-section">
+                        ${data.habilidades.map(skill => `
+                            <span class="skill-item">${skill}</span>
+                        `).join('')}
+                    </div>
+                </section>
+            ` : ''}
+        </div>
     </div>`;
 }
 
 function generateProTemplate(data) {
-    return generateBasicTemplate(data); // Usar el mismo template por ahora
+    return `
+    <div class="cv-preview template-professional">
+        <div class="header-section">
+            <div class="row align-items-center">
+                <div class="col-md-9">
+                    <div class="profile-info">
+                        <h1>${data.nombre || ''}</h1>
+                        <div class="contact-info">
+                            ${data.email ? `<p>${data.email}</p>` : ''}
+                            ${data.telefono ? `<p>${data.telefono}</p>` : ''}
+                            ${data.direccion ? `<p>${data.direccion}</p>` : ''}
+                            ${data.dni ? `<p>DNI: ${data.dni}</p>` : ''}
+                            ${data.fecha_nacimiento ? `<p>${data.fecha_nacimiento}</p>` : ''}
+                        </div>
+                    </div>
+                </div>
+                ${data.profile_image ? `
+                <div class="col-md-3">
+                    <div class="profile-image">
+                        <img src="${data.profile_image}" alt="Foto de perfil" class="img-fluid">
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+
+        <div class="content-section">
+            ${data.experiencia && data.experiencia.length ? `
+                <section class="mb-4">
+                    <h2>Experiencia Laboral</h2>
+                    ${data.experiencia.map(exp => `
+                        <div class="experience-item">
+                            <h3>${exp.cargo}</h3>
+                            <div class="company">${exp.empresa}</div>
+                            <div class="period">${exp.periodo}</div>
+                            ${exp.descripcion ? `<div class="description">${exp.descripcion}</div>` : ''}
+                        </div>
+                    `).join('')}
+                </section>
+            ` : ''}
+
+            ${data.educacion && data.educacion.length ? `
+                <section class="mb-4">
+                    <h2>Educación</h2>
+                    ${data.educacion.map(edu => `
+                        <div class="education-item">
+                            <h3>${edu.titulo}</h3>
+                            <div class="institution">${edu.institucion}</div>
+                            <div class="year">${edu.año}</div>
+                        </div>
+                    `).join('')}
+                </section>
+            ` : ''}
+
+            ${data.habilidades && data.habilidades.length ? `
+                <section class="mb-4">
+                    <h2>Habilidades</h2>
+                    <div class="skills-section">
+                        ${data.habilidades.map(skill => `
+                            <span class="skill-item">${skill}</span>
+                        `).join('')}
+                    </div>
+                </section>
+            ` : ''}
+        </div>
+    </div>`;
 }
 
 // Agregar listeners para todos los campos del formulario

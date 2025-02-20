@@ -1,208 +1,99 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CV - {{ cv_data.nombre }}</title>
-    <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            color: #2c3e50;
-            background-color: #ffffff;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            padding: 30px;
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            color: white;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .profile-image {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            margin-right: 30px;
-            object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .header-info {
-            flex-grow: 1;
-        }
-        .nombre {
-            font-size: 36px;
-            margin: 0;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: white;
-        }
-        .contacto {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            color: #ecf0f1;
-        }
-        .contacto div {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .seccion {
-            margin-bottom: 30px;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .titulo-seccion {
-            font-size: 24px;
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            font-weight: 600;
-        }
-        .experiencia-item, .educacion-item {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            transition: transform 0.2s;
-        }
-        .experiencia-item:hover, .educacion-item:hover {
-            transform: translateX(5px);
-            background-color: #f1f3f5;
-        }
-        .info-principal {
-            flex: 2;
-        }
-        .periodo {
-            flex: 1;
-            text-align: right;
-            color: #7f8c8d;
-            font-style: italic;
-            padding-left: 20px;
-        }
-        .empresa {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-        .cargo {
-            color: #3498db;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-        .descripcion {
-            color: #5d6d7e;
-            font-size: 0.95em;
-            line-height: 1.5;
-        }
-        .habilidades {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .habilidad {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 500;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        .habilidad:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <div class="header">
-        {% if cv_data.profile_image %}
-        <img src="{{ cv_data.profile_image }}" alt="Foto de perfil" class="profile-image">
-        {% endif %}
-        <div class="header-info">
-            <h1 class="nombre">{{ cv_data.nombre }}</h1>
-            <div class="contacto">
-                {% if cv_data.email %}<div>📧 {{ cv_data.email }}</div>{% endif %}
-                {% if cv_data.telefono %}<div>📱 {{ cv_data.telefono }}</div>{% endif %}
-                {% if cv_data.direccion %}<div>📍 {{ cv_data.direccion }}</div>{% endif %}
-                {% if cv_data.dni %}<div>🆔 DNI: {{ cv_data.dni }}</div>{% endif %}
-                {% if cv_data.fecha_nacimiento %}<div>📅 {{ cv_data.fecha_nacimiento }}</div>{% endif %}
-            </div>
-        </div>
-    </div>
-
-    {% if cv_data.experiencia %}
-    <div class="seccion">
-        <h2 class="titulo-seccion">Experiencia Laboral</h2>
-        {% for exp in cv_data.experiencia %}
-        <div class="experiencia-item">
-            <div class="info-principal">
-                <div class="empresa">{{ exp.empresa }}</div>
-                <div class="cargo">{{ exp.cargo }}</div>
-                {% if exp.descripcion %}<div class="descripcion">{{ exp.descripcion }}</div>{% endif %}
-            </div>
-            <div class="periodo">
-                {% if exp.periodo %}
-                    {% if ',' in exp.periodo %}
-                        {% set fechas = exp.periodo.split(',') %}
-                        {{ fechas[0] }} - {{ fechas[1] if fechas[1]|trim else 'Presente' }}
-                    {% else %}
-                        {{ exp.periodo }}
+    <div class="container my-4">
+        <div class="cv-preview template-basic">
+            <div class="header-section">
+                <div class="row align-items-center">
+                    <div class="col-md-9">
+                        <div class="profile-info">
+                            <h1>{{ cv_data.nombre }}</h1>
+                            <div class="contact-info">
+                                {% if cv_data.email %}<p>{{ cv_data.email }}</p>{% endif %}
+                                {% if cv_data.telefono %}<p>{{ cv_data.telefono }}</p>{% endif %}
+                                {% if cv_data.direccion %}<p>{{ cv_data.direccion }}</p>{% endif %}
+                                {% if cv_data.dni %}<p>DNI: {{ cv_data.dni }}</p>{% endif %}
+                                {% if cv_data.fecha_nacimiento %}<p>{{ cv_data.fecha_nacimiento }}</p>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% if cv_data.profile_image %}
+                    <div class="col-md-3">
+                        <div class="profile-image">
+                            <img src="{{ cv_data.profile_image }}" alt="Foto de perfil" class="img-fluid">
+                        </div>
+                    </div>
                     {% endif %}
+                </div>
+            </div>
+
+            <div class="content-section">
+                {% if cv_data.experiencia %}
+                <section class="mb-4">
+                    <h2>Experiencia Laboral</h2>
+                    {% for exp in cv_data.experiencia %}
+                    <div class="experience-item">
+                        <h3>{{ exp.cargo }}</h3>
+                        <div class="company">{{ exp.empresa }}</div>
+                        <div class="period">
+                            {% if exp.periodo %}
+                                {% if ',' in exp.periodo %}
+                                    {% set fechas = exp.periodo.split(',') %}
+                                    {{ fechas[0] }} - {{ fechas[1] if fechas[1]|trim else 'Presente' }}
+                                {% else %}
+                                    {{ exp.periodo }}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% if exp.descripcion %}<div class="description">{{ exp.descripcion }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                </section>
+                {% endif %}
+
+                {% if cv_data.educacion %}
+                <section class="mb-4">
+                    <h2>Educación</h2>
+                    {% for edu in cv_data.educacion %}
+                    <div class="education-item">
+                        <h3>{{ edu.titulo }}</h3>
+                        <div class="institution">{{ edu.institucion }}</div>
+                        <div class="year">
+                            {% if edu.año %}
+                                {% if ',' in edu.año %}
+                                    {% set fechas = edu.año.split(',') %}
+                                    {{ fechas[0] }} - {{ fechas[1] if fechas[1]|trim else 'En curso' }}
+                                {% else %}
+                                    {{ edu.año }}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </section>
+                {% endif %}
+
+                {% if cv_data.habilidades %}
+                <section class="mb-4">
+                    <h2>Habilidades</h2>
+                    <div class="skills-section">
+                        {% for habilidad in cv_data.habilidades %}
+                        <span class="skill-item">{{ habilidad }}</span>
+                        {% endfor %}
+                    </div>
+                </section>
                 {% endif %}
             </div>
         </div>
-        {% endfor %}
     </div>
-    {% endif %}
 
-    {% if cv_data.educacion %}
-    <div class="seccion">
-        <h2 class="titulo-seccion">Educación</h2>
-        {% for edu in cv_data.educacion %}
-        <div class="educacion-item">
-            <div class="info-principal">
-                <div class="empresa">{{ edu.institucion }}</div>
-                <div class="cargo">{{ edu.titulo }}</div>
-            </div>
-            <div class="periodo">
-                {% if edu.año %}
-                    {% if ',' in edu.año %}
-                        {% set fechas = edu.año.split(',') %}
-                        {{ fechas[0] }} - {{ fechas[1] if fechas[1]|trim else 'En curso' }}
-                    {% else %}
-                        {{ edu.año }}
-                    {% endif %}
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if cv_data.habilidades %}
-    <div class="seccion">
-        <h2 class="titulo-seccion">Habilidades</h2>
-        <div class="habilidades">
-            {% for habilidad in cv_data.habilidades %}
-            <span class="habilidad">{{ habilidad }}</span>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
