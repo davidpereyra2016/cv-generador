@@ -22,6 +22,7 @@
     ],
     "env": {
         "PYTHONPATH": ".",
-        "FLASK_ENV": "production"
+        "FLASK_ENV": "production",
+        "VERCEL_ENV": "production"
     }
 }

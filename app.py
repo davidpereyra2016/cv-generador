@@ -6,15 +6,26 @@ from datetime import datetime
 import base64
 from io import BytesIO
 from fpdf import FPDF
+import tempfile
 
 # Cargar variables de entorno
 load_dotenv()
 
 app = Flask(__name__)
 
-# Crear directorios necesarios
-os.makedirs('bd_pdf', exist_ok=True)
-os.makedirs('static/uploads', exist_ok=True)
+# Configuración de directorios
+if not os.getenv('VERCEL_ENV'):
+    # En desarrollo local
+    UPLOAD_FOLDER = 'static/uploads'
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    PDF_FOLDER = 'bd_pdf'
+    os.makedirs(PDF_FOLDER, exist_ok=True)
+else:
+    # En Vercel (producción)
+    UPLOAD_FOLDER = tempfile.gettempdir()
+    PDF_FOLDER = tempfile.gettempdir()
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Configuración de MercadoPago
 mp_access_token = os.getenv('MP_ACCESS_TOKEN')
@@ -135,7 +146,11 @@ def generate_pdf_content(cv_data):
         for skill in cv_data['habilidades']:
             pdf.cell(0, 10, f"• {skill}", ln=True)
     
-    return pdf.output(dest='S')
+    # Crear un archivo temporal para el PDF
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+        pdf_path = tmp_file.name
+        pdf.output(pdf_path)
+        return pdf_path
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
@@ -147,17 +162,43 @@ def generate_pdf():
             return jsonify({'error': 'Datos incompletos'}), 400
 
         # Generar PDF
-        pdf_content = generate_pdf_content(cv_data)
+        pdf_path = generate_pdf_content(cv_data)
 
-        # Crear respuesta con el PDF
-        response = make_response(pdf_content)
-        response.headers['Content-Type'] = 'application/pdf'
-        response.headers['Content-Disposition'] = f'attachment; filename=cv_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+        # Enviar el archivo y luego eliminarlo
+        response = send_file(pdf_path, as_attachment=True, download_name='cv.pdf')
         
+        @response.call_on_close
+        def cleanup():
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
+                
         return response
 
     except Exception as e:
         app.logger.error(f"Error generando PDF: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/download_pdf', methods=['POST'])
+def download_pdf():
+    try:
+        data = request.get_json()
+        pdf_path = generate_pdf_content(data)
+        
+        # Enviar el archivo y luego eliminarlo
+        response = send_file(pdf_path, as_attachment=True, download_name='cv.pdf')
+        
+        @response.call_on_close
+        def cleanup():
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
+                
+        return response
+        
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
