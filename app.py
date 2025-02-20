@@ -4,9 +4,13 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime
 import base64
-import tempfile
-from xhtml2pdf import pisa
 from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 
 # Cargar variables de entorno
 load_dotenv()
@@ -69,41 +73,63 @@ def failure():
 def pending():
     return "El pago está pendiente"
 
-def html_to_pdf(html_content):
-    # Crear un buffer de memoria para el PDF
-    result = BytesIO()
-    
-    # Convertir HTML a PDF
-    pisa.CreatePDF(
-        html_content,
-        dest=result,
-        encoding='utf-8'
+def generate_pdf_content(cv_data):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Estilo personalizado para el nombre
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30
     )
-    
-    # Obtener el contenido del buffer
-    pdf_content = result.getvalue()
-    result.close()
-    
-    return pdf_content
+
+    # Agregar nombre
+    story.append(Paragraph(cv_data['nombre'], title_style))
+    story.append(Spacer(1, 12))
+
+    # Agregar información de contacto
+    contact_info = f"Email: {cv_data['email']}<br/>Teléfono: {cv_data['telefono']}"
+    story.append(Paragraph(contact_info, styles['Normal']))
+    story.append(Spacer(1, 12))
+
+    # Agregar experiencia laboral
+    story.append(Paragraph('Experiencia Laboral', styles['Heading2']))
+    for exp in cv_data.get('experiencia', []):
+        exp_text = f"{exp['empresa']} - {exp['cargo']}<br/>{exp['periodo']}<br/>{exp['descripcion']}"
+        story.append(Paragraph(exp_text, styles['Normal']))
+        story.append(Spacer(1, 12))
+
+    # Agregar educación
+    story.append(Paragraph('Educación', styles['Heading2']))
+    for edu in cv_data.get('educacion', []):
+        edu_text = f"{edu['institucion']} - {edu['titulo']}<br/>{edu['periodo']}"
+        story.append(Paragraph(edu_text, styles['Normal']))
+        story.append(Spacer(1, 12))
+
+    # Agregar habilidades
+    if cv_data.get('habilidades'):
+        story.append(Paragraph('Habilidades', styles['Heading2']))
+        skills_text = '<br/>'.join([f"• {skill}" for skill in cv_data['habilidades']])
+        story.append(Paragraph(skills_text, styles['Normal']))
+
+    doc.build(story)
+    return buffer.getvalue()
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
     try:
         data = request.get_json()
-        template_type = data.get('template_type')
         cv_data = data.get('cv_data')
 
-        if not template_type or not cv_data:
+        if not cv_data:
             return jsonify({'error': 'Datos incompletos'}), 400
 
-        # Seleccionar la plantilla correcta
-        template = 'cv_template_basico.html' if template_type == 'basico' else 'cv_template_profesional.html'
-        
-        # Renderizar el HTML
-        html_content = render_template(template, cv_data=cv_data)
-        
-        # Convertir HTML a PDF
-        pdf_content = html_to_pdf(html_content)
+        # Generar PDF
+        pdf_content = generate_pdf_content(cv_data)
 
         # Crear respuesta con el PDF
         response = make_response(pdf_content)
