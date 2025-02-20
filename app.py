@@ -2,9 +2,10 @@ from flask import Flask, render_template, request, jsonify, send_file, redirect,
 import mercadopago
 import os
 from dotenv import load_dotenv
-import pdfkit
+from weasyprint import HTML
 from datetime import datetime
 import base64
+import tempfile
 
 # Cargar variables de entorno
 load_dotenv()
@@ -14,13 +15,6 @@ app = Flask(__name__)
 # Crear directorios necesarios
 os.makedirs('bd_pdf', exist_ok=True)
 os.makedirs('static/uploads', exist_ok=True)
-
-# Configuración de wkhtmltopdf para Vercel
-if os.environ.get('VERCEL_ENV') == 'production':
-    WKHTMLTOPDF_PATH = os.environ.get('WKHTMLTOPDF_PATH', '/usr/local/bin/wkhtmltopdf')
-    config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
-else:
-    config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
 
 # Configuración de MercadoPago
 mp_access_token = os.getenv('MP_ACCESS_TOKEN')
@@ -84,45 +78,28 @@ def generate_pdf():
         if not template_type or not cv_data:
             return jsonify({'error': 'Datos incompletos'}), 400
 
-        # Asegurarse de que la carpeta bd_pdf existe
-        if not os.path.exists('bd_pdf'):
-            os.makedirs('bd_pdf')
-
         # Seleccionar la plantilla correcta
         template = 'cv_template_basico.html' if template_type == 'basico' else 'cv_template_profesional.html'
         
         # Renderizar el HTML
-        html = render_template(template, cv_data=cv_data)
+        html_content = render_template(template, cv_data=cv_data)
         
-        # Generar nombre único para el PDF
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        pdf_filename = f'cv_{timestamp}.pdf'
-        pdf_path = os.path.join('bd_pdf', pdf_filename)
-
-        # Configurar opciones de wkhtmltopdf
-        options = {
-            'page-size': 'A4',
-            'margin-top': '0.75in',
-            'margin-right': '0.75in',
-            'margin-bottom': '0.75in',
-            'margin-left': '0.75in',
-            'encoding': "UTF-8",
-            'no-outline': None,
-            'enable-local-file-access': None,
-            'print-media-type': None
-        }
-
-        # Generar PDF
-        pdfkit.from_string(html, pdf_path, options=options, configuration=config)
-
-        # Leer el archivo PDF generado
-        with open(pdf_path, 'rb') as f:
-            pdf_content = f.read()
+        # Crear un archivo temporal para el PDF
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+            # Generar el PDF usando WeasyPrint
+            HTML(string=html_content, base_url=request.host_url).write_pdf(tmp.name)
+            
+            # Leer el contenido del PDF
+            with open(tmp.name, 'rb') as pdf_file:
+                pdf_content = pdf_file.read()
+            
+            # Eliminar el archivo temporal
+            os.unlink(tmp.name)
 
         # Crear respuesta con el PDF
         response = make_response(pdf_content)
         response.headers['Content-Type'] = 'application/pdf'
-        response.headers['Content-Disposition'] = f'attachment; filename={pdf_filename}'
+        response.headers['Content-Disposition'] = f'attachment; filename=cv_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
         
         return response
 
