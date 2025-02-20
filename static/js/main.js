@@ -1,5 +1,16 @@
+// Variable global para MercadoPago
+let mp;
+
 // Inicializar MercadoPago
-const mp = new MercadoPago('TEST-d7ac5deb-e7c4-4b2c-9c8c-0b9c9a2a0d1c');
+async function initMercadoPago() {
+    try {
+        const response = await fetch('/get_mp_public_key');
+        const data = await response.json();
+        mp = new MercadoPago(data.public_key);
+    } catch (error) {
+        console.error('Error al inicializar MercadoPago:', error);
+    }
+}
 
 // Función para manejar la carga de la imagen
 function handleImageUpload(event) {
@@ -177,7 +188,10 @@ function generateProTemplate(data) {
 }
 
 // Agregar listeners para todos los campos del formulario
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Inicializar MercadoPago
+    await initMercadoPago();
+    
     updatePreview(); // Actualizar vista previa inicial
     
     // Listener para cambios en el formulario
@@ -282,44 +296,45 @@ function agregarHabilidad() {
 }
 
 async function procesarPago() {
-    const formData = new FormData(document.getElementById('cvForm'));
-    const data = {};
-    
-    // Procesar los datos del formulario correctamente
-    formData.forEach((value, key) => {
-        if (key.endsWith('[]')) {
-            const baseKey = key.slice(0, -2);
-            if (!data[baseKey]) {
-                data[baseKey] = [];
-            }
-            data[baseKey].push(value);
-        } else {
-            data[key] = value;
-        }
-    });
-    
-    // Guardar datos en localStorage para usarlos después de la redirección
-    localStorage.setItem('template_type', data.template_type);
-    localStorage.setItem('cv_data', JSON.stringify(data));
-    
     try {
-        const response = await fetch('/crear_preferencia', {
+        // Obtener los datos del formulario
+        const formData = new FormData(document.getElementById('cvForm'));
+        const data = {};
+        formData.forEach((value, key) => {
+            if (key.endsWith('[]')) {
+                const baseKey = key.slice(0, -2);
+                if (!data[baseKey]) {
+                    data[baseKey] = [];
+                }
+                data[baseKey].push(value);
+            } else {
+                data[key] = value;
+            }
+        });
+
+        // Guardar datos en localStorage
+        localStorage.setItem('cv_data', JSON.stringify(data));
+        
+        // Crear preferencia de pago
+        const response = await fetch('/create_preference', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                template_type: data.template_type,
-                cv_data: data
-            })
+            body: JSON.stringify(data)
         });
+
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
         
-        const preference = await response.json();
+        const result = await response.json();
         
-        if (preference.init_point) {
-            window.location.href = preference.init_point;
+        if (result.id) {
+            // Redirigir al checkout de MercadoPago
+            window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference_id=${result.id}`;
         } else {
-            throw new Error('No se recibió el punto de inicio de MercadoPago');
+            throw new Error('No se recibió el ID de preferencia');
         }
     } catch (error) {
         console.error('Error al procesar el pago:', error);

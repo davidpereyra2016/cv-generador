@@ -18,8 +18,10 @@ os.makedirs('static/uploads', exist_ok=True)
 
 # Configuración de MercadoPago
 mp_access_token = os.getenv('MP_ACCESS_TOKEN')
-if not mp_access_token:
-    raise ValueError("MP_ACCESS_TOKEN no está configurado en las variables de entorno")
+mp_public_key = os.getenv('MP_PUBLIC_KEY')
+
+if not mp_access_token or not mp_public_key:
+    raise ValueError("MP_ACCESS_TOKEN y MP_PUBLIC_KEY deben estar configurados en las variables de entorno")
 
 sdk = mercadopago.SDK(mp_access_token)
 
@@ -30,10 +32,13 @@ def index():
 @app.route('/create_preference', methods=['POST'])
 def create_preference():
     try:
+        data = request.get_json()
+        
+        # Crear el objeto de preferencia
         preference_data = {
             "items": [
                 {
-                    "title": "Generador de CV",
+                    "title": "Generador de CV Profesional",
                     "quantity": 1,
                     "currency_id": "ARS",
                     "unit_price": 2000
@@ -44,13 +49,22 @@ def create_preference():
                 "failure": request.host_url + "failure",
                 "pending": request.host_url + "pending"
             },
-            "auto_return": "approved"
+            "auto_return": "approved",
+            "binary_mode": True
         }
 
+        # Crear la preferencia en MercadoPago
         preference_response = sdk.preference().create(preference_data)
-        preference = preference_response["response"]
-
-        return jsonify({"id": preference["id"]})
+        
+        if "response" not in preference_response:
+            app.logger.error(f"Error en la respuesta de MercadoPago: {preference_response}")
+            return jsonify({"error": "Error al crear la preferencia"}), 500
+            
+        return jsonify({
+            "id": preference_response["response"]["id"],
+            "init_point": preference_response["response"]["init_point"]
+        })
+            
     except Exception as e:
         app.logger.error(f"Error creating preference: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -67,6 +81,10 @@ def failure():
 @app.route('/pending')
 def pending():
     return "El pago está pendiente"
+
+@app.route('/get_mp_public_key', methods=['GET'])
+def get_mp_public_key():
+    return jsonify({"public_key": mp_public_key})
 
 def generate_pdf_content(cv_data):
     pdf = FPDF()
