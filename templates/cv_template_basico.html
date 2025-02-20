@@ -14,13 +14,14 @@
                 <div class="row align-items-center">
                     <div class="col-md-9">
                         <div class="profile-info">
-                            <h1>{{ cv_data.nombre }}</h1>
-                            <div class="contact-info">
-                                {% if cv_data.email %}<p>{{ cv_data.email }}</p>{% endif %}
-                                {% if cv_data.telefono %}<p>{{ cv_data.telefono }}</p>{% endif %}
-                                {% if cv_data.direccion %}<p>{{ cv_data.direccion }}</p>{% endif %}
+                            <h1 class="text-black-basic">{{ cv_data.nombre }}</h1>
+                            <div class="contact-info-basic">
+                                {% if cv_data.email %}<p>Email: {{ cv_data.email }}</p>{% endif %}
+                                {% if cv_data.telefono %}<p>Telefono: {{ cv_data.telefono }}</p>{% endif %}
+                                {% if cv_data.direccion %}<p>Dirección: {{ cv_data.direccion }}</p>{% endif %}
                                 {% if cv_data.dni %}<p>DNI: {{ cv_data.dni }}</p>{% endif %}
-                                {% if cv_data.fecha_nacimiento %}<p>{{ cv_data.fecha_nacimiento }}</p>{% endif %}
+                                {% if cv_data.fecha_nacimiento %}<p>Fecha de nacimiento: {{ cv_data.fecha_nacimiento }}</p>{% endif %}
+                                {% if cv_edad %}<p>Edad: {{ cv_edad }}</p>{% endif %}
                             </div>
                         </div>
                     </div>

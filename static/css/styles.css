@@ -10,6 +10,14 @@
     min-height: 800px;
 }
 
+.text-black-basic {
+    color: black;
+}
+
+.text-black-professional {
+    color: white;
+}
+
 .form-control:focus {
     border-color: #80bdff;
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
@@ -204,7 +212,7 @@ h2 {
 }
 
 #cvPreview h1 {
-    color: #2c3e50;
+    /* color: white; */
     margin-bottom: 20px;
 }
 
@@ -217,7 +225,13 @@ h2 {
 
 #cvPreview .contact-info {
     margin: 15px 0;
+    /* color: #7f8c8d; */
+}
+.contact-info-basic {
     color: #7f8c8d;
+}
+.contact-info-professional {
+    color: white;
 }
 
 #cvPreview .education-item,
@@ -258,7 +272,7 @@ h2 {
 }
 
 .template-basic .profile-info h1 {
-    color: #333;
+    color: black;
     font-size: 1.8em;
 }
 

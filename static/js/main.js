@@ -47,6 +47,7 @@ function updatePreview() {
         telefono: formData.get('telefono'),
         direccion: formData.get('direccion'),
         dni: formData.get('dni'),
+        edad: formData.get('edad'),
         fecha_nacimiento: formData.get('fecha_nacimiento'),
         profile_image: localStorage.getItem('profile_image'),
         experiencia: [],
@@ -129,13 +130,14 @@ function generateBasicTemplate(data) {
             <div class="row align-items-center">
                 <div class="col-md-9">
                     <div class="profile-info">
-                        <h1>${data.nombre || ''}</h1>
-                        <div class="contact-info">
-                            ${data.email ? `<p>${data.email}</p>` : ''}
-                            ${data.telefono ? `<p>${data.telefono}</p>` : ''}
-                            ${data.direccion ? `<p>${data.direccion}</p>` : ''}
+                        <h1 class="text-black-basic">${data.nombre || ''}</h1>
+                        <div class="contact-info-basic">
+                            ${data.email ? `<p>Email: ${data.email}</p>` : ''}
+                            ${data.telefono ? `<p>Telefono: ${data.telefono}</p>` : ''}
+                            ${data.direccion ? `<p>Dirección: ${data.direccion}</p>` : ''}
                             ${data.dni ? `<p>DNI: ${data.dni}</p>` : ''}
-                            ${data.fecha_nacimiento ? `<p>${data.fecha_nacimiento}</p>` : ''}
+                            ${data.fecha_nacimiento ? `<p>Fecha de nacimiento: ${data.fecha_nacimiento}</p>` : ''}
+                            ${data.edad ? `<p>Edad: ${data.edad}</p>` : ''}
                         </div>
                     </div>
                 </div>
@@ -198,13 +200,14 @@ function generateProTemplate(data) {
             <div class="row align-items-center">
                 <div class="col-md-9">
                     <div class="profile-info">
-                        <h1>${data.nombre || ''}</h1>
-                        <div class="contact-info">
-                            ${data.email ? `<p>${data.email}</p>` : ''}
-                            ${data.telefono ? `<p>${data.telefono}</p>` : ''}
-                            ${data.direccion ? `<p>${data.direccion}</p>` : ''}
+                        <h1 class="text-black-professional">${data.nombre || ''}</h1>
+                        <div class="contact-info-professional">
+                            ${data.email ? `<p>Email: ${data.email}</p>` : ''}
+                            ${data.telefono ? `<p>Telefono: ${data.telefono}</p>` : ''}
+                            ${data.direccion ? `<p>Dirección: ${data.direccion}</p>` : ''}
                             ${data.dni ? `<p>DNI: ${data.dni}</p>` : ''}
-                            ${data.fecha_nacimiento ? `<p>${data.fecha_nacimiento}</p>` : ''}
+                            ${data.fecha_nacimiento ? `<p>Fecha de nacimiento: ${data.fecha_nacimiento}</p>` : ''}
+                            ${data.edad ? `<p>Edad: ${data.edad}</p>` : ''}
                         </div>
                     </div>
                 </div>

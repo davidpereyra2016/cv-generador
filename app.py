@@ -158,6 +158,8 @@ def generate_pdf_content(cv_data):
         pdf.cell(0, 10, f"DNI: {cv_data['dni']}", ln=True)
     if cv_data.get('fecha_nacimiento'):
         pdf.cell(0, 10, f"Fecha de nacimiento: {cv_data['fecha_nacimiento']}", ln=True)
+    if cv_data.get('edad'):
+        pdf.cell(0, 10, f"Edad: {cv_data['edad']}", ln=True)
     pdf.ln(10)
     
     # Experiencia laboral
