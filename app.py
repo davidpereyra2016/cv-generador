@@ -209,7 +209,7 @@ def generate_pdf_content(cv_data):
         pdf.set_font('Arial', 'B', 12)
         pdf.cell(0, 10, f"{edu['institucion']} - {edu['titulo']}", ln=True)
         pdf.set_font('Arial', 'I', 10)
-        pdf.cell(0, 10, edu['periodo'], ln=True)
+        pdf.cell(0, 10, edu['año'], ln=True)
         pdf.ln(5)
     
     # Habilidades
