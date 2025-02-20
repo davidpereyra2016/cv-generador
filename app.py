@@ -5,12 +5,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 import base64
 from io import BytesIO
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
+from fpdf import FPDF
 
 # Cargar variables de entorno
 load_dotenv()
@@ -74,50 +69,55 @@ def pending():
     return "El pago está pendiente"
 
 def generate_pdf_content(cv_data):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    styles = getSampleStyleSheet()
-    story = []
-
-    # Estilo personalizado para el nombre
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        spaceAfter=30
-    )
-
-    # Agregar nombre
-    story.append(Paragraph(cv_data['nombre'], title_style))
-    story.append(Spacer(1, 12))
-
-    # Agregar información de contacto
-    contact_info = f"Email: {cv_data['email']}<br/>Teléfono: {cv_data['telefono']}"
-    story.append(Paragraph(contact_info, styles['Normal']))
-    story.append(Spacer(1, 12))
-
-    # Agregar experiencia laboral
-    story.append(Paragraph('Experiencia Laboral', styles['Heading2']))
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Configuración de fuentes
+    pdf.set_font('Arial', 'B', 24)
+    
+    # Nombre
+    pdf.cell(0, 20, cv_data['nombre'], ln=True, align='C')
+    
+    # Información de contacto
+    pdf.set_font('Arial', '', 12)
+    pdf.cell(0, 10, f"Email: {cv_data['email']}", ln=True)
+    pdf.cell(0, 10, f"Teléfono: {cv_data['telefono']}", ln=True)
+    pdf.ln(10)
+    
+    # Experiencia laboral
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(0, 10, 'Experiencia Laboral', ln=True)
+    pdf.ln(5)
+    
+    pdf.set_font('Arial', '', 12)
     for exp in cv_data.get('experiencia', []):
-        exp_text = f"{exp['empresa']} - {exp['cargo']}<br/>{exp['periodo']}<br/>{exp['descripcion']}"
-        story.append(Paragraph(exp_text, styles['Normal']))
-        story.append(Spacer(1, 12))
-
-    # Agregar educación
-    story.append(Paragraph('Educación', styles['Heading2']))
+        pdf.cell(0, 10, f"{exp['empresa']} - {exp['cargo']}", ln=True)
+        pdf.cell(0, 10, exp['periodo'], ln=True)
+        pdf.multi_cell(0, 10, exp['descripcion'])
+        pdf.ln(5)
+    
+    # Educación
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(0, 10, 'Educación', ln=True)
+    pdf.ln(5)
+    
+    pdf.set_font('Arial', '', 12)
     for edu in cv_data.get('educacion', []):
-        edu_text = f"{edu['institucion']} - {edu['titulo']}<br/>{edu['periodo']}"
-        story.append(Paragraph(edu_text, styles['Normal']))
-        story.append(Spacer(1, 12))
-
-    # Agregar habilidades
+        pdf.cell(0, 10, f"{edu['institucion']} - {edu['titulo']}", ln=True)
+        pdf.cell(0, 10, edu['periodo'], ln=True)
+        pdf.ln(5)
+    
+    # Habilidades
     if cv_data.get('habilidades'):
-        story.append(Paragraph('Habilidades', styles['Heading2']))
-        skills_text = '<br/>'.join([f"• {skill}" for skill in cv_data['habilidades']])
-        story.append(Paragraph(skills_text, styles['Normal']))
-
-    doc.build(story)
-    return buffer.getvalue()
+        pdf.set_font('Arial', 'B', 16)
+        pdf.cell(0, 10, 'Habilidades', ln=True)
+        pdf.ln(5)
+        
+        pdf.set_font('Arial', '', 12)
+        for skill in cv_data['habilidades']:
+            pdf.cell(0, 10, f"• {skill}", ln=True)
+    
+    return pdf.output(dest='S')
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
