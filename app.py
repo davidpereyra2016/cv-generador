@@ -119,22 +119,23 @@ def get_mp_public_key():
 @app.route('/webhook', methods=['POST'])
 def webhook():
     try:
-        data = request.args
-        if 'data.id' not in data or 'type' not in data:
-            return jsonify({'error': 'Datos incompletos'}), 400
+        # Los datos vienen en el cuerpo de la solicitud, no en los argumentos
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No se recibieron datos'}), 400
 
-        if data['type'] == 'payment':
-            payment_id = data['data.id']
-            payment_info = sdk.payment().get(payment_id)
-            
-            if 'response' in payment_info:
-                payment_data = payment_info['response']
-                # Aquí puedes almacenar el payment_data o realizar otras acciones
-                app.logger.info(f"Pago recibido: {payment_data}")
-                return jsonify({'status': 'success'}), 200
-            else:
-                app.logger.error(f"Error al obtener información del pago: {payment_info}")
-                return jsonify({'error': 'Error al procesar el pago'}), 400
+        if data.get('type') == 'payment' and data.get('action') == 'payment.updated':
+            payment_id = data.get('data', {}).get('id')
+            if payment_id:
+                payment_info = sdk.payment().get(payment_id)
+                
+                if 'response' in payment_info:
+                    payment_data = payment_info['response']
+                    app.logger.info(f"Pago recibido: {payment_data}")
+                    return jsonify({'status': 'success'}), 200
+                else:
+                    app.logger.error(f"Error al obtener información del pago: {payment_info}")
+                    return jsonify({'error': 'Error al procesar el pago'}), 400
         
         return jsonify({'status': 'ignored'}), 200
         
