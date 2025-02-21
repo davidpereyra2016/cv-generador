@@ -74,7 +74,7 @@ def create_preference():
         preference_response = sdk.preference().create(preference_data)
         
         if "response" not in preference_response:
-            app.logger.error(f"Error en la respuesta de MercadoPago: {preference_response}")
+            current_app.logger.error(f"Error en la respuesta de MercadoPago: {preference_response}")
             return jsonify({"error": "Error al crear la preferencia"}), 500
             
         return jsonify({
@@ -83,7 +83,7 @@ def create_preference():
         })
             
     except Exception as e:
-        app.logger.error(f"Error creating preference: {str(e)}")
+        current_app.logger.error(f"Error creating preference: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/success')
@@ -97,10 +97,10 @@ def success():
         if payment_id:
             payment_info = sdk.payment().get(payment_id)
             if 'response' in payment_info:
-                app.logger.info(f"Pago confirmado: {payment_info['response']}")
+                current_app.logger.info(f"Pago confirmado: {payment_info['response']}")
     except Exception as e:
         # Solo registrar el error, no afectar la respuesta
-        app.logger.error(f"Error al registrar pago en success: {str(e)}")
+        current_app.logger.error(f"Error al registrar pago en success: {str(e)}")
     
     # Siempre retornar la plantilla, incluso si hay error en el registro del pago
     return render_template('success.html', 
@@ -134,16 +134,16 @@ def webhook():
                 
                 if 'response' in payment_info:
                     payment_data = payment_info['response']
-                    app.logger.info(f"Pago recibido: {payment_data}")
+                    current_app.logger.info(f"Pago recibido: {payment_data}")
                     return jsonify({'status': 'success'}), 200
                 else:
-                    app.logger.error(f"Error al obtener información del pago: {payment_info}")
+                    current_app.logger.error(f"Error al obtener información del pago: {payment_info}")
                     return jsonify({'error': 'Error al procesar el pago'}), 400
         
         return jsonify({'status': 'ignored'}), 200
         
     except Exception as e:
-        app.logger.error(f"Error en webhook: {str(e)}")
+        current_app.logger.error(f"Error en webhook: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 def generate_pdf_content(cv_data):
@@ -186,7 +186,7 @@ def generate_pdf_content(cv_data):
             # Limpiar archivo temporal
             os.remove(img_path)
         except Exception as e:
-            app.logger.error(f"Error al procesar la imagen: {str(e)}")
+            current_app.logger.error(f"Error al procesar la imagen: {str(e)}")
     
     # Nombre
     pdf.set_xy(10, 20)
@@ -320,7 +320,7 @@ def generate_pdf():
             return response
             
     except Exception as e:
-        app.logger.error(f"Error generando PDF: {str(e)}")
+        current_app.logger.error(f"Error generando PDF: {str(e)}")
         return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
 
 @app.route('/download_pdf', methods=['POST'])
@@ -349,4 +349,4 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
 else:
     # En producción (Vercel)
-    app = app.wsgi_app
+    application = app
