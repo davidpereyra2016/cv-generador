@@ -145,7 +145,7 @@ def webhook():
     except Exception as e:
         current_app.logger.error(f"Error en webhook: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
+# Función para generar el PDF
 def generate_pdf_content(cv_data):
     pdf = FPDF()
     pdf.add_page()
@@ -326,9 +326,17 @@ def generate_pdf():
 @app.route('/download_pdf', methods=['POST'])
 def download_pdf():
     try:
-        data = request.get_json() or request.form.to_dict()
+        data = request.get_json()
         
-        # Generar el PDF usando la función existente
+        # Si los datos vienen anidados bajo cv_data
+        if 'cv_data' in data:
+            data = data['cv_data']
+        
+        # Validar campos requeridos
+        if not data.get('nombre'):
+            return jsonify({'error': 'El nombre es requerido'}), 400
+        
+        # Generar PDF con estructura de datos corregida
         pdf = generate_pdf_content(data)
         
         if not os.getenv('VERCEL_ENV'):

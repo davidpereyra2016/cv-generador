@@ -42,14 +42,14 @@ function updatePreview() {
     }
 
     const cvData = {
+        template_type: document.querySelector('input[name="template_type"]:checked').value,
         nombre: formData.get('nombre'),
+        dni: formData.get('dni'),
+        fecha_nacimiento: formData.get('fecha_nacimiento'),
+        edad: formData.get('edad'),
         email: formData.get('email'),
         telefono: formData.get('telefono'),
         direccion: formData.get('direccion'),
-        dni: formData.get('dni'),
-        edad: formData.get('edad'),
-        fecha_nacimiento: formData.get('fecha_nacimiento'),
-        profile_image: localStorage.getItem('profile_image'),
         experiencia: [],
         educacion: [],
         habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
@@ -65,20 +65,10 @@ function updatePreview() {
 
     empresas.forEach((empresa, index) => {
         if (empresa) {
-            let periodo = '';
-            if (fechasInicio[index]) {
-                periodo = fechasInicio[index];
-                if (trabajoActual[index] === 'on') {
-                    periodo += ',Presente';
-                } else if (fechasFin[index]) {
-                    periodo += ',' + fechasFin[index];
-                }
-            }
-            
             cvData.experiencia.push({
                 empresa: empresa,
                 cargo: cargos[index] || '',
-                periodo: periodo,
+                periodo: `${fechasInicio[index] || ''} - ${trabajoActual[index] === 'on' ? 'Presente' : fechasFin[index] || ''}`,
                 descripcion: descripciones[index] || ''
             });
         }
@@ -93,20 +83,10 @@ function updatePreview() {
 
     titulos.forEach((titulo, index) => {
         if (titulo) {
-            let año = '';
-            if (fechasInicioEdu[index]) {
-                año = fechasInicioEdu[index];
-                if (enCurso[index] === 'on') {
-                    año += ',En curso';
-                } else if (fechasFinEdu[index]) {
-                    año += ',' + fechasFinEdu[index];
-                }
-            }
-            
             cvData.educacion.push({
                 titulo: titulo,
                 institucion: instituciones[index] || '',
-                año: año
+                año: `${fechasInicioEdu[index] || ''} - ${enCurso[index] === 'on' ? 'En curso' : fechasFinEdu[index] || ''}`
             });
         }
     });
@@ -375,20 +355,57 @@ async function procesarPago() {
     try {
         // Obtener los datos del formulario
         const formData = new FormData(document.getElementById('cvForm'));
-        const data = {};
-        formData.forEach((value, key) => {
-            if (key.endsWith('[]')) {
-                const baseKey = key.slice(0, -2);
-                if (!data[baseKey]) {
-                    data[baseKey] = [];
-                }
-                data[baseKey].push(value);
-            } else {
-                data[key] = value;
+        const data = {
+            template_type: document.querySelector('input[name="template_type"]:checked').value,
+            nombre: formData.get('nombre'),
+            dni: formData.get('dni'),
+            fecha_nacimiento: formData.get('fecha_nacimiento'),
+            edad: formData.get('edad'),
+            email: formData.get('email'),
+            telefono: formData.get('telefono'),
+            direccion: formData.get('direccion'),
+            experiencia: [],
+            educacion: [],
+            habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
+        };
+
+        // Procesar experiencia
+        const empresas = formData.getAll('empresa[]');
+        const cargos = formData.getAll('cargo[]');
+        const fechasInicio = formData.getAll('fecha_inicio[]');
+        const fechasFin = formData.getAll('fecha_fin[]');
+        const descripciones = formData.getAll('descripcion[]');
+        const trabajoActual = formData.getAll('trabajo_actual[]');
+
+        empresas.forEach((empresa, index) => {
+            if (empresa) {
+                data.experiencia.push({
+                    empresa: empresa,
+                    cargo: cargos[index] || '',
+                    periodo: `${fechasInicio[index] || ''} - ${trabajoActual[index] === 'on' ? 'Presente' : fechasFin[index] || ''}`,
+                    descripcion: descripciones[index] || ''
+                });
             }
         });
 
-        // Guardar datos en localStorage
+        // Procesar educación
+        const titulos = formData.getAll('titulo[]');
+        const instituciones = formData.getAll('institucion[]');
+        const fechasInicioEdu = formData.getAll('fecha_inicio_edu[]');
+        const fechasFinEdu = formData.getAll('fecha_fin_edu[]');
+        const enCurso = formData.getAll('en_curso[]');
+
+        titulos.forEach((titulo, index) => {
+            if (titulo) {
+                data.educacion.push({
+                    titulo: titulo,
+                    institucion: instituciones[index] || '',
+                    año: `${fechasInicioEdu[index] || ''} - ${enCurso[index] === 'on' ? 'En curso' : fechasFinEdu[index] || ''}`
+                });
+            }
+        });
+
+        // Guardar datos estructurados
         localStorage.setItem('cv_data', JSON.stringify(data));
         
         // Crear preferencia de pago
