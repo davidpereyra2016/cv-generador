@@ -326,7 +326,7 @@ def generate_pdf():
 @app.route('/download_pdf', methods=['POST'])
 def download_pdf():
     try:
-        data = request.get_json()
+        data = request.get_json() or request.form.to_dict()
         pdf_path = generate_pdf_content(data)
         
         # Enviar el archivo y luego eliminarlo
@@ -342,7 +342,30 @@ def download_pdf():
         return response
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        current_app.logger.error(f"Error generando PDF: {str(e)}")
+        return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
+
+@app.route('/generate_pdf', methods=['POST'])
+def generate_pdf():
+    try:
+        data = request.get_json() or request.form.to_dict()
+        pdf_path = generate_pdf_content(data)
+        
+        # Enviar el archivo y luego eliminarlo
+        response = send_file(pdf_path, as_attachment=True, download_name='cv.pdf')
+        
+        @response.call_on_close
+        def cleanup():
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
+                
+        return response
+        
+    except Exception as e:
+        current_app.logger.error(f"Error generando PDF: {str(e)}")
+        return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
 
 if __name__ == '__main__':
     # En desarrollo
