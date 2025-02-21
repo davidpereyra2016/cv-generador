@@ -68,7 +68,9 @@
         <div class="template-info">
             <h4>Detalles de tu compra:</h4>
             <p>Plantilla seleccionada: <strong>{{ template_type.capitalize() }}</strong></p>
+            {% if payment_id %}
             <p>ID de Pago: <strong>{{ payment_id }}</strong></p>
+            {% endif %}
         </div>
 
         <div class="button-group">

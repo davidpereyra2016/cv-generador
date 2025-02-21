@@ -82,27 +82,24 @@ def create_preference():
 
 @app.route('/success')
 def success():
+    # Mantener la funcionalidad básica que funcionaba antes
+    template_type = request.args.get('template_type', 'basico')
+    payment_id = request.args.get('payment_id')
+    
+    # Registrar información del pago sin afectar la funcionalidad principal
     try:
-        template_type = request.args.get('template_type', 'basico')
-        payment_id = request.args.get('payment_id')
-        collection_status = request.args.get('collection_status')
-        merchant_order_id = request.args.get('merchant_order_id')
-        
-        # Verificar el estado del pago
-        if payment_id and collection_status == 'approved':
+        if payment_id:
             payment_info = sdk.payment().get(payment_id)
             if 'response' in payment_info:
-                payment_data = payment_info['response']
-                app.logger.info(f"Pago confirmado: {payment_data}")
-        
-        return render_template('success.html', 
-                            template_type=template_type,
-                            payment_id=payment_id,
-                            collection_status=collection_status,
-                            merchant_order_id=merchant_order_id)
+                app.logger.info(f"Pago confirmado: {payment_info['response']}")
     except Exception as e:
-        app.logger.error(f"Error en success: {str(e)}")
-        return render_template('success.html', template_type=template_type)
+        # Solo registrar el error, no afectar la respuesta
+        app.logger.error(f"Error al registrar pago en success: {str(e)}")
+    
+    # Siempre retornar la plantilla, incluso si hay error en el registro del pago
+    return render_template('success.html', 
+                         template_type=template_type,
+                         payment_id=payment_id)
 
 @app.route('/failure')
 def failure():
