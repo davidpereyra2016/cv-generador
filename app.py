@@ -45,6 +45,12 @@ def create_preference():
     try:
         data = request.get_json()
         
+        template_type = data.get("template_type", "basico")
+        if template_type == "profesional":
+            price = 10
+        else:
+            price = 5
+        
         # Crear el objeto de preferencia
         preference_data = {
             "items": [
@@ -52,7 +58,7 @@ def create_preference():
                     "title": "Generador de CV Profesional",
                     "quantity": 1,
                     "currency_id": "ARS",
-                    "unit_price": 10
+                    "unit_price": price
                 }
             ],
             "back_urls": {
