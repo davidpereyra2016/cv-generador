@@ -102,7 +102,7 @@ def generate_pdf_content(cv_data):
     pdf.add_page()
     
     # Configuración de fuentes
-    pdf.set_font('Arial', 'B', 24)
+    pdf.set_font('Helvetica', 'B', 24)
     
     # Determinar el estilo de plantilla
     template_type = cv_data.get('template_type', 'basico')
@@ -144,7 +144,7 @@ def generate_pdf_content(cv_data):
     pdf.cell(0, 20, cv_data['nombre'], ln=True, align='L')
     
     # Información de contacto
-    pdf.set_font('Arial', '', 12)
+    pdf.set_font('Helvetica', '', 12)
     if is_professional:
         pdf.set_text_color(44, 62, 80)  # #2c3e50
     else:
@@ -165,7 +165,7 @@ def generate_pdf_content(cv_data):
     pdf.ln(10)
     
     # Experiencia laboral
-    pdf.set_font('Arial', 'B', 16)
+    pdf.set_font('Helvetica', 'B', 16)
     if is_professional:
         pdf.set_text_color(26, 73, 113)  # #1a4971
         pdf.set_fill_color(240, 242, 245) # #f0f2f5
@@ -176,23 +176,23 @@ def generate_pdf_content(cv_data):
     pdf.cell(0, 10, 'Experiencia Laboral', ln=True, fill=True)
     pdf.ln(5)
     
-    pdf.set_font('Arial', '', 12)
+    pdf.set_font('Helvetica', '', 12)
     if is_professional:
         pdf.set_text_color(44, 62, 80)  # #2c3e50
     else:
         pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
     
     for exp in cv_data.get('experiencia', []):
-        pdf.set_font('Arial', 'B', 12)
+        pdf.set_font('Helvetica', 'B', 12)
         pdf.cell(0, 10, f"{exp['empresa']} - {exp['cargo']}", ln=True)
-        pdf.set_font('Arial', 'I', 10)
+        pdf.set_font('Helvetica', 'I', 10)
         pdf.cell(0, 10, exp['periodo'], ln=True)
-        pdf.set_font('Arial', '', 11)
+        pdf.set_font('Helvetica', '', 11)
         pdf.multi_cell(0, 10, exp['descripcion'])
         pdf.ln(5)
     
     # Educación
-    pdf.set_font('Arial', 'B', 16)
+    pdf.set_font('Helvetica', 'B', 16)
     if is_professional:
         pdf.set_text_color(26, 73, 113)  # #1a4971
         pdf.set_fill_color(240, 242, 245) # #f0f2f5
@@ -203,22 +203,22 @@ def generate_pdf_content(cv_data):
     pdf.cell(0, 10, 'Educación', ln=True, fill=True)
     pdf.ln(5)
     
-    pdf.set_font('Arial', '', 12)
+    pdf.set_font('Helvetica', '', 12)
     if is_professional:
         pdf.set_text_color(44, 62, 80)  # #2c3e50
     else:
         pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
     
     for edu in cv_data.get('educacion', []):
-        pdf.set_font('Arial', 'B', 12)
+        pdf.set_font('Helvetica', 'B', 12)
         pdf.cell(0, 10, f"{edu['institucion']} - {edu['titulo']}", ln=True)
-        pdf.set_font('Arial', 'I', 10)
+        pdf.set_font('Helvetica', 'I', 10)
         pdf.cell(0, 10, edu['año'], ln=True)
         pdf.ln(5)
     
     # Habilidades
     if cv_data.get('habilidades'):
-        pdf.set_font('Arial', 'B', 16)
+        pdf.set_font('Helvetica', 'B', 16)
         if is_professional:
             pdf.set_text_color(26, 73, 113)  # #1a4971
             pdf.set_fill_color(240, 242, 245) # #f0f2f5
@@ -229,48 +229,50 @@ def generate_pdf_content(cv_data):
         pdf.cell(0, 10, 'Habilidades', ln=True, fill=True)
         pdf.ln(5)
         
-        pdf.set_font('Arial', '', 12)
+        pdf.set_font('Helvetica', '', 12)
         if is_professional:
             pdf.set_text_color(44, 62, 80)  # #2c3e50
         else:
             pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
             
         for skill in cv_data['habilidades']:
-            pdf.cell(0, 10, f"• {skill}", ln=True)
+            pdf.cell(0, 10, f"- {skill}", ln=True)  # Usar guión en lugar de bullet point
     
-    # Crear un archivo temporal para el PDF
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-        pdf_path = tmp_file.name
-        pdf.output(pdf_path)
-        return pdf_path
+    return pdf
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
     try:
-        data = request.get_json()
-        cv_data = data.get('cv_data')
-
-        if not cv_data:
-            return jsonify({'error': 'Datos incompletos'}), 400
+        # Verificar que los datos son JSON válidos
+        if not request.is_json:
+            return jsonify({"error": "Se requiere JSON"}), 400
+            
+        cv_data = request.get_json()
+        if cv_data is None:
+            return jsonify({"error": "JSON inválido"}), 400
 
         # Generar PDF
-        pdf_path = generate_pdf_content(cv_data)
-
-        # Enviar el archivo y luego eliminarlo
-        response = send_file(pdf_path, as_attachment=True, download_name='cv.pdf')
+        pdf_content = generate_pdf_content(cv_data)
         
-        @response.call_on_close
-        def cleanup():
-            try:
-                os.remove(pdf_path)
-            except:
-                pass
-                
-        return response
-
+        # Crear archivo temporal
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            pdf_content.output(tmp_file.name)
+            
+            # Leer el archivo y devolverlo como respuesta
+            with open(tmp_file.name, 'rb') as f:
+                pdf_bytes = f.read()
+            
+            # Eliminar archivo temporal
+            os.unlink(tmp_file.name)
+            
+            response = make_response(pdf_bytes)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = 'attachment; filename=cv.pdf'
+            return response
+            
     except Exception as e:
         app.logger.error(f"Error generando PDF: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
 
 @app.route('/download_pdf', methods=['POST'])
 def download_pdf():
