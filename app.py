@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, make_response
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, make_response, current_app
 import mercadopago
 import os
 from dotenv import load_dotenv
@@ -82,8 +82,27 @@ def create_preference():
 
 @app.route('/success')
 def success():
-    template_type = request.args.get('template_type', 'basico')
-    return render_template('success.html', template_type=template_type)
+    try:
+        template_type = request.args.get('template_type', 'basico')
+        payment_id = request.args.get('payment_id')
+        collection_status = request.args.get('collection_status')
+        merchant_order_id = request.args.get('merchant_order_id')
+        
+        # Verificar el estado del pago
+        if payment_id and collection_status == 'approved':
+            payment_info = sdk.payment().get(payment_id)
+            if 'response' in payment_info:
+                payment_data = payment_info['response']
+                app.logger.info(f"Pago confirmado: {payment_data}")
+        
+        return render_template('success.html', 
+                            template_type=template_type,
+                            payment_id=payment_id,
+                            collection_status=collection_status,
+                            merchant_order_id=merchant_order_id)
+    except Exception as e:
+        app.logger.error(f"Error en success: {str(e)}")
+        return render_template('success.html', template_type=template_type)
 
 @app.route('/failure')
 def failure():
@@ -96,6 +115,32 @@ def pending():
 @app.route('/get_mp_public_key', methods=['GET'])
 def get_mp_public_key():
     return jsonify({"public_key": mp_public_key})
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    try:
+        data = request.args
+        if 'data.id' not in data or 'type' not in data:
+            return jsonify({'error': 'Datos incompletos'}), 400
+
+        if data['type'] == 'payment':
+            payment_id = data['data.id']
+            payment_info = sdk.payment().get(payment_id)
+            
+            if 'response' in payment_info:
+                payment_data = payment_info['response']
+                # Aquí puedes almacenar el payment_data o realizar otras acciones
+                app.logger.info(f"Pago recibido: {payment_data}")
+                return jsonify({'status': 'success'}), 200
+            else:
+                app.logger.error(f"Error al obtener información del pago: {payment_info}")
+                return jsonify({'error': 'Error al procesar el pago'}), 400
+        
+        return jsonify({'status': 'ignored'}), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error en webhook: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 def generate_pdf_content(cv_data):
     pdf = FPDF()
