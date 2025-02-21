@@ -417,3 +417,56 @@ async function procesarPago() {
         alert('Hubo un error al procesar el pago. Por favor, intente nuevamente.');
     }
 }
+
+// Función para generar el PDF después del pago exitoso
+async function generarPDF() {
+    try {
+        // Recuperar datos del localStorage
+        const cvData = localStorage.getItem('cv_data');
+        if (!cvData) {
+            throw new Error('No se encontraron datos del CV');
+        }
+
+        // Crear un objeto Blob con el PDF recibido
+        const response = await fetch('/download_pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: cvData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al generar el PDF');
+        }
+
+        // Descargar el PDF usando blob
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'cv.pdf';
+        document.body.appendChild(a);
+        a.click();
+        
+        // Limpiar
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+
+    } catch (error) {
+        console.error('Error al generar el PDF:', error);
+        alert('Hubo un error al generar el PDF: ' + error.message);
+    }
+}
+
+// Verificar si venimos de un pago exitoso y generar PDF
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'approved') {
+        generarPDF();
+    }
+});
