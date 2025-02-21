@@ -327,20 +327,29 @@ def generate_pdf():
 def download_pdf():
     try:
         data = request.get_json() or request.form.to_dict()
-        pdf_path = generate_pdf_content(data)
         
-        # Enviar el archivo y luego eliminarlo
-        response = send_file(pdf_path, as_attachment=True, download_name='cv.pdf')
+        # Generar el PDF usando la función existente
+        pdf = generate_pdf_content(data)
         
-        @response.call_on_close
-        def cleanup():
-            try:
-                os.remove(pdf_path)
-            except:
-                pass
-                
-        return response
-        
+        if not os.getenv('VERCEL_ENV'):
+            # En desarrollo, guardar en bd_pdf
+            os.makedirs('bd_pdf', exist_ok=True)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"cv_{data.get('nombre', 'usuario')}_{timestamp}.pdf"
+            filepath = os.path.join('bd_pdf', filename)
+            pdf.output(filepath, 'F')
+            return send_file(filepath, as_attachment=True, download_name='cv.pdf')
+        else:
+            # En producción, usar BytesIO
+            pdf_output = BytesIO()
+            pdf.output(pdf_output)
+            pdf_output.seek(0)
+            return send_file(
+                pdf_output,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name='cv.pdf'
+            )
     except Exception as e:
         current_app.logger.error(f"Error generando PDF: {str(e)}")
         return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
