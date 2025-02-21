@@ -111,8 +111,10 @@ def generate_pdf_content(cv_data):
     # Configurar colores según la plantilla
     if is_professional:
         pdf.set_text_color(26, 73, 113)  # #1a4971
+        pdf.set_fill_color(240, 242, 245)  # #f0f2f5
     else:
         pdf.set_text_color(51, 51, 51)  # #333333
+        pdf.set_fill_color(245, 245, 245)  # #f5f5f5 - gris claro
     
     # Agregar imagen de perfil si existe
     if 'imagen_perfil' in cv_data and cv_data['imagen_perfil']:
@@ -146,7 +148,7 @@ def generate_pdf_content(cv_data):
     if is_professional:
         pdf.set_text_color(44, 62, 80)  # #2c3e50
     else:
-        pdf.set_text_color(102, 102, 102)  # #666666
+        pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
     
     if cv_data.get('email'):
         pdf.cell(0, 10, f"Email: {cv_data['email']}", ln=True)
@@ -165,20 +167,20 @@ def generate_pdf_content(cv_data):
     # Experiencia laboral
     pdf.set_font('Arial', 'B', 16)
     if is_professional:
-        pdf.set_text_color(26, 73, 113)
-        pdf.set_fill_color(240, 242, 245)
+        pdf.set_text_color(26, 73, 113)  # #1a4971
+        pdf.set_fill_color(240, 242, 245) # #f0f2f5
     else:
-        pdf.set_text_color(51, 51, 51)
-        pdf.set_fill_color(248, 249, 250)
+        pdf.set_text_color(51, 51, 51)  # #333333
+        pdf.set_fill_color(245, 245, 245) # #f5f5f5 - gris claro
     
     pdf.cell(0, 10, 'Experiencia Laboral', ln=True, fill=True)
     pdf.ln(5)
     
     pdf.set_font('Arial', '', 12)
     if is_professional:
-        pdf.set_text_color(44, 62, 80)
+        pdf.set_text_color(44, 62, 80)  # #2c3e50
     else:
-        pdf.set_text_color(102, 102, 102)
+        pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
     
     for exp in cv_data.get('experiencia', []):
         pdf.set_font('Arial', 'B', 12)
@@ -192,18 +194,20 @@ def generate_pdf_content(cv_data):
     # Educación
     pdf.set_font('Arial', 'B', 16)
     if is_professional:
-        pdf.set_text_color(26, 73, 113)
+        pdf.set_text_color(26, 73, 113)  # #1a4971
+        pdf.set_fill_color(240, 242, 245) # #f0f2f5
     else:
-        pdf.set_text_color(51, 51, 51)
+        pdf.set_text_color(51, 51, 51)  # #333333
+        pdf.set_fill_color(245, 245, 245) # #f5f5f5 - gris claro
     
     pdf.cell(0, 10, 'Educación', ln=True, fill=True)
     pdf.ln(5)
     
     pdf.set_font('Arial', '', 12)
     if is_professional:
-        pdf.set_text_color(44, 62, 80)
+        pdf.set_text_color(44, 62, 80)  # #2c3e50
     else:
-        pdf.set_text_color(102, 102, 102)
+        pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
     
     for edu in cv_data.get('educacion', []):
         pdf.set_font('Arial', 'B', 12)
@@ -216,18 +220,20 @@ def generate_pdf_content(cv_data):
     if cv_data.get('habilidades'):
         pdf.set_font('Arial', 'B', 16)
         if is_professional:
-            pdf.set_text_color(26, 73, 113)
+            pdf.set_text_color(26, 73, 113)  # #1a4971
+            pdf.set_fill_color(240, 242, 245) # #f0f2f5
         else:
-            pdf.set_text_color(51, 51, 51)
+            pdf.set_text_color(51, 51, 51)  # #333333
+            pdf.set_fill_color(245, 245, 245) # #f5f5f5 - gris claro
             
         pdf.cell(0, 10, 'Habilidades', ln=True, fill=True)
         pdf.ln(5)
         
         pdf.set_font('Arial', '', 12)
         if is_professional:
-            pdf.set_text_color(44, 62, 80)
+            pdf.set_text_color(44, 62, 80)  # #2c3e50
         else:
-            pdf.set_text_color(102, 102, 102)
+            pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
             
         for skill in cv_data['habilidades']:
             pdf.cell(0, 10, f"• {skill}", ln=True)
