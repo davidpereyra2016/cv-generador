@@ -190,7 +190,7 @@ def generate_pdf_content(cv_data):
     
     # Nombre
     pdf.set_xy(10, 20)
-    pdf.cell(0, 20, cv_data['nombre'], ln=True, align='L')
+    pdf.cell(0, 20, cv_data.get('nombre', 'Sin Nombre'), ln=True, align='L')
     
     # Información de contacto
     pdf.set_font('Helvetica', '', 12)
