@@ -145,149 +145,108 @@ def webhook():
     except Exception as e:
         current_app.logger.error(f"Error en webhook: {str(e)}")
         return jsonify({'error': str(e)}), 500
-# Función para generar el PDF
-def generate_pdf_content(cv_data):
-    pdf = FPDF()
-    pdf.add_page()
-    
-    # Configuración de fuentes
-    pdf.set_font('Helvetica', 'B', 24)
-    
-    # Determinar el estilo de plantilla
-    template_type = cv_data.get('template_type', 'basico')
-    is_professional = template_type == 'profesional'
-    
-    # Configurar colores según la plantilla
-    if is_professional:
-        pdf.set_text_color(26, 73, 113)  # #1a4971
-        pdf.set_fill_color(240, 242, 245)  # #f0f2f5
-    else:
-        pdf.set_text_color(51, 51, 51)  # #333333
-        pdf.set_fill_color(245, 245, 245)  # #f5f5f5 - gris claro
-    
-    # Agregar imagen de perfil si existe
-    if 'imagen_perfil' in cv_data and cv_data['imagen_perfil']:
-        try:
-            # Decodificar la imagen base64
-            image_data = cv_data['imagen_perfil'].split(',')[1]
-            image_bytes = base64.b64decode(image_data)
-            
-            # Guardar temporalmente la imagen
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp_img:
-                tmp_img.write(image_bytes)
-                img_path = tmp_img.name
-            
-            # Calcular posición de la imagen
-            if is_professional:
-                pdf.image(img_path, x=170, y=15, w=30, h=30)  # Más pequeña para diseño profesional
-            else:
-                pdf.image(img_path, x=160, y=15, w=40, h=40)  # Más grande para diseño básico
-            
-            # Limpiar archivo temporal
-            os.remove(img_path)
-        except Exception as e:
-            current_app.logger.error(f"Error al procesar la imagen: {str(e)}")
-    
-    # Nombre
-    pdf.set_xy(10, 20)
-    pdf.cell(0, 20, cv_data.get('nombre', 'Sin Nombre'), ln=True, align='L')
-    
-    # Información de contacto
-    pdf.set_font('Helvetica', '', 12)
-    if is_professional:
-        pdf.set_text_color(44, 62, 80)  # #2c3e50
-    else:
-        pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
-    
-    if cv_data.get('email'):
-        pdf.cell(0, 10, f"Email: {cv_data['email']}", ln=True)
-    if cv_data.get('telefono'):
-        pdf.cell(0, 10, f"Teléfono: {cv_data['telefono']}", ln=True)
-    if cv_data.get('direccion'):
-        pdf.cell(0, 10, f"Dirección: {cv_data['direccion']}", ln=True)
-    if cv_data.get('dni'):
-        pdf.cell(0, 10, f"DNI: {cv_data['dni']}", ln=True)
-    if cv_data.get('fecha_nacimiento'):
-        pdf.cell(0, 10, f"Fecha de nacimiento: {cv_data['fecha_nacimiento']}", ln=True)
-    if cv_data.get('edad'):
-        pdf.cell(0, 10, f"Edad: {cv_data['edad']}", ln=True)
-    pdf.ln(10)
-    
-    # Experiencia laboral
-    pdf.set_font('Helvetica', 'B', 16)
-    if is_professional:
-        pdf.set_text_color(26, 73, 113)  # #1a4971
-        pdf.set_fill_color(240, 242, 245) # #f0f2f5
-    else:
-        pdf.set_text_color(51, 51, 51)  # #333333
-        pdf.set_fill_color(245, 245, 245) # #f5f5f5 - gris claro
-    
-    pdf.cell(0, 10, 'Experiencia Laboral', ln=True, fill=True)
-    pdf.ln(5)
-    
-    pdf.set_font('Helvetica', '', 12)
-    if is_professional:
-        pdf.set_text_color(44, 62, 80)  # #2c3e50
-    else:
-        pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
-    
-    for exp in cv_data.get('experiencia', []):
-        pdf.set_font('Helvetica', 'B', 12)
-        pdf.cell(0, 10, f"{exp['empresa']} - {exp['cargo']}", ln=True)
-        pdf.set_font('Helvetica', 'I', 10)
-        pdf.cell(0, 10, exp['periodo'], ln=True)
-        pdf.set_font('Helvetica', '', 11)
-        pdf.multi_cell(0, 10, exp['descripcion'])
-        pdf.ln(5)
-    
-    # Educación
-    pdf.set_font('Helvetica', 'B', 16)
-    if is_professional:
-        pdf.set_text_color(26, 73, 113)  # #1a4971
-        pdf.set_fill_color(240, 242, 245) # #f0f2f5
-    else:
-        pdf.set_text_color(51, 51, 51)  # #333333
-        pdf.set_fill_color(245, 245, 245) # #f5f5f5 - gris claro
-    
-    pdf.cell(0, 10, 'Educación', ln=True, fill=True)
-    pdf.ln(5)
-    
-    pdf.set_font('Helvetica', '', 12)
-    if is_professional:
-        pdf.set_text_color(44, 62, 80)  # #2c3e50
-    else:
-        pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
-    
-    for edu in cv_data.get('educacion', []):
-        pdf.set_font('Helvetica', 'B', 12)
-        pdf.cell(0, 10, f"{edu['institucion']} - {edu['titulo']}", ln=True)
-        pdf.set_font('Helvetica', 'I', 10)
-        pdf.cell(0, 10, edu['año'], ln=True)
-        pdf.ln(5)
-    
-    # Habilidades
-    if cv_data.get('habilidades'):
-        pdf.set_font('Helvetica', 'B', 16)
-        if is_professional:
-            pdf.set_text_color(26, 73, 113)  # #1a4971
-            pdf.set_fill_color(240, 242, 245) # #f0f2f5
-        else:
-            pdf.set_text_color(51, 51, 51)  # #333333
-            pdf.set_fill_color(245, 245, 245) # #f5f5f5 - gris claro
-            
-        pdf.cell(0, 10, 'Habilidades', ln=True, fill=True)
-        pdf.ln(5)
+
+@app.route('/download_pdf', methods=['POST'])
+def download_pdf():
+    try:
+        data = request.get_json()
+        app.logger.info(f"[DEBUG] Datos recibidos para PDF: {data}")
         
-        pdf.set_font('Helvetica', '', 12)
-        if is_professional:
-            pdf.set_text_color(44, 62, 80)  # #2c3e50
-        else:
-            pdf.set_text_color(77, 77, 77)  # #4d4d4d - gris oscuro
+        # Asegurar que tenemos los datos necesarios
+        if not data:
+            app.logger.error("[ERROR] No se recibieron datos")
+            return jsonify({"error": "No se recibieron datos"}), 400
             
-        for skill in cv_data['habilidades']:
-            pdf.cell(0, 10, f"- {skill}", ln=True)  # Usar guión en lugar de bullet point
-    
-    return pdf
+        # Validar campos requeridos
+        if not data.get('nombre'):
+            app.logger.error("[ERROR] Falta el nombre en los datos")
+            return jsonify({"error": "El nombre es requerido"}), 400
+            
+        app.logger.info(f"[DEBUG] Generando PDF para: {data['nombre']}")
+        
+        # Generar PDF
+        pdf = generate_pdf_content(data)
+        
+        # Crear respuesta
+        response = make_response(pdf.output(dest='S').encode('latin1'))
+        response.headers.set('Content-Disposition', 'attachment', filename='cv.pdf')
+        response.headers.set('Content-Type', 'application/pdf')
+        
+        app.logger.info("[DEBUG] PDF generado exitosamente")
+        return response
+        
+    except Exception as e:
+        app.logger.error(f"[ERROR] Error al generar PDF: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+def generate_pdf_content(data):
+    try:
+        app.logger.info("[DEBUG] Iniciando generación de contenido PDF")
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        
+        # Datos personales
+        app.logger.info("[DEBUG] Procesando datos personales")
+        nombre = data.get('nombre', '').strip()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(200, 10, txt=nombre or "Sin Nombre", ln=True, align='C')
+        
+        # Información de contacto
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt=f"Email: {data.get('email', '')}", ln=True, align='L')
+        pdf.cell(200, 10, txt=f"Teléfono: {data.get('telefono', '')}", ln=True, align='L')
+        pdf.cell(200, 10, txt=f"Dirección: {data.get('direccion', '')}", ln=True, align='L')
+        
+        # Experiencia Laboral
+        app.logger.info("[DEBUG] Procesando experiencia laboral")
+        pdf.set_font("Arial", 'B', 14)
+        pdf.cell(200, 10, txt="Experiencia Laboral", ln=True, align='L')
+        
+        experiencias = data.get('experiencia', [])
+        app.logger.info(f"[DEBUG] Número de experiencias: {len(experiencias)}")
+        
+        for exp in experiencias:
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(200, 10, txt=exp.get('empresa', ''), ln=True, align='L')
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt=f"Cargo: {exp.get('cargo', '')}", ln=True, align='L')
+            pdf.cell(200, 10, txt=f"Periodo: {exp.get('periodo', '')}", ln=True, align='L')
+            if exp.get('descripcion'):
+                pdf.multi_cell(0, 10, txt=f"Descripción: {exp.get('descripcion', '')}")
+            pdf.cell(200, 5, txt="", ln=True, align='L')  # Espacio
+        
+        # Educación
+        app.logger.info("[DEBUG] Procesando educación")
+        pdf.set_font("Arial", 'B', 14)
+        pdf.cell(200, 10, txt="Educación", ln=True, align='L')
+        
+        educacion = data.get('educacion', [])
+        app.logger.info(f"[DEBUG] Número de registros educativos: {len(educacion)}")
+        
+        for edu in educacion:
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(200, 10, txt=edu.get('titulo', ''), ln=True, align='L')
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt=f"Institución: {edu.get('institucion', '')}", ln=True, align='L')
+            pdf.cell(200, 10, txt=f"Año: {edu.get('año', '')}", ln=True, align='L')
+            pdf.cell(200, 5, txt="", ln=True, align='L')  # Espacio
+        
+        # Habilidades
+        if data.get('habilidades'):
+            app.logger.info("[DEBUG] Procesando habilidades")
+            pdf.set_font("Arial", 'B', 14)
+            pdf.cell(200, 10, txt="Habilidades", ln=True, align='L')
+            pdf.set_font("Arial", size=12)
+            habilidades = ", ".join(data.get('habilidades', []))
+            pdf.multi_cell(0, 10, txt=habilidades)
+        
+        app.logger.info("[DEBUG] PDF generado exitosamente")
+        return pdf
+        
+    except Exception as e:
+        app.logger.error(f"[ERROR] Error en generate_pdf_content: {str(e)}")
+        raise
 
 @app.route('/generate_pdf', methods=['POST'])
 def generate_pdf():
@@ -319,45 +278,6 @@ def generate_pdf():
             response.headers['Content-Disposition'] = 'attachment; filename=cv.pdf'
             return response
             
-    except Exception as e:
-        current_app.logger.error(f"Error generando PDF: {str(e)}")
-        return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
-
-@app.route('/download_pdf', methods=['POST'])
-def download_pdf():
-    try:
-        data = request.get_json()
-        
-        # Si los datos vienen anidados bajo cv_data
-        if 'cv_data' in data:
-            data = data['cv_data']
-        
-        # Validar campos requeridos
-        if not data.get('nombre'):
-            return jsonify({'error': 'El nombre es requerido'}), 400
-        
-        # Generar PDF con estructura de datos corregida
-        pdf = generate_pdf_content(data)
-        
-        if not os.getenv('VERCEL_ENV'):
-            # En desarrollo, guardar en bd_pdf
-            os.makedirs('bd_pdf', exist_ok=True)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"cv_{data.get('nombre', 'usuario')}_{timestamp}.pdf"
-            filepath = os.path.join('bd_pdf', filename)
-            pdf.output(filepath, 'F')
-            return send_file(filepath, as_attachment=True, download_name='cv.pdf')
-        else:
-            # En producción, usar BytesIO
-            pdf_output = BytesIO()
-            pdf.output(pdf_output)
-            pdf_output.seek(0)
-            return send_file(
-                pdf_output,
-                mimetype='application/pdf',
-                as_attachment=True,
-                download_name='cv.pdf'
-            )
     except Exception as e:
         current_app.logger.error(f"Error generando PDF: {str(e)}")
         return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500

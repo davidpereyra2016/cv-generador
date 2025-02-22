@@ -355,6 +355,8 @@ async function procesarPago() {
     try {
         // Obtener los datos del formulario
         const formData = new FormData(document.getElementById('cvForm'));
+        
+        // Crear objeto con los datos
         const data = {
             template_type: document.querySelector('input[name="template_type"]:checked').value,
             nombre: formData.get('nombre'),
@@ -369,45 +371,48 @@ async function procesarPago() {
             habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
         };
 
+        console.log('[DEBUG] Datos básicos recopilados:', data);
+
         // Procesar experiencia
         const empresas = formData.getAll('empresa[]');
-        const cargos = formData.getAll('cargo[]');
-        const fechasInicio = formData.getAll('fecha_inicio[]');
-        const fechasFin = formData.getAll('fecha_fin[]');
-        const descripciones = formData.getAll('descripcion[]');
-        const trabajoActual = formData.getAll('trabajo_actual[]');
-
         empresas.forEach((empresa, index) => {
-            if (empresa) {
+            if (empresa.trim()) {
+                console.log(`[DEBUG] Procesando experiencia ${index}:`, empresa);
                 data.experiencia.push({
-                    empresa: empresa,
-                    cargo: cargos[index] || '',
-                    periodo: `${fechasInicio[index] || ''} - ${trabajoActual[index] === 'on' ? 'Presente' : fechasFin[index] || ''}`,
-                    descripcion: descripciones[index] || ''
+                    empresa: empresa.trim(),
+                    cargo: formData.getAll('cargo[]')[index]?.trim() || '',
+                    periodo: `${formData.getAll('fecha_inicio[]')[index]?.trim() || ''} - ${
+                        formData.getAll('trabajo_actual[]')[index] === 'on' 
+                        ? 'Presente' 
+                        : formData.getAll('fecha_fin[]')[index]?.trim() || ''
+                    }`,
+                    descripcion: formData.getAll('descripcion[]')[index]?.trim() || ''
                 });
             }
         });
 
         // Procesar educación
         const titulos = formData.getAll('titulo[]');
-        const instituciones = formData.getAll('institucion[]');
-        const fechasInicioEdu = formData.getAll('fecha_inicio_edu[]');
-        const fechasFinEdu = formData.getAll('fecha_fin_edu[]');
-        const enCurso = formData.getAll('en_curso[]');
-
         titulos.forEach((titulo, index) => {
-            if (titulo) {
+            if (titulo.trim()) {
+                console.log(`[DEBUG] Procesando educación ${index}:`, titulo);
                 data.educacion.push({
-                    titulo: titulo,
-                    institucion: instituciones[index] || '',
-                    año: `${fechasInicioEdu[index] || ''} - ${enCurso[index] === 'on' ? 'En curso' : fechasFinEdu[index] || ''}`
+                    titulo: titulo.trim(),
+                    institucion: formData.getAll('institucion[]')[index]?.trim() || '',
+                    año: `${formData.getAll('fecha_inicio_edu[]')[index]?.trim() || ''} - ${
+                        formData.getAll('en_curso[]')[index] === 'on'
+                        ? 'En curso'
+                        : formData.getAll('fecha_fin_edu[]')[index]?.trim() || ''
+                    }`
                 });
             }
         });
 
-        // Guardar datos estructurados
-        localStorage.setItem('cv_data', JSON.stringify(data));
+        console.log('[DEBUG] Datos completos a enviar:', JSON.stringify(data, null, 2));
         
+        // Guardar en localStorage
+        localStorage.setItem('cv_data', JSON.stringify(data));
+
         // Crear preferencia de pago
         const response = await fetch('/create_preference', {
             method: 'POST',
@@ -424,27 +429,27 @@ async function procesarPago() {
         const result = await response.json();
         
         if (result.id) {
-            // Redirigir al checkout de MercadoPago
             window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference_id=${result.id}`;
         } else {
             throw new Error('No se recibió el ID de preferencia');
         }
     } catch (error) {
-        console.error('Error al procesar el pago:', error);
+        console.error('[ERROR] Error al procesar el pago:', error);
         alert('Hubo un error al procesar el pago. Por favor, intente nuevamente.');
     }
 }
 
-// Función para generar el PDF después del pago exitoso
 async function generarPDF() {
     try {
         // Recuperar datos del localStorage
         const cvData = localStorage.getItem('cv_data');
+        console.log('[DEBUG] Datos recuperados de localStorage:', cvData);
+        
         if (!cvData) {
             throw new Error('No se encontraron datos del CV');
         }
 
-        // Crear un objeto Blob con el PDF recibido
+        // Enviar datos al servidor para generar PDF
         const response = await fetch('/download_pdf', {
             method: 'POST',
             headers: {
@@ -453,12 +458,14 @@ async function generarPDF() {
             body: cvData
         });
 
+        console.log('[DEBUG] Respuesta del servidor:', response.status);
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Error al generar el PDF');
         }
 
-        // Descargar el PDF usando blob
+        // Obtener el blob del PDF
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -475,7 +482,7 @@ async function generarPDF() {
         }, 100);
 
     } catch (error) {
-        console.error('Error al generar el PDF:', error);
+        console.error('[ERROR] Error al generar el PDF:', error);
         alert('Hubo un error al generar el PDF: ' + error.message);
     }
 }
