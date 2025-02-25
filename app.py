@@ -285,6 +285,9 @@ def generate_pdf_content(data):
         if data.get('email'): contact_info.append(f"Email: {data.get('email')}")
         if data.get('telefono'): contact_info.append(f"Tel: {data.get('telefono')}")
         if data.get('direccion'): contact_info.append(data.get('direccion'))
+        if data.get('dni'): contact_info.append(f"DNI: {data.get('dni')}")
+        if data.get('fecha_nacimiento'): contact_info.append(f"Fecha de Nacimiento: {data.get('fecha_nacimiento')}")
+        if data.get('edad'): contact_info.append(f"Edad: {data.get('edad')}")
         
         pdf.cell(0, 6, txt=" | ".join(contact_info), ln=True, align='C')
         
