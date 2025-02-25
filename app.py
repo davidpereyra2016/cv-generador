@@ -51,9 +51,9 @@ def create_preference():
         external_reference = data.get("external_reference")
         
         if template_type == "profesional":
-            price = 2000
+            price = 10
         else:
-            price = 1500
+            price = 5
         
         # Crear el objeto de preferencia
         preference_data = {
@@ -141,12 +141,19 @@ def success():
                                                 template_type=form_data.get('template_type', 'basico'),
                                                 payment_id=payment_id,
                                                 form_id=form_id)
+                    
+                    # Si no hay form_id o no se encuentra el archivo, usar localStorage como respaldo
+                    return render_template('success.html',
+                                        template_type=request.args.get('template_type', 'basico'),
+                                        payment_id=payment_id,
+                                        use_localstorage=True)
             except Exception as e:
                 current_app.logger.error(f"Error al verificar pago: {str(e)}")
         
         return render_template('success.html',
                             template_type=request.args.get('template_type', 'basico'),
-                            payment_id=payment_id)
+                            payment_id=payment_id,
+                            use_localstorage=True)
         
     except Exception as e:
         current_app.logger.error(f"Error en success: {str(e)}")
@@ -202,17 +209,23 @@ def generate_pdf():
         if data is None:
             return jsonify({"error": "JSON inválido"}), 400
             
-        form_id = data.get('form_id')
-        if not form_id:
-            return jsonify({"error": "Se requiere form_id"}), 400
-            
-        # Cargar datos del formulario
-        json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
-        if not os.path.exists(json_path):
-            return jsonify({"error": "No se encontraron los datos del formulario"}), 400
-            
-        with open(json_path, 'r', encoding='utf-8') as f:
-            cv_data = json.load(f)
+        # Obtener datos del CV, ya sea del archivo JSON o directamente
+        cv_data = None
+        
+        if 'cv_data' in data:
+            cv_data = data['cv_data']
+        elif 'form_id' in data:
+            json_path = os.path.join(PDF_FOLDER, f'form_{data["form_id"]}.json')
+            if os.path.exists(json_path):
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    cv_data = json.load(f)
+                try:
+                    os.remove(json_path)
+                except Exception as e:
+                    current_app.logger.error(f"Error al eliminar archivo temporal: {str(e)}")
+        
+        if cv_data is None:
+            return jsonify({"error": "No se encontraron datos del CV"}), 400
 
         # Generar PDF
         pdf = generate_pdf_content(cv_data)
@@ -228,12 +241,6 @@ def generate_pdf():
             # Eliminar archivo temporal
             os.unlink(tmp_file.name)
             
-            # Limpiar el archivo JSON temporal
-            try:
-                os.remove(json_path)
-            except Exception as e:
-                current_app.logger.error(f"Error al eliminar archivo temporal JSON: {str(e)}")
-            
             # Enviar respuesta
             response = make_response(pdf_bytes)
             response.headers['Content-Type'] = 'application/pdf'
@@ -242,7 +249,7 @@ def generate_pdf():
             
     except Exception as e:
         current_app.logger.error(f"Error generando PDF: {str(e)}")
-        return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
 def generate_pdf_content(data):
     try:
