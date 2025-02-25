@@ -85,7 +85,7 @@
 
     <script>
         function generatePDF() {
-            const cvData = JSON.parse(localStorage.getItem('cv_data'));
+            const formId = '{{ form_id }}';
             const templateType = '{{ template_type }}';
             
             fetch('/generate_pdf', {
@@ -94,15 +94,13 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    template_type: templateType,
-                    cv_data: cvData
+                    form_id: formId,
+                    template_type: templateType
                 })
             })
             .then(response => {
                 if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Error al generar el PDF');
-                    });
+                    throw new Error('Error al generar el PDF');
                 }
                 return response.blob();
             })
@@ -110,7 +108,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `cv_${new Date().toISOString().slice(0,10)}.pdf`;
+                a.download = 'cv.pdf';
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -118,7 +116,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Hubo un error al generar el PDF: ' + error.message);
+                alert('Error al generar el PDF. Por favor, intente nuevamente.');
             });
         }
     </script>

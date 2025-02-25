@@ -332,7 +332,7 @@ function obtenerDatosFormulario() {
     return cvData;
 }
 
-// Modificar la función procesarPago para guardar datos primero
+// Modificar la función procesarPago para incluir form_id como external_reference
 async function procesarPago() {
     try {
         // Primero guardar los datos del formulario
@@ -349,7 +349,7 @@ async function procesarPago() {
             },
             body: JSON.stringify({
                 template_type: templateType,
-                form_id: formId
+                external_reference: formId
             })
         });
 
@@ -359,12 +359,8 @@ async function procesarPago() {
 
         const preference = await response.json();
         
-        // Modificar la URL de éxito para incluir el form_id
-        const successUrl = new URL(preference.init_point);
-        successUrl.searchParams.append('form_id', formId);
-        
         // Redirigir a MercadoPago
-        window.location.href = successUrl.toString();
+        window.location.href = preference.init_point;
         
     } catch (error) {
         console.error('Error:', error);

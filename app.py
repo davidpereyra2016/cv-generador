@@ -48,10 +48,12 @@ def create_preference():
         data = request.get_json()
         
         template_type = data.get("template_type", "basico")
+        external_reference = data.get("external_reference")
+        
         if template_type == "profesional":
-            price = 10
+            price = 2000
         else:
-            price = 5
+            price = 1500
         
         # Crear el objeto de preferencia
         preference_data = {
@@ -69,7 +71,8 @@ def create_preference():
                 "pending": request.host_url + "pending"
             },
             "auto_return": "approved",
-            "binary_mode": True
+            "binary_mode": True,
+            "external_reference": external_reference
         }
 
         # Crear la preferencia en MercadoPago
@@ -110,39 +113,40 @@ def save_form_data():
 @app.route('/success')
 def success():
     try:
-        form_id = request.args.get('form_id')
+        # Obtener parámetros de la URL
         payment_id = request.args.get('payment_id')
+        status = request.args.get('status')
         
-        if not form_id:
-            return "Error: No se encontró el ID del formulario", 400
+        if status != 'approved':
+            return redirect(url_for('failure'))
             
-        # Cargar datos del formulario
-        json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
-        if not os.path.exists(json_path):
-            return "Error: No se encontraron los datos del formulario", 400
-            
-        with open(json_path, 'r', encoding='utf-8') as f:
-            form_data = json.load(f)
-        
         # Registrar información del pago
         if payment_id:
             try:
                 payment_info = sdk.payment().get(payment_id)
                 if 'response' in payment_info:
                     current_app.logger.info(f"Pago confirmado: {payment_info['response']}")
+                    
+                    # Obtener el external_reference que contiene el form_id
+                    form_id = payment_info['response'].get('external_reference')
+                    
+                    if form_id:
+                        # Cargar datos del formulario
+                        json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
+                        if os.path.exists(json_path):
+                            with open(json_path, 'r', encoding='utf-8') as f:
+                                form_data = json.load(f)
+                                
+                            return render_template('success.html',
+                                                template_type=form_data.get('template_type', 'basico'),
+                                                payment_id=payment_id,
+                                                form_id=form_id)
             except Exception as e:
                 current_app.logger.error(f"Error al verificar pago: {str(e)}")
         
-        # Generar PDF con los datos del formulario
-        pdf_path = generate_pdf(form_data)
-        
-        # Limpiar el archivo JSON temporal
-        try:
-            os.remove(json_path)
-        except Exception as e:
-            current_app.logger.error(f"Error al eliminar archivo temporal: {str(e)}")
-        
-        return send_file(pdf_path, as_attachment=True, download_name='cv.pdf')
+        return render_template('success.html',
+                            template_type=request.args.get('template_type', 'basico'),
+                            payment_id=payment_id)
         
     except Exception as e:
         current_app.logger.error(f"Error en success: {str(e)}")
@@ -187,38 +191,58 @@ def webhook():
         current_app.logger.error(f"Error en webhook: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/download_pdf', methods=['POST'])
-def download_pdf():
+@app.route('/generate_pdf', methods=['POST'])
+def generate_pdf():
     try:
+        # Verificar que los datos son JSON válidos
+        if not request.is_json:
+            return jsonify({"error": "Se requiere JSON"}), 400
+            
         data = request.get_json()
-        app.logger.info(f"[DEBUG] Datos recibidos para PDF: {data}")
-        
-        # Asegurar que tenemos los datos necesarios
-        if not data:
-            app.logger.error("[ERROR] No se recibieron datos")
-            return jsonify({"error": "No se recibieron datos"}), 400
+        if data is None:
+            return jsonify({"error": "JSON inválido"}), 400
             
-        # Validar campos requeridos
-        if not data.get('nombre'):
-            app.logger.error("[ERROR] Falta el nombre en los datos")
-            return jsonify({"error": "El nombre es requerido"}), 400
+        form_id = data.get('form_id')
+        if not form_id:
+            return jsonify({"error": "Se requiere form_id"}), 400
             
-        app.logger.info(f"[DEBUG] Generando PDF para: {data['nombre']}")
-        
+        # Cargar datos del formulario
+        json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
+        if not os.path.exists(json_path):
+            return jsonify({"error": "No se encontraron los datos del formulario"}), 400
+            
+        with open(json_path, 'r', encoding='utf-8') as f:
+            cv_data = json.load(f)
+
         # Generar PDF
-        pdf = generate_pdf_content(data)
+        pdf = generate_pdf_content(cv_data)
         
-        # Crear respuesta
-        response = make_response(pdf.output(dest='S').encode('latin1'))
-        response.headers.set('Content-Disposition', 'attachment', filename='cv.pdf')
-        response.headers.set('Content-Type', 'application/pdf')
-        
-        app.logger.info("[DEBUG] PDF generado exitosamente")
-        return response
-        
+        # Crear archivo temporal
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            pdf.output(tmp_file.name)
+            
+            # Leer el archivo
+            with open(tmp_file.name, 'rb') as f:
+                pdf_bytes = f.read()
+                
+            # Eliminar archivo temporal
+            os.unlink(tmp_file.name)
+            
+            # Limpiar el archivo JSON temporal
+            try:
+                os.remove(json_path)
+            except Exception as e:
+                current_app.logger.error(f"Error al eliminar archivo temporal JSON: {str(e)}")
+            
+            # Enviar respuesta
+            response = make_response(pdf_bytes)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = 'attachment; filename=cv.pdf'
+            return response
+            
     except Exception as e:
-        app.logger.error(f"[ERROR] Error al generar PDF: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        current_app.logger.error(f"Error generando PDF: {str(e)}")
+        return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
 
 def generate_pdf_content(data):
     try:
