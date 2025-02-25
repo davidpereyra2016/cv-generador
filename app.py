@@ -308,16 +308,8 @@ def generate_pdf_content(data):
         pdf.set_xy(10, 10)
         pdf.cell(160, 10, txt=data.get('nombre', 'Sin Nombre'), ln=True, align='L')
         
-        # Información de contacto primaria (en línea)
-        pdf.set_font("Arial", '', 11)
-        pdf.set_xy(10, 22)
-        contact_primary = []
-        if data.get('email'): contact_primary.append(f"Email: {data.get('email')}")
-        if data.get('telefono'): contact_primary.append(f"Tel: {data.get('telefono')}")
-        if data.get('direccion'): contact_primary.append(data.get('direccion'))
-        pdf.cell(160, 6, txt=" | ".join(contact_primary), ln=True, align='L')
-        
         # Información de contacto secundaria (uno debajo del otro)
+        pdf.set_font("Arial", '', 11)
         pdf.set_xy(10, 30)
         if data.get('dni'):
             pdf.cell(160, 5, txt=f"DNI: {data.get('dni')}", ln=True, align='L')
@@ -325,6 +317,15 @@ def generate_pdf_content(data):
             pdf.cell(160, 5, txt=f"Fecha de Nacimiento: {data.get('fecha_nacimiento')}", ln=True, align='L')
         if data.get('edad'):
             pdf.cell(160, 5, txt=f"Edad: {data.get('edad')}", ln=True, align='L')
+        
+        # Información de contacto primaria (en línea) debajo de la información secundaria
+        current_y = pdf.get_y()
+        pdf.set_xy(10, current_y)
+        contact_primary = []
+        if data.get('email'): contact_primary.append(f"Email: {data.get('email')}")
+        if data.get('telefono'): contact_primary.append(f"Tel: {data.get('telefono')}")
+        if data.get('direccion'): contact_primary.append(f"Dirección: {data.get('direccion')}")
+        pdf.cell(160, 6, txt=" | ".join(contact_primary), ln=True, align='L')
         
         # Resetear color de texto y continuar con el resto del CV
         pdf.set_text_color(*text_color)
