@@ -21,19 +21,29 @@ document.addEventListener('DOMContentLoaded', function() {
     profileImageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
+            // Verificar tamaño máximo (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('La imagen es demasiado grande. El tamaño máximo permitido es 2MB.');
+                return;
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 const imageData = e.target.result;
-                previewImage.src = imageData;
                 
-                // Guardar la imagen en localStorage
-                localStorage.setItem('profile_image', imageData);
-                
-                // Actualizar vista previa del CV
-                updateCVPreview();
-                
-                // Para depuración
-                console.log('[DEBUG] Imagen guardada en localStorage:', imageData.substring(0, 50) + '...');
+                // Optimizar la imagen antes de guardarla
+                optimizeImage(imageData, function(optimizedImage) {
+                    previewImage.src = optimizedImage;
+                    
+                    // Guardar la imagen optimizada en localStorage
+                    localStorage.setItem('profile_image', optimizedImage);
+                    
+                    // Actualizar vista previa del CV
+                    updateCVPreview();
+                    
+                    // Para depuración
+                    console.log('[DEBUG] Imagen guardada en localStorage:', optimizedImage.substring(0, 50) + '...');
+                });
             };
             reader.readAsDataURL(file);
         }
@@ -41,16 +51,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Event listeners para otros campos
     document.querySelectorAll('input, textarea').forEach(input => {
-        input.addEventListener('input', updateCVPreview);
+        if (input.id !== 'profileImageInput') {
+            input.addEventListener('input', function() {
+                // Preservar la imagen al actualizar la vista previa
+                updateCVPreview();
+            });
+        }
     });
 
     // Event listener para el selector de plantilla
-    document.querySelectorAll('input[name="template"]').forEach(radio => {
+    document.querySelectorAll('input[name="template_type"]').forEach(radio => {
         radio.addEventListener('change', updateCVPreview);
     });
 
     // Cargar datos guardados si existen
     loadSavedData();
+    
+    // Añadir event listeners para los botones de experiencia, educación y habilidades
+    document.getElementById('agregarExperiencia').addEventListener('click', agregarExperiencia);
+    document.getElementById('agregarEducacion').addEventListener('click', agregarEducacion);
+    document.getElementById('agregarHabilidad').addEventListener('click', agregarHabilidad);
+    
+    // Event listener para el botón de generar PDF
+    document.getElementById('generarPDF').addEventListener('click', generarPDF);
+    
+    // Event listener para el botón de pagar
+    document.getElementById('pagarButton').addEventListener('click', iniciarPago);
+    
+    // Inicializar con una experiencia, educación y habilidad vacías
+    agregarExperiencia();
+    agregarEducacion();
+    agregarHabilidad();
+    
+    // Inicializar la vista previa
+    updateCVPreview();
+    
+    // Inicializar MercadoPago si está disponible
+    if (typeof MercadoPago !== 'undefined') {
+        initMercadoPago();
+    }
+    
+    // Event listener para la foto de perfil
+    document.getElementById('profileImageInput').addEventListener('change', handleImageUpload);
 });
 
 function loadSavedData() {
@@ -90,8 +132,99 @@ function updateCVPreview() {
     // Obtener tipo de plantilla
     const templateType = document.querySelector('input[name="template_type"]:checked').value;
     
-    // Obtener imagen de perfil
+    // Obtener imagen de perfil - SIEMPRE obtener la imagen del localStorage
     const profileImage = localStorage.getItem('profile_image');
+    console.log('[DEBUG] Imagen recuperada para vista previa:', profileImage ? 'Sí (longitud: ' + profileImage.length + ')' : 'No');
+    
+    // Crear objeto con todos los datos
+    const cvData = {
+        nombre,
+        email,
+        telefono,
+        direccion,
+        dni,
+        fecha_nacimiento: fechaNacimiento,
+        edad,
+        experiencia: [],
+        educacion: [],
+        habilidades,
+        template_type: templateType,
+        profile_image: profileImage
+    };
+    
+    // Agregar experiencia laboral
+    for (let i = 0; i < empresas.length; i++) {
+        if (empresas[i] || cargos[i] || periodos[i] || descripciones[i]) {
+            cvData.experiencia.push({
+                empresa: empresas[i] || '',
+                cargo: cargos[i] || '',
+                periodo: periodos[i] || '',
+                descripcion: descripciones[i] || ''
+            });
+        }
+    }
+    
+    // Agregar educación
+    for (let i = 0; i < titulos.length; i++) {
+        if (titulos[i] || instituciones[i]) {
+            cvData.educacion.push({
+                titulo: titulos[i] || '',
+                institucion: instituciones[i] || '',
+                año: `${fechasInicioEdu[i] || ''} - ${enCurso[i] === 'on' ? 'En curso' : fechasFinEdu[i] || ''}`
+            });
+        }
+    }
+    
+    // Guardar en localStorage para usar después
+    localStorage.setItem('cv_data', JSON.stringify(cvData));
+    
+    // Para depuración
+    console.log('[DEBUG] Datos guardados en localStorage:', JSON.stringify(cvData).substring(0, 100) + '...');
+    
+    // Actualizar vista previa
+    const template = document.querySelector('input[name="template_type"]:checked').value;
+    const previewHtml = template === 'basico' ? 
+        generateBasicTemplate(cvData) : 
+        generateProTemplate(cvData);
+    
+    document.getElementById('cvPreview').innerHTML = previewHtml;
+}
+
+function updatePreview() {
+    const form = document.getElementById('cvForm');
+    const formData = new FormData(form);
+    
+    // Obtener todos los datos del formulario
+    const nombre = document.getElementById('nombre').value;
+    const email = document.getElementById('email').value;
+    const telefono = document.getElementById('telefono').value;
+    const direccion = document.getElementById('direccion').value;
+    const dni = document.getElementById('dni').value;
+    const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
+    const edad = document.getElementById('edad').value;
+    
+    // Obtener experiencia laboral
+    const empresas = Array.from(document.querySelectorAll('[name="empresa"]')).map(input => input.value);
+    const cargos = Array.from(document.querySelectorAll('[name="cargo"]')).map(input => input.value);
+    const periodos = Array.from(document.querySelectorAll('[name="periodo"]')).map(input => input.value);
+    const descripciones = Array.from(document.querySelectorAll('[name="descripcion"]')).map(input => input.value);
+    
+    // Obtener educación
+    const titulos = Array.from(document.querySelectorAll('[name="titulo"]')).map(input => input.value);
+    const instituciones = Array.from(document.querySelectorAll('[name="institucion"]')).map(input => input.value);
+    const fechasInicioEdu = Array.from(document.querySelectorAll('[name="fecha_inicio_edu"]')).map(input => input.value);
+    const fechasFinEdu = Array.from(document.querySelectorAll('[name="fecha_fin_edu"]')).map(input => input.value);
+    const enCurso = Array.from(document.querySelectorAll('[name="en_curso"]')).map(input => input.checked ? 'on' : 'off');
+    
+    // Obtener habilidades
+    const habilidades = Array.from(document.querySelectorAll('[name="habilidad"]')).map(input => input.value);
+    
+    // Obtener tipo de plantilla
+    const templateType = document.querySelector('input[name="template_type"]:checked').value;
+    
+    // Obtener imagen de perfil - SIEMPRE obtener la imagen del localStorage
+    const profileImage = localStorage.getItem('profile_image');
+    console.log('[DEBUG] Imagen recuperada para vista previa:', profileImage ? 'Sí (longitud: ' + profileImage.length + ')' : 'No');
     
     // Crear objeto con todos los datos
     const cvData = {
@@ -290,11 +423,31 @@ function generateProTemplate(data) {
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
+        // Verificar tamaño máximo (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('La imagen es demasiado grande. El tamaño máximo permitido es 2MB.');
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('previewImage').src = e.target.result;
-            localStorage.setItem('profile_image', e.target.result);
-        }
+            const imageData = e.target.result;
+            
+            // Optimizar la imagen antes de guardarla
+            optimizeImage(imageData, function(optimizedImage) {
+                const previewImage = document.getElementById('previewImage');
+                previewImage.src = optimizedImage;
+                
+                // Guardar la imagen optimizada en localStorage
+                localStorage.setItem('profile_image', optimizedImage);
+                
+                // Actualizar vista previa del CV
+                updateCVPreview();
+                
+                // Para depuración
+                console.log('[DEBUG] Imagen guardada en handleImageUpload:', optimizedImage.substring(0, 50) + '...');
+            });
+        };
         reader.readAsDataURL(file);
     }
 }
@@ -365,16 +518,13 @@ function updatePreview() {
         }
     });
 
-    // Guardar en localStorage para usar después
-    localStorage.setItem('cv_data', JSON.stringify(cvData));
+    // Agregar imagen de perfil si existe
+    const profileImage = document.getElementById('previewImage').src;
+    if (profileImage && !profileImage.includes('default-profile1.png')) {
+        cvData.profile_image = profileImage;
+    }
 
-    // Actualizar vista previa
-    const template = document.querySelector('input[name="template_type"]:checked').value;
-    const previewHtml = template === 'basico' ? 
-        generateBasicTemplate(cvData) : 
-        generateProTemplate(cvData);
-    
-    document.getElementById('cvPreview').innerHTML = previewHtml;
+    return cvData;
 }
 
 // Función para guardar datos del formulario en el servidor
@@ -596,20 +746,29 @@ document.addEventListener('DOMContentLoaded', async function() {
 async function generarPDF() {
     try {
         // Recuperar datos del localStorage
-        const cvData = localStorage.getItem('cv_data');
-        console.log('[DEBUG] Datos recuperados de localStorage:', cvData ? cvData.substring(0, 100) + '...' : 'No hay datos');
+        const cvDataStr = localStorage.getItem('cv_data');
+        console.log('[DEBUG] Datos recuperados de localStorage:', cvDataStr ? cvDataStr.substring(0, 100) + '...' : 'No hay datos');
         
-        if (!cvData) {
+        if (!cvDataStr) {
             throw new Error('No se encontraron datos del CV');
         }
-
+        
+        // Parsear los datos
+        const cvData = JSON.parse(cvDataStr);
+        
+        // Asegurarse de que la imagen esté incluida
+        if (!cvData.profile_image && localStorage.getItem('profile_image')) {
+            cvData.profile_image = localStorage.getItem('profile_image');
+            console.log('[DEBUG] Imagen añadida desde localStorage');
+        }
+        
         // Enviar datos al servidor para generar PDF
         const response = await fetch('/download_pdf', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: cvData
+            body: JSON.stringify(cvData)
         });
 
         console.log('[DEBUG] Respuesta del servidor:', response.status);
@@ -738,4 +897,155 @@ function agregarHabilidad() {
     `;
     container.appendChild(habilidadItem);
     updatePreview();
+}
+
+// Función para optimizar la imagen
+function optimizeImage(base64Image, callback) {
+    const img = new Image();
+    img.onload = function() {
+        // Dimensiones máximas
+        const maxWidth = 300;
+        const maxHeight = 300;
+        
+        // Calcular nuevas dimensiones manteniendo la relación de aspecto
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > height) {
+            if (width > maxWidth) {
+                height = Math.round(height * maxWidth / width);
+                width = maxWidth;
+            }
+        } else {
+            if (height > maxHeight) {
+                width = Math.round(width * maxHeight / height);
+                height = maxHeight;
+            }
+        }
+        
+        // Crear canvas para redimensionar
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Dibujar imagen redimensionada
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convertir a base64 con calidad reducida
+        const optimizedImage = canvas.toDataURL('image/jpeg', 0.8);
+        
+        callback(optimizedImage);
+    };
+    img.src = base64Image;
+}
+
+// Función para iniciar pago
+async function iniciarPago() {
+    try {
+        // Obtener los datos del formulario
+        const formData = new FormData(document.getElementById('cvForm'));
+        
+        // Crear objeto con los datos
+        const data = {
+            template_type: document.querySelector('input[name="template_type"]:checked').value,
+            nombre: formData.get('nombre'),
+            dni: formData.get('dni'),
+            fecha_nacimiento: formData.get('fecha_nacimiento'),
+            edad: formData.get('edad'),
+            email: formData.get('email'),
+            telefono: formData.get('telefono'),
+            direccion: formData.get('direccion'),
+            experiencia: [],
+            educacion: [],
+            habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
+        };
+
+        console.log('[DEBUG] Datos básicos recopilados:', data);
+
+        // Procesar experiencia
+        const empresas = formData.getAll('empresa[]');
+        empresas.forEach((empresa, index) => {
+            if (empresa.trim()) {
+                console.log(`[DEBUG] Procesando experiencia ${index}:`, empresa);
+                data.experiencia.push({
+                    empresa: empresa.trim(),
+                    cargo: formData.getAll('cargo[]')[index]?.trim() || '',
+                    periodo: `${formData.getAll('fecha_inicio[]')[index]?.trim() || ''} - ${
+                        formData.getAll('trabajo_actual[]')[index] === 'on' 
+                        ? 'Presente' 
+                        : formData.getAll('fecha_fin[]')[index]?.trim() || ''
+                    }`,
+                    descripcion: formData.getAll('descripcion[]')[index]?.trim() || ''
+                });
+            }
+        });
+
+        // Procesar educación
+        const titulos = formData.getAll('titulo[]');
+        titulos.forEach((titulo, index) => {
+            if (titulo.trim()) {
+                console.log(`[DEBUG] Procesando educación ${index}:`, titulo);
+                data.educacion.push({
+                    titulo: titulo.trim(),
+                    institucion: formData.getAll('institucion[]')[index]?.trim() || '',
+                    año: `${formData.getAll('fecha_inicio_edu[]')[index]?.trim() || ''} - ${
+                        formData.getAll('en_curso[]')[index] === 'on'
+                        ? 'En curso'
+                        : formData.getAll('fecha_fin_edu[]')[index]?.trim() || ''
+                    }`
+                });
+            }
+        });
+
+        console.log('[DEBUG] Datos completos a enviar:', JSON.stringify(data, null, 2));
+        
+        // Guardar en localStorage
+        localStorage.setItem('cv_data', JSON.stringify(data));
+
+        // Primero guardar los datos del formulario para obtener un form_id
+        const saveResponse = await fetch('/save_form_data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!saveResponse.ok) {
+            throw new Error('Error al guardar los datos del formulario');
+        }
+        
+        const saveResult = await saveResponse.json();
+        const formId = saveResult.form_id;
+
+        if (!formId) {
+            throw new Error('No se recibió el ID del formulario');
+        }
+        
+        // Crear preferencia de pago
+        const response = await fetch('/create_preference', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                template_type: data.template_type, // Usar el mismo valor de la plantilla
+                external_reference: formId
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al crear preferencia de pago');
+        }
+
+        const preference = await response.json();
+        
+        // Redirigir a MercadoPago
+        window.location.href = preference.init_point;
+        
+    } catch (error) {
+        console.error('[ERROR] Error al procesar el pago:', error);
+        alert('Error al procesar el pago. Por favor, intente nuevamente.');
+    }
 }

@@ -264,13 +264,21 @@ def download_pdf():
     try:
         # Verificar que los datos son JSON válidos
         if not request.is_json:
+            app.logger.error("[ERROR] La solicitud no contiene JSON")
             return jsonify({"error": "Se requiere JSON"}), 400
             
         data = request.get_json()
         if data is None:
+            app.logger.error("[ERROR] JSON inválido")
             return jsonify({"error": "JSON inválido"}), 400
         
         app.logger.info(f"[DEBUG] Datos recibidos para PDF: {str(data)[:100]}...")
+        
+        # Verificar si hay imagen
+        if 'profile_image' in data:
+            app.logger.info(f"[DEBUG] Imagen encontrada en los datos, longitud: {len(data['profile_image'])}")
+        else:
+            app.logger.warning("[WARNING] No se encontró imagen en los datos")
         
         # Generar PDF
         pdf = generate_pdf_content(data)
@@ -293,12 +301,15 @@ def download_pdf():
             return response
             
     except Exception as e:
-        current_app.logger.error(f"Error generando PDF: {str(e)}")
+        app.logger.error(f"[ERROR] Error generando PDF: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 def generate_pdf_content(data):
     try:
         app.logger.info("[DEBUG] Iniciando generación de contenido PDF")
+        app.logger.info(f"[DEBUG] Tipo de plantilla: {data.get('template_type', 'No especificado')}")
+        app.logger.info(f"[DEBUG] ¿Tiene imagen?: {'Sí' if data.get('profile_image') else 'No'}")
+        
         pdf = FPDF()
         pdf.add_page()
         
@@ -331,23 +342,41 @@ def generate_pdf_content(data):
                     image_data = image_data.split(',')[1]
                 
                 # Decodificar la imagen
-                image_bytes = base64.b64decode(image_data)
+                try:
+                    image_bytes = base64.b64decode(image_data)
+                    app.logger.info(f"[DEBUG] Imagen decodificada correctamente, tamaño: {len(image_bytes)} bytes")
+                except Exception as e:
+                    app.logger.error(f"[ERROR] Error al decodificar la imagen: {str(e)}")
+                    raise
                 
                 # Guardar temporalmente la imagen
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_img:
-                    temp_img.write(image_bytes)
-                    temp_img.flush()
-                    app.logger.info(f"[DEBUG] Imagen guardada temporalmente en: {temp_img.name}")
-                    
-                    # Agregar imagen al PDF
-                    pdf.image(temp_img.name, x=170, y=5, w=30, h=30)
-                    
-                # Eliminar archivo temporal
-                os.unlink(temp_img.name)
-                app.logger.info("[DEBUG] Imagen agregada al PDF correctamente")
+                try:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_img:
+                        temp_img.write(image_bytes)
+                        temp_img.flush()
+                        temp_img_path = temp_img.name
+                        app.logger.info(f"[DEBUG] Imagen guardada temporalmente en: {temp_img_path}")
+                except Exception as e:
+                    app.logger.error(f"[ERROR] Error al guardar la imagen temporal: {str(e)}")
+                    raise
+                
+                # Agregar imagen al PDF
+                try:
+                    pdf.image(temp_img_path, x=170, y=5, w=30, h=30)
+                    app.logger.info("[DEBUG] Imagen agregada al PDF correctamente")
+                except Exception as e:
+                    app.logger.error(f"[ERROR] Error al agregar la imagen al PDF: {str(e)}")
+                    raise
+                finally:
+                    # Eliminar archivo temporal
+                    try:
+                        os.unlink(temp_img_path)
+                        app.logger.info("[DEBUG] Archivo temporal de imagen eliminado")
+                    except Exception as e:
+                        app.logger.error(f"[ERROR] Error al eliminar archivo temporal: {str(e)}")
             except Exception as e:
-                app.logger.error(f"Error al procesar la imagen: {str(e)}")
-                app.logger.error(f"Detalles de la imagen: {data.get('profile_image')[:50]}...")
+                app.logger.error(f"[ERROR] Error al procesar la imagen: {str(e)}")
+                app.logger.error(f"[ERROR] Detalles de la imagen: {data.get('profile_image')[:50]}...")
         
         # Nombre
         pdf.set_font("Arial", 'B', 24)
