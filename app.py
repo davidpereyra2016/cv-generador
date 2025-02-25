@@ -259,6 +259,43 @@ def generate_pdf():
         current_app.logger.error(f"Error generando PDF: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/download_pdf', methods=['POST'])
+def download_pdf():
+    try:
+        # Verificar que los datos son JSON válidos
+        if not request.is_json:
+            return jsonify({"error": "Se requiere JSON"}), 400
+            
+        data = request.get_json()
+        if data is None:
+            return jsonify({"error": "JSON inválido"}), 400
+        
+        app.logger.info(f"[DEBUG] Datos recibidos para PDF: {str(data)[:100]}...")
+        
+        # Generar PDF
+        pdf = generate_pdf_content(data)
+        
+        # Crear archivo temporal
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            pdf.output(tmp_file.name)
+            
+            # Leer el archivo
+            with open(tmp_file.name, 'rb') as f:
+                pdf_bytes = f.read()
+                
+            # Eliminar archivo temporal
+            os.unlink(tmp_file.name)
+            
+            # Enviar respuesta
+            response = make_response(pdf_bytes)
+            response.headers['Content-Type'] = 'application/pdf'
+            response.headers['Content-Disposition'] = 'attachment; filename=cv.pdf'
+            return response
+            
+    except Exception as e:
+        current_app.logger.error(f"Error generando PDF: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 def generate_pdf_content(data):
     try:
         app.logger.info("[DEBUG] Iniciando generación de contenido PDF")
@@ -283,24 +320,34 @@ def generate_pdf_content(data):
         pdf.rect(0, 0, 210, 50, 'F')  # Aumentamos la altura del encabezado
         
         # Si es plantilla profesional y hay imagen, agregarla
-        if template_type == 'profesional' and data.get('profile_image') and HAS_PIL:
+        if template_type == 'profesional' and data.get('profile_image'):
             try:
                 # Decodificar la imagen base64
-                image_data = data['profile_image'].split(',')[1]
+                image_data = data['profile_image']
+                app.logger.info(f"[DEBUG] Imagen recibida (primeros 50 caracteres): {image_data[:50]}...")
+                
+                # Asegurarse de que la cadena base64 esté correctamente formateada
+                if ',' in image_data:
+                    image_data = image_data.split(',')[1]
+                
+                # Decodificar la imagen
                 image_bytes = base64.b64decode(image_data)
                 
                 # Guardar temporalmente la imagen
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_img:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_img:
                     temp_img.write(image_bytes)
                     temp_img.flush()
+                    app.logger.info(f"[DEBUG] Imagen guardada temporalmente en: {temp_img.name}")
                     
                     # Agregar imagen al PDF
                     pdf.image(temp_img.name, x=170, y=5, w=30, h=30)
                     
                 # Eliminar archivo temporal
                 os.unlink(temp_img.name)
+                app.logger.info("[DEBUG] Imagen agregada al PDF correctamente")
             except Exception as e:
                 app.logger.error(f"Error al procesar la imagen: {str(e)}")
+                app.logger.error(f"Detalles de la imagen: {data.get('profile_image')[:50]}...")
         
         # Nombre
         pdf.set_font("Arial", 'B', 24)

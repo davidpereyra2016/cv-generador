@@ -25,8 +25,15 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.onload = function(e) {
                 const imageData = e.target.result;
                 previewImage.src = imageData;
+                
+                // Guardar la imagen en localStorage
                 localStorage.setItem('profile_image', imageData);
+                
+                // Actualizar vista previa del CV
                 updateCVPreview();
+                
+                // Para depuración
+                console.log('[DEBUG] Imagen guardada en localStorage:', imageData.substring(0, 50) + '...');
             };
             reader.readAsDataURL(file);
         }
@@ -55,218 +62,82 @@ function loadSavedData() {
 }
 
 function updateCVPreview() {
-    const formData = getFormData();
-    const template = document.querySelector('input[name="template"]:checked').value;
-    const previewContainer = document.getElementById('cvPreview');
-    
-    let previewHTML = '';
-    if (template === 'profesional') {
-        previewHTML = `
-            <div class="cv-preview professional-template">
-                <div class="header-section">
-                    <div class="profile-info">
-                        <h1>${formData.nombre || 'Nombre Completo'}</h1>
-                        <div class="contact-info">
-                            <div class="primary-contact">
-                                ${formData.email ? `<p>Email: ${formData.email}</p>` : ''}
-                                ${formData.telefono ? `<p>Tel: ${formData.telefono}</p>` : ''}
-                                ${formData.direccion ? `<p>${formData.direccion}</p>` : ''}
-                            </div>
-                            <div class="secondary-contact">
-                                ${formData.dni ? `<p>DNI: ${formData.dni}</p>` : ''}
-                                ${formData.fecha_nacimiento ? `<p>Fecha de Nacimiento: ${formData.fecha_nacimiento}</p>` : ''}
-                                ${formData.edad ? `<p>Edad: ${formData.edad}</p>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                    ${formData.profile_image ? `
-                    <div class="profile-image">
-                        <img src="${formData.profile_image}" alt="Foto de perfil">
-                    </div>
-                    ` : ''}
-                </div>
-
-                <!-- Experiencia Laboral -->
-                <div class="section">
-                    <h2>Experiencia Laboral</h2>
-                    ${formData.experiencia.map(exp => `
-                        <div class="experience-item">
-                            <h3>${exp.empresa || ''}</h3>
-                            <p class="position">${exp.cargo || ''}</p>
-                            <p class="period">${exp.periodo || ''}</p>
-                            ${exp.descripcion ? `<p class="description">${exp.descripcion}</p>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-
-                <!-- Educación -->
-                <div class="section">
-                    <h2>Educación</h2>
-                    ${formData.educacion.map(edu => `
-                        <div class="education-item">
-                            <h3>${edu.titulo || ''}</h3>
-                            <p class="institution">${edu.institucion || ''}</p>
-                            <p class="year">${edu.año || ''}</p>
-                        </div>
-                    `).join('')}
-                </div>
-
-                <!-- Habilidades -->
-                ${formData.habilidades.length > 0 ? `
-                    <div class="section">
-                        <h2>Habilidades</h2>
-                        <div class="skills-section">
-                            ${formData.habilidades.map(hab => `
-                                <span class="skill-item">${hab}</span>
-                            `).join('')}
-                        </div>
-                    </div>
-                ` : ''}
-            </div>`;
-    } else {
-        // Template básico
-        previewHTML = `
-            <div class="cv-preview basic-template">
-                <h1 class="text-center">${formData.nombre || 'Nombre Completo'}</h1>
-                <div class="contact-info text-center">
-                    ${formData.email ? `<p>Email: ${formData.email}</p>` : ''}
-                    ${formData.telefono ? `<p>Tel: ${formData.telefono}</p>` : ''}
-                    ${formData.direccion ? `<p>${formData.direccion}</p>` : ''}
-                </div>
-                <!-- Resto del contenido básico -->
-            </div>`;
-    }
-    
-    previewContainer.innerHTML = previewHTML;
-}
-
-function getFormData() {
-    const formData = {
-        nombre: document.getElementById('nombre')?.value || '',
-        email: document.getElementById('email')?.value || '',
-        telefono: document.getElementById('telefono')?.value || '',
-        direccion: document.getElementById('direccion')?.value || '',
-        dni: document.getElementById('dni')?.value || '',
-        fecha_nacimiento: document.getElementById('fecha_nacimiento')?.value || '',
-        edad: document.getElementById('edad')?.value || '',
-        experiencia: [],
-        educacion: [],
-        habilidades: [],
-        profile_image: localStorage.getItem('profile_image') || null,
-        template_type: document.querySelector('input[name="template"]:checked')?.value || 'basico'
-    };
+    // Obtener todos los datos del formulario
+    const nombre = document.getElementById('nombre').value;
+    const email = document.getElementById('email').value;
+    const telefono = document.getElementById('telefono').value;
+    const direccion = document.getElementById('direccion').value;
+    const dni = document.getElementById('dni').value;
+    const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
+    const edad = document.getElementById('edad').value;
     
     // Obtener experiencia laboral
-    document.querySelectorAll('.experiencia-item').forEach(item => {
-        formData.experiencia.push({
-            empresa: item.querySelector('[name="empresa"]')?.value || '',
-            cargo: item.querySelector('[name="cargo"]')?.value || '',
-            periodo: item.querySelector('[name="periodo"]')?.value || '',
-            descripcion: item.querySelector('[name="descripcion"]')?.value || ''
-        });
-    });
+    const empresas = Array.from(document.querySelectorAll('[name="empresa"]')).map(input => input.value);
+    const cargos = Array.from(document.querySelectorAll('[name="cargo"]')).map(input => input.value);
+    const periodos = Array.from(document.querySelectorAll('[name="periodo"]')).map(input => input.value);
+    const descripciones = Array.from(document.querySelectorAll('[name="descripcion"]')).map(input => input.value);
     
     // Obtener educación
-    document.querySelectorAll('.educacion-item').forEach(item => {
-        formData.educacion.push({
-            titulo: item.querySelector('[name="titulo"]')?.value || '',
-            institucion: item.querySelector('[name="institucion"]')?.value || '',
-            año: item.querySelector('[name="año"]')?.value || ''
-        });
-    });
+    const titulos = Array.from(document.querySelectorAll('[name="titulo"]')).map(input => input.value);
+    const instituciones = Array.from(document.querySelectorAll('[name="institucion"]')).map(input => input.value);
+    const fechasInicioEdu = Array.from(document.querySelectorAll('[name="fecha_inicio_edu"]')).map(input => input.value);
+    const fechasFinEdu = Array.from(document.querySelectorAll('[name="fecha_fin_edu"]')).map(input => input.value);
+    const enCurso = Array.from(document.querySelectorAll('[name="en_curso"]')).map(input => input.checked ? 'on' : 'off');
     
     // Obtener habilidades
-    document.querySelectorAll('.habilidad-item input').forEach(item => {
-        if (item.value.trim()) {
-            formData.habilidades.push(item.value.trim());
-        }
-    });
+    const habilidades = Array.from(document.querySelectorAll('[name="habilidad"]')).map(input => input.value);
     
-    return formData;
-}
-
-// Función para manejar la carga de la imagen
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('previewImage').src = e.target.result;
-            localStorage.setItem('profile_image', e.target.result);
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-// Actualizar vista previa en tiempo real
-function updatePreview() {
-    const form = document.getElementById('cvForm');
-    const formData = new FormData(form);
+    // Obtener tipo de plantilla
+    const templateType = document.querySelector('input[name="template_type"]:checked').value;
     
-    // Obtener la imagen del input file
-    const fileInput = document.querySelector('input[type="file"]');
-    const imagePreview = document.getElementById('imagePreview');
-    if (fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            localStorage.setItem('profile_image', e.target.result);
-        }
-        reader.readAsDataURL(fileInput.files[0]);
-    }
-
+    // Obtener imagen de perfil
+    const profileImage = localStorage.getItem('profile_image');
+    
+    // Crear objeto con todos los datos
     const cvData = {
-        template_type: document.querySelector('input[name="template_type"]:checked').value,
-        nombre: formData.get('nombre'),
-        dni: formData.get('dni'),
-        fecha_nacimiento: formData.get('fecha_nacimiento'),
-        edad: formData.get('edad'),
-        email: formData.get('email'),
-        telefono: formData.get('telefono'),
-        direccion: formData.get('direccion'),
+        nombre,
+        email,
+        telefono,
+        direccion,
+        dni,
+        fecha_nacimiento: fechaNacimiento,
+        edad,
         experiencia: [],
         educacion: [],
-        habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
+        habilidades,
+        template_type: templateType,
+        profile_image: profileImage
     };
-
-    // Procesar experiencia
-    const empresas = formData.getAll('empresa[]');
-    const cargos = formData.getAll('cargo[]');
-    const fechasInicio = formData.getAll('fecha_inicio[]');
-    const fechasFin = formData.getAll('fecha_fin[]');
-    const descripciones = formData.getAll('descripcion[]');
-    const trabajoActual = formData.getAll('trabajo_actual[]');
-
-    empresas.forEach((empresa, index) => {
-        if (empresa) {
+    
+    // Agregar experiencia laboral
+    for (let i = 0; i < empresas.length; i++) {
+        if (empresas[i] || cargos[i] || periodos[i] || descripciones[i]) {
             cvData.experiencia.push({
-                empresa: empresa,
-                cargo: cargos[index] || '',
-                periodo: `${fechasInicio[index] || ''} - ${trabajoActual[index] === 'on' ? 'Presente' : fechasFin[index] || ''}`,
-                descripcion: descripciones[index] || ''
+                empresa: empresas[i] || '',
+                cargo: cargos[i] || '',
+                periodo: periodos[i] || '',
+                descripcion: descripciones[i] || ''
             });
         }
-    });
-
-    // Procesar educación
-    const titulos = formData.getAll('titulo[]');
-    const instituciones = formData.getAll('institucion[]');
-    const fechasInicioEdu = formData.getAll('fecha_inicio_edu[]');
-    const fechasFinEdu = formData.getAll('fecha_fin_edu[]');
-    const enCurso = formData.getAll('en_curso[]');
-
-    titulos.forEach((titulo, index) => {
-        if (titulo) {
+    }
+    
+    // Agregar educación
+    for (let i = 0; i < titulos.length; i++) {
+        if (titulos[i] || instituciones[i]) {
             cvData.educacion.push({
-                titulo: titulo,
-                institucion: instituciones[index] || '',
-                año: `${fechasInicioEdu[index] || ''} - ${enCurso[index] === 'on' ? 'En curso' : fechasFinEdu[index] || ''}`
+                titulo: titulos[i] || '',
+                institucion: instituciones[i] || '',
+                año: `${fechasInicioEdu[i] || ''} - ${enCurso[i] === 'on' ? 'En curso' : fechasFinEdu[i] || ''}`
             });
         }
-    });
-
+    }
+    
     // Guardar en localStorage para usar después
     localStorage.setItem('cv_data', JSON.stringify(cvData));
-
+    
+    // Para depuración
+    console.log('[DEBUG] Datos guardados en localStorage:', JSON.stringify(cvData).substring(0, 100) + '...');
+    
     // Actualizar vista previa
     const template = document.querySelector('input[name="template_type"]:checked').value;
     const previewHtml = template === 'basico' ? 
@@ -414,6 +285,96 @@ function generateProTemplate(data) {
             ` : ''}
         </div>
     </div>`;
+}
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImage').src = e.target.result;
+            localStorage.setItem('profile_image', e.target.result);
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+// Actualizar vista previa en tiempo real
+function updatePreview() {
+    const form = document.getElementById('cvForm');
+    const formData = new FormData(form);
+    
+    // Obtener la imagen del input file
+    const fileInput = document.querySelector('input[type="file"]');
+    const imagePreview = document.getElementById('imagePreview');
+    if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            localStorage.setItem('profile_image', e.target.result);
+        }
+        reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    const cvData = {
+        template_type: document.querySelector('input[name="template_type"]:checked').value,
+        nombre: formData.get('nombre'),
+        dni: formData.get('dni'),
+        fecha_nacimiento: formData.get('fecha_nacimiento'),
+        edad: formData.get('edad'),
+        email: formData.get('email'),
+        telefono: formData.get('telefono'),
+        direccion: formData.get('direccion'),
+        experiencia: [],
+        educacion: [],
+        habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
+    };
+
+    // Procesar experiencia
+    const empresas = formData.getAll('empresa[]');
+    const cargos = formData.getAll('cargo[]');
+    const fechasInicio = formData.getAll('fecha_inicio[]');
+    const fechasFin = formData.getAll('fecha_fin[]');
+    const descripciones = formData.getAll('descripcion[]');
+    const trabajoActual = formData.getAll('trabajo_actual[]');
+
+    empresas.forEach((empresa, index) => {
+        if (empresa) {
+            cvData.experiencia.push({
+                empresa: empresa,
+                cargo: cargos[index] || '',
+                periodo: `${fechasInicio[index] || ''} - ${trabajoActual[index] === 'on' ? 'Presente' : fechasFin[index] || ''}`,
+                descripcion: descripciones[index] || ''
+            });
+        }
+    });
+
+    // Procesar educación
+    const titulos = formData.getAll('titulo[]');
+    const instituciones = formData.getAll('institucion[]');
+    const fechasInicioEdu = formData.getAll('fecha_inicio_edu[]');
+    const fechasFinEdu = formData.getAll('fecha_fin_edu[]');
+    const enCurso = formData.getAll('en_curso[]');
+
+    titulos.forEach((titulo, index) => {
+        if (titulo) {
+            cvData.educacion.push({
+                titulo: titulo,
+                institucion: instituciones[index] || '',
+                año: `${fechasInicioEdu[index] || ''} - ${enCurso[index] === 'on' ? 'En curso' : fechasFinEdu[index] || ''}`
+            });
+        }
+    });
+
+    // Guardar en localStorage para usar después
+    localStorage.setItem('cv_data', JSON.stringify(cvData));
+
+    // Actualizar vista previa
+    const template = document.querySelector('input[name="template_type"]:checked').value;
+    const previewHtml = template === 'basico' ? 
+        generateBasicTemplate(cvData) : 
+        generateProTemplate(cvData);
+    
+    document.getElementById('cvPreview').innerHTML = previewHtml;
 }
 
 // Función para guardar datos del formulario en el servidor
@@ -632,6 +593,62 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('profileImageInput').addEventListener('change', handleImageUpload);
 });
 
+async function generarPDF() {
+    try {
+        // Recuperar datos del localStorage
+        const cvData = localStorage.getItem('cv_data');
+        console.log('[DEBUG] Datos recuperados de localStorage:', cvData ? cvData.substring(0, 100) + '...' : 'No hay datos');
+        
+        if (!cvData) {
+            throw new Error('No se encontraron datos del CV');
+        }
+
+        // Enviar datos al servidor para generar PDF
+        const response = await fetch('/download_pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: cvData
+        });
+
+        console.log('[DEBUG] Respuesta del servidor:', response.status);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al generar el PDF');
+        }
+
+        // Obtener el blob del PDF
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'cv.pdf';
+        document.body.appendChild(a);
+        a.click();
+        
+        // Limpiar
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+
+    } catch (error) {
+        console.error('[ERROR] Error al generar el PDF:', error);
+        alert('Hubo un error al generar el PDF: ' + error.message);
+    }
+}
+
+// Verificar si venimos de un pago exitoso y generar PDF
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('status') === 'approved') {
+        generarPDF();
+    }
+});
+
 function agregarExperiencia() {
     const container = document.getElementById('experienciaContainer');
     const nuevaExperiencia = document.createElement('div');
@@ -722,59 +739,3 @@ function agregarHabilidad() {
     container.appendChild(habilidadItem);
     updatePreview();
 }
-
-async function generarPDF() {
-    try {
-        // Recuperar datos del localStorage
-        const cvData = localStorage.getItem('cv_data');
-        console.log('[DEBUG] Datos recuperados de localStorage:', cvData);
-        
-        if (!cvData) {
-            throw new Error('No se encontraron datos del CV');
-        }
-
-        // Enviar datos al servidor para generar PDF
-        const response = await fetch('/download_pdf', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: cvData
-        });
-
-        console.log('[DEBUG] Respuesta del servidor:', response.status);
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Error al generar el PDF');
-        }
-
-        // Obtener el blob del PDF
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = 'cv.pdf';
-        document.body.appendChild(a);
-        a.click();
-        
-        // Limpiar
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 100);
-
-    } catch (error) {
-        console.error('[ERROR] Error al generar el PDF:', error);
-        alert('Hubo un error al generar el PDF: ' + error.message);
-    }
-}
-
-// Verificar si venimos de un pago exitoso y generar PDF
-document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('status') === 'approved') {
-        generarPDF();
-    }
-});
