@@ -256,62 +256,113 @@ def generate_pdf_content(data):
         app.logger.info("[DEBUG] Iniciando generación de contenido PDF")
         pdf = FPDF()
         pdf.add_page()
-        pdf.set_font("Arial", size=12)
         
-        # Datos personales
-        app.logger.info("[DEBUG] Procesando datos personales")
-        nombre = data.get('nombre', '').strip()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(200, 10, txt=nombre or "Sin Nombre", ln=True, align='C')
+        # Determinar tipo de plantilla
+        template_type = data.get('template_type', 'basico')
+        
+        # Configuración de colores
+        if template_type == 'profesional':
+            header_color = (26, 73, 113)  # #1a4971
+            text_color = (68, 68, 68)  # #444444
+            accent_color = (26, 73, 113)  # #1a4971
+        else:
+            header_color = (74, 74, 74)  # #4a4a4a
+            text_color = (0, 0, 0)  # #000000
+            accent_color = (74, 74, 74)  # #4a4a4a
+            
+        # Encabezado con datos personales
+        pdf.set_fill_color(*header_color)
+        pdf.rect(0, 0, 210, 40, 'F')
+        
+        # Nombre
+        pdf.set_font("Arial", 'B', 24)
+        pdf.set_text_color(255, 255, 255)  # Blanco
+        pdf.cell(0, 20, txt=data.get('nombre', 'Sin Nombre'), ln=True, align='C')
         
         # Información de contacto
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt=f"Email: {data.get('email', '')}", ln=True, align='L')
-        pdf.cell(200, 10, txt=f"Teléfono: {data.get('telefono', '')}", ln=True, align='L')
-        pdf.cell(200, 10, txt=f"Dirección: {data.get('direccion', '')}", ln=True, align='L')
+        pdf.set_font("Arial", '', 11)
+        contact_info = []
+        if data.get('email'): contact_info.append(f"Email: {data.get('email')}")
+        if data.get('telefono'): contact_info.append(f"Tel: {data.get('telefono')}")
+        if data.get('direccion'): contact_info.append(data.get('direccion'))
+        
+        pdf.cell(0, 6, txt=" | ".join(contact_info), ln=True, align='C')
+        
+        # Resetear color de texto
+        pdf.set_text_color(*text_color)
+        
+        # Espacio después del encabezado
+        pdf.ln(20)
         
         # Experiencia Laboral
-        app.logger.info("[DEBUG] Procesando experiencia laboral")
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(200, 10, txt="Experiencia Laboral", ln=True, align='L')
+        pdf.set_font("Arial", 'B', 16)
+        pdf.set_text_color(*accent_color)
+        pdf.cell(0, 10, txt="EXPERIENCIA LABORAL", ln=True, align='L')
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(5)
         
         experiencias = data.get('experiencia', [])
-        app.logger.info(f"[DEBUG] Número de experiencias: {len(experiencias)}")
-        
         for exp in experiencias:
+            # Empresa y cargo
             pdf.set_font("Arial", 'B', 12)
-            pdf.cell(200, 10, txt=exp.get('empresa', ''), ln=True, align='L')
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt=f"Cargo: {exp.get('cargo', '')}", ln=True, align='L')
-            pdf.cell(200, 10, txt=f"Periodo: {exp.get('periodo', '')}", ln=True, align='L')
+            pdf.set_text_color(*accent_color)
+            pdf.cell(0, 8, txt=exp.get('empresa', ''), ln=True, align='L')
+            
+            pdf.set_font("Arial", 'I', 11)
+            pdf.set_text_color(*text_color)
+            pdf.cell(0, 6, txt=exp.get('cargo', ''), ln=True, align='L')
+            
+            # Periodo
+            pdf.set_font("Arial", '', 10)
+            pdf.cell(0, 6, txt=exp.get('periodo', ''), ln=True, align='L')
+            
+            # Descripción
             if exp.get('descripcion'):
-                pdf.multi_cell(0, 10, txt=f"Descripción: {exp.get('descripcion', '')}")
-            pdf.cell(200, 5, txt="", ln=True, align='L')  # Espacio
+                pdf.set_font("Arial", '', 10)
+                pdf.multi_cell(0, 6, txt=exp.get('descripcion', ''))
+            
+            pdf.ln(5)
         
         # Educación
-        app.logger.info("[DEBUG] Procesando educación")
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(200, 10, txt="Educación", ln=True, align='L')
+        pdf.ln(5)
+        pdf.set_font("Arial", 'B', 16)
+        pdf.set_text_color(*accent_color)
+        pdf.cell(0, 10, txt="EDUCACIÓN", ln=True, align='L')
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(5)
         
         educacion = data.get('educacion', [])
-        app.logger.info(f"[DEBUG] Número de registros educativos: {len(educacion)}")
-        
         for edu in educacion:
+            # Título
             pdf.set_font("Arial", 'B', 12)
-            pdf.cell(200, 10, txt=edu.get('titulo', ''), ln=True, align='L')
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt=f"Institución: {edu.get('institucion', '')}", ln=True, align='L')
-            pdf.cell(200, 10, txt=f"Año: {edu.get('año', '')}", ln=True, align='L')
-            pdf.cell(200, 5, txt="", ln=True, align='L')  # Espacio
+            pdf.set_text_color(*accent_color)
+            pdf.cell(0, 8, txt=edu.get('titulo', ''), ln=True, align='L')
+            
+            # Institución
+            pdf.set_font("Arial", 'I', 11)
+            pdf.set_text_color(*text_color)
+            pdf.cell(0, 6, txt=edu.get('institucion', ''), ln=True, align='L')
+            
+            # Año
+            pdf.set_font("Arial", '', 10)
+            pdf.cell(0, 6, txt=edu.get('año', ''), ln=True, align='L')
+            
+            pdf.ln(5)
         
         # Habilidades
         if data.get('habilidades'):
-            app.logger.info("[DEBUG] Procesando habilidades")
-            pdf.set_font("Arial", 'B', 14)
-            pdf.cell(200, 10, txt="Habilidades", ln=True, align='L')
-            pdf.set_font("Arial", size=12)
-            habilidades = ", ".join(data.get('habilidades', []))
-            pdf.multi_cell(0, 10, txt=habilidades)
+            pdf.ln(5)
+            pdf.set_font("Arial", 'B', 16)
+            pdf.set_text_color(*accent_color)
+            pdf.cell(0, 10, txt="HABILIDADES", ln=True, align='L')
+            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+            pdf.ln(5)
+            
+            # Crear lista de habilidades
+            pdf.set_font("Arial", '', 11)
+            pdf.set_text_color(*text_color)
+            for habilidad in data.get('habilidades', []):
+                pdf.cell(0, 6, txt=f"• {habilidad}", ln=True, align='L')
         
         app.logger.info("[DEBUG] PDF generado exitosamente")
         return pdf
