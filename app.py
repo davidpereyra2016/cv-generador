@@ -362,7 +362,7 @@ def generate_pdf_content(data):
             pdf.set_font("Arial", '', 11)
             pdf.set_text_color(*text_color)
             for habilidad in data.get('habilidades', []):
-                pdf.cell(0, 6, txt=f"• {habilidad}", ln=True, align='L')
+                pdf.cell(0, 6, txt="- " + habilidad, ln=True, align='L')  # Usando guión en lugar de bullet point
         
         app.logger.info("[DEBUG] PDF generado exitosamente")
         return pdf

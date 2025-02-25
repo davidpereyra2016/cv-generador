@@ -85,60 +85,63 @@
 
     <script>
         function generatePDF() {
+            let fetchPromise;
+            
             {% if use_localstorage %}
-                const cvData = JSON.parse(localStorage.getItem('cv_data'));
-                if (!cvData) {
-                    alert('No se encontraron los datos del CV. Por favor, complete el formulario nuevamente.');
-                    window.location.href = '/';
-                    return;
-                }
-                
-                fetch('/generate_pdf', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        template_type: '{{ template_type }}',
-                        cv_data: cvData
-                    })
+            const cvData = JSON.parse(localStorage.getItem('cv_data'));
+            if (!cvData) {
+                alert('No se encontraron los datos del CV. Por favor, complete el formulario nuevamente.');
+                window.location.href = '/';
+                return;
+            }
+            
+            fetchPromise = fetch('/generate_pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    template_type: '{{ template_type }}',
+                    cv_data: cvData
                 })
-            {% else %}
-                const formId = '{{ form_id }}';
-                
-                fetch('/generate_pdf', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        form_id: formId,
-                        template_type: '{{ template_type }}'
-                    })
-                })
-            {% endif %}
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Error al generar el PDF');
-                    });
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'cv.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al generar el PDF: ' + error.message);
             });
+            {% else %}
+            const formId = '{{ form_id }}';
+            
+            fetchPromise = fetch('/generate_pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    form_id: formId,
+                    template_type: '{{ template_type }}'
+                })
+            });
+            {% endif %}
+
+            fetchPromise
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.error || 'Error al generar el PDF');
+                        });
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'cv.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    alert('Error: ' + error.message);
+                });
         }
     </script>
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
