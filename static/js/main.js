@@ -243,6 +243,135 @@ function generateProTemplate(data) {
     </div>`;
 }
 
+// Función para guardar datos del formulario en el servidor
+async function guardarDatosFormulario() {
+    try {
+        const cvData = obtenerDatosFormulario();
+        
+        const response = await fetch('/save_form_data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(cvData)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Error al guardar los datos del formulario');
+        }
+        
+        const data = await response.json();
+        return data.form_id;
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
+// Función para obtener datos del formulario
+function obtenerDatosFormulario() {
+    const form = document.getElementById('cvForm');
+    const formData = new FormData(form);
+    
+    const cvData = {
+        template_type: document.querySelector('input[name="template_type"]:checked').value,
+        nombre: formData.get('nombre'),
+        dni: formData.get('dni'),
+        fecha_nacimiento: formData.get('fecha_nacimiento'),
+        edad: formData.get('edad'),
+        email: formData.get('email'),
+        telefono: formData.get('telefono'),
+        direccion: formData.get('direccion'),
+        experiencia: [],
+        educacion: [],
+        habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
+    };
+
+    // Procesar experiencia
+    const empresas = formData.getAll('empresa[]');
+    const cargos = formData.getAll('cargo[]');
+    const fechasInicio = formData.getAll('fecha_inicio[]');
+    const fechasFin = formData.getAll('fecha_fin[]');
+    const descripciones = formData.getAll('descripcion[]');
+    const trabajoActual = formData.getAll('trabajo_actual[]');
+
+    empresas.forEach((empresa, index) => {
+        if (empresa) {
+            cvData.experiencia.push({
+                empresa: empresa,
+                cargo: cargos[index] || '',
+                periodo: `${fechasInicio[index] || ''} - ${trabajoActual[index] === 'on' ? 'Presente' : fechasFin[index] || ''}`,
+                descripcion: descripciones[index] || ''
+            });
+        }
+    });
+
+    // Procesar educación
+    const titulos = formData.getAll('titulo[]');
+    const instituciones = formData.getAll('institucion[]');
+    const fechasInicioEdu = formData.getAll('fecha_inicio_edu[]');
+    const fechasFinEdu = formData.getAll('fecha_fin_edu[]');
+    const enCurso = formData.getAll('en_curso[]');
+
+    titulos.forEach((titulo, index) => {
+        if (titulo) {
+            cvData.educacion.push({
+                titulo: titulo,
+                institucion: instituciones[index] || '',
+                año: `${fechasInicioEdu[index] || ''} - ${enCurso[index] === 'on' ? 'En curso' : fechasFinEdu[index] || ''}`
+            });
+        }
+    });
+
+    // Agregar imagen de perfil si existe
+    const profileImage = document.getElementById('previewImage').src;
+    if (profileImage && !profileImage.includes('default-profile1.png')) {
+        cvData.profile_image = profileImage;
+    }
+
+    return cvData;
+}
+
+// Modificar la función procesarPago para guardar datos primero
+async function procesarPago() {
+    try {
+        // Primero guardar los datos del formulario
+        const formId = await guardarDatosFormulario();
+        
+        // Obtener el tipo de plantilla seleccionada
+        const templateType = document.querySelector('input[name="template_type"]:checked').value;
+        
+        // Crear preferencia de pago
+        const response = await fetch('/create_preference', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                template_type: templateType,
+                form_id: formId
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al crear preferencia de pago');
+        }
+
+        const preference = await response.json();
+        
+        // Modificar la URL de éxito para incluir el form_id
+        const successUrl = new URL(preference.init_point);
+        successUrl.searchParams.append('form_id', formId);
+        
+        // Redirigir a MercadoPago
+        window.location.href = successUrl.toString();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al procesar el pago. Por favor, intente nuevamente.');
+    }
+}
+
 // Agregar listeners para todos los campos del formulario
 document.addEventListener('DOMContentLoaded', async function() {
     // Inicializar MercadoPago

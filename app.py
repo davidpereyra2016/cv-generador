@@ -7,6 +7,8 @@ import base64
 from io import BytesIO
 from fpdf import FPDF
 import tempfile
+import json
+import uuid
 
 # Cargar variables de entorno
 load_dotenv()
@@ -86,26 +88,65 @@ def create_preference():
         current_app.logger.error(f"Error creating preference: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/save_form_data', methods=['POST'])
+def save_form_data():
+    try:
+        form_data = request.get_json()
+        
+        # Generar un ID único para el formulario
+        form_id = str(uuid.uuid4())
+        
+        # Crear el archivo JSON temporal
+        json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(form_data, f, ensure_ascii=False)
+            
+        return jsonify({"form_id": form_id})
+    except Exception as e:
+        current_app.logger.error(f"Error saving form data: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/success')
 def success():
-    # Mantener la funcionalidad básica que funcionaba antes
-    template_type = request.args.get('template_type', 'basico')
-    payment_id = request.args.get('payment_id')
-    
-    # Registrar información del pago sin afectar la funcionalidad principal
     try:
+        form_id = request.args.get('form_id')
+        payment_id = request.args.get('payment_id')
+        
+        if not form_id:
+            return "Error: No se encontró el ID del formulario", 400
+            
+        # Cargar datos del formulario
+        json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
+        if not os.path.exists(json_path):
+            return "Error: No se encontraron los datos del formulario", 400
+            
+        with open(json_path, 'r', encoding='utf-8') as f:
+            form_data = json.load(f)
+        
+        # Registrar información del pago
         if payment_id:
-            payment_info = sdk.payment().get(payment_id)
-            if 'response' in payment_info:
-                current_app.logger.info(f"Pago confirmado: {payment_info['response']}")
+            try:
+                payment_info = sdk.payment().get(payment_id)
+                if 'response' in payment_info:
+                    current_app.logger.info(f"Pago confirmado: {payment_info['response']}")
+            except Exception as e:
+                current_app.logger.error(f"Error al verificar pago: {str(e)}")
+        
+        # Generar PDF con los datos del formulario
+        pdf_path = generate_pdf(form_data)
+        
+        # Limpiar el archivo JSON temporal
+        try:
+            os.remove(json_path)
+        except Exception as e:
+            current_app.logger.error(f"Error al eliminar archivo temporal: {str(e)}")
+        
+        return send_file(pdf_path, as_attachment=True, download_name='cv.pdf')
+        
     except Exception as e:
-        # Solo registrar el error, no afectar la respuesta
-        current_app.logger.error(f"Error al registrar pago en success: {str(e)}")
-    
-    # Siempre retornar la plantilla, incluso si hay error en el registro del pago
-    return render_template('success.html', 
-                         template_type=template_type,
-                         payment_id=payment_id)
+        current_app.logger.error(f"Error en success: {str(e)}")
+        return str(e), 500
 
 @app.route('/failure')
 def failure():
@@ -248,23 +289,14 @@ def generate_pdf_content(data):
         app.logger.error(f"[ERROR] Error en generate_pdf_content: {str(e)}")
         raise
 
-@app.route('/generate_pdf', methods=['POST'])
-def generate_pdf():
+def generate_pdf(data):
     try:
-        # Verificar que los datos son JSON válidos
-        if not request.is_json:
-            return jsonify({"error": "Se requiere JSON"}), 400
-            
-        cv_data = request.get_json()
-        if cv_data is None:
-            return jsonify({"error": "JSON inválido"}), 400
-
         # Generar PDF
-        pdf_content = generate_pdf_content(cv_data)
+        pdf = generate_pdf_content(data)
         
         # Crear archivo temporal
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-            pdf_content.output(tmp_file.name)
+            pdf.output(tmp_file.name)
             
             # Leer el archivo y devolverlo como respuesta
             with open(tmp_file.name, 'rb') as f:
@@ -273,14 +305,11 @@ def generate_pdf():
             # Eliminar archivo temporal
             os.unlink(tmp_file.name)
             
-            response = make_response(pdf_bytes)
-            response.headers['Content-Type'] = 'application/pdf'
-            response.headers['Content-Disposition'] = 'attachment; filename=cv.pdf'
-            return response
+            return BytesIO(pdf_bytes)
             
     except Exception as e:
         current_app.logger.error(f"Error generando PDF: {str(e)}")
-        return jsonify({"error": f"Error al generar el PDF: {str(e)}"}), 500
+        raise
 
 if __name__ == '__main__':
     # En desarrollo
