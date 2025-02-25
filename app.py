@@ -9,7 +9,13 @@ from datetime import datetime
 from io import BytesIO
 from fpdf import FPDF
 import uuid
-from PIL import Image
+
+try:
+    from PIL import Image
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+
 import io
 
 # Cargar variables de entorno
@@ -277,7 +283,7 @@ def generate_pdf_content(data):
         pdf.rect(0, 0, 210, 50, 'F')  # Aumentamos la altura del encabezado
         
         # Si es plantilla profesional y hay imagen, agregarla
-        if template_type == 'profesional' and data.get('profile_image'):
+        if template_type == 'profesional' and data.get('profile_image') and HAS_PIL:
             try:
                 # Decodificar la imagen base64
                 image_data = data['profile_image'].split(',')[1]
