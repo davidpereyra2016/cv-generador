@@ -561,3 +561,25 @@ h2 {
         font-size: 1.5em;
     }
 }
+
+/* Estilo para el fondo de todas las páginas */
+body {
+    background-color: white; /* Azul celeste claro */
+}
+
+/* Mantener formularios en color blanco */
+.form-section, .col-md-6.p-4, .template-selector, .template-card, .price-card {
+    background-color: white;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Asegurar que la vista previa se mantenga blanca */
+.preview-section {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    border-left: 1px solid #dee2e6;
+    padding: 20px;
+}
