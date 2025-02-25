@@ -274,7 +274,7 @@ def generate_pdf_content(data):
             text_color = (68, 68, 68)  # #444444
             accent_color = (26, 73, 113)  # #1a4971
         else:
-            header_color = (74, 74, 74)  # #4a4a4a
+            header_color = (100, 100, 100)  # Cambiado de #4a4a4a a un gris más claro
             text_color = (0, 0, 0)  # #000000
             accent_color = (74, 74, 74)  # #4a4a4a
             
@@ -311,12 +311,10 @@ def generate_pdf_content(data):
         # Información de contacto primaria (en línea)
         pdf.set_font("Arial", '', 11)
         pdf.set_xy(10, 22)
-        
         contact_primary = []
         if data.get('email'): contact_primary.append(f"Email: {data.get('email')}")
         if data.get('telefono'): contact_primary.append(f"Tel: {data.get('telefono')}")
         if data.get('direccion'): contact_primary.append(data.get('direccion'))
-        
         pdf.cell(160, 6, txt=" | ".join(contact_primary), ln=True, align='L')
         
         # Información de contacto secundaria (uno debajo del otro)
@@ -341,18 +339,27 @@ def generate_pdf_content(data):
         
         experiencias = data.get('experiencia', [])
         for exp in experiencias:
-            # Empresa y cargo
+            # Empresa y periodo en la misma línea
             pdf.set_font("Arial", 'B', 12)
             pdf.set_text_color(*accent_color)
-            pdf.cell(0, 8, txt=exp.get('empresa', ''), ln=True, align='L')
+            empresa = exp.get('empresa', '')
+            periodo = exp.get('periodo', '')
             
+            # Calcular ancho del texto de la empresa
+            empresa_width = pdf.get_string_width(empresa)
+            
+            # Imprimir empresa
+            pdf.cell(empresa_width + 5, 8, txt=empresa, align='L')
+            
+            # Imprimir periodo a la derecha
+            pdf.set_font("Arial", '', 10)
+            pdf.set_text_color(*text_color)
+            pdf.cell(0, 8, txt=periodo, ln=True, align='R')
+            
+            # Cargo
             pdf.set_font("Arial", 'I', 11)
             pdf.set_text_color(*text_color)
             pdf.cell(0, 6, txt=exp.get('cargo', ''), ln=True, align='L')
-            
-            # Periodo
-            pdf.set_font("Arial", '', 10)
-            pdf.cell(0, 6, txt=exp.get('periodo', ''), ln=True, align='L')
             
             # Descripción
             if exp.get('descripcion'):
@@ -371,19 +378,27 @@ def generate_pdf_content(data):
         
         educacion = data.get('educacion', [])
         for edu in educacion:
-            # Título
+            # Título y año en la misma línea
             pdf.set_font("Arial", 'B', 12)
             pdf.set_text_color(*accent_color)
-            pdf.cell(0, 8, txt=edu.get('titulo', ''), ln=True, align='L')
+            titulo = edu.get('titulo', '')
+            anio = edu.get('año', '')
+            
+            # Calcular ancho del texto del título
+            titulo_width = pdf.get_string_width(titulo)
+            
+            # Imprimir título
+            pdf.cell(titulo_width + 5, 8, txt=titulo, align='L')
+            
+            # Imprimir año a la derecha
+            pdf.set_font("Arial", '', 10)
+            pdf.set_text_color(*text_color)
+            pdf.cell(0, 8, txt=anio, ln=True, align='R')
             
             # Institución
             pdf.set_font("Arial", 'I', 11)
             pdf.set_text_color(*text_color)
             pdf.cell(0, 6, txt=edu.get('institucion', ''), ln=True, align='L')
-            
-            # Año
-            pdf.set_font("Arial", '', 10)
-            pdf.cell(0, 6, txt=edu.get('año', ''), ln=True, align='L')
             
             pdf.ln(5)
         

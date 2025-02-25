@@ -505,14 +505,88 @@ function obtenerDatosFormulario() {
     return cvData;
 }
 
-// Modificar la función procesarPago para incluir form_id como external_reference
+// Función unificada procesarPago para incluir form_id como external_reference
 async function procesarPago() {
     try {
-        // Primero guardar los datos del formulario
-        const formId = await guardarDatosFormulario();
+        // Obtener los datos del formulario
+        const formData = new FormData(document.getElementById('cvForm'));
         
-        // Obtener el tipo de plantilla seleccionada
-        const templateType = document.querySelector('input[name="template_type"]:checked').value;
+        // Crear objeto con los datos
+        const data = {
+            template_type: document.querySelector('input[name="template_type"]:checked').value,
+            nombre: formData.get('nombre'),
+            dni: formData.get('dni'),
+            fecha_nacimiento: formData.get('fecha_nacimiento'),
+            edad: formData.get('edad'),
+            email: formData.get('email'),
+            telefono: formData.get('telefono'),
+            direccion: formData.get('direccion'),
+            experiencia: [],
+            educacion: [],
+            habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
+        };
+
+        console.log('[DEBUG] Datos básicos recopilados:', data);
+
+        // Procesar experiencia
+        const empresas = formData.getAll('empresa[]');
+        empresas.forEach((empresa, index) => {
+            if (empresa.trim()) {
+                console.log(`[DEBUG] Procesando experiencia ${index}:`, empresa);
+                data.experiencia.push({
+                    empresa: empresa.trim(),
+                    cargo: formData.getAll('cargo[]')[index]?.trim() || '',
+                    periodo: `${formData.getAll('fecha_inicio[]')[index]?.trim() || ''} - ${
+                        formData.getAll('trabajo_actual[]')[index] === 'on' 
+                        ? 'Presente' 
+                        : formData.getAll('fecha_fin[]')[index]?.trim() || ''
+                    }`,
+                    descripcion: formData.getAll('descripcion[]')[index]?.trim() || ''
+                });
+            }
+        });
+
+        // Procesar educación
+        const titulos = formData.getAll('titulo[]');
+        titulos.forEach((titulo, index) => {
+            if (titulo.trim()) {
+                console.log(`[DEBUG] Procesando educación ${index}:`, titulo);
+                data.educacion.push({
+                    titulo: titulo.trim(),
+                    institucion: formData.getAll('institucion[]')[index]?.trim() || '',
+                    año: `${formData.getAll('fecha_inicio_edu[]')[index]?.trim() || ''} - ${
+                        formData.getAll('en_curso[]')[index] === 'on'
+                        ? 'En curso'
+                        : formData.getAll('fecha_fin_edu[]')[index]?.trim() || ''
+                    }`
+                });
+            }
+        });
+
+        console.log('[DEBUG] Datos completos a enviar:', JSON.stringify(data, null, 2));
+        
+        // Guardar en localStorage
+        localStorage.setItem('cv_data', JSON.stringify(data));
+
+        // Primero guardar los datos del formulario para obtener un form_id
+        const saveResponse = await fetch('/save_form_data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!saveResponse.ok) {
+            throw new Error('Error al guardar los datos del formulario');
+        }
+        
+        const saveResult = await saveResponse.json();
+        const formId = saveResult.form_id;
+
+        if (!formId) {
+            throw new Error('No se recibió el ID del formulario');
+        }
         
         // Crear preferencia de pago
         const response = await fetch('/create_preference', {
@@ -521,7 +595,7 @@ async function procesarPago() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                template_type: templateType,
+                template_type: data.template_type, // Usar el mismo valor de la plantilla
                 external_reference: formId
             })
         });
@@ -536,7 +610,7 @@ async function procesarPago() {
         window.location.href = preference.init_point;
         
     } catch (error) {
-        console.error('Error:', error);
+        console.error('[ERROR] Error al procesar el pago:', error);
         alert('Error al procesar el pago. Por favor, intente nuevamente.');
     }
 }
@@ -647,94 +721,6 @@ function agregarHabilidad() {
     `;
     container.appendChild(habilidadItem);
     updatePreview();
-}
-
-async function procesarPago() {
-    try {
-        // Obtener los datos del formulario
-        const formData = new FormData(document.getElementById('cvForm'));
-        
-        // Crear objeto con los datos
-        const data = {
-            template_type: document.querySelector('input[name="template_type"]:checked').value,
-            nombre: formData.get('nombre'),
-            dni: formData.get('dni'),
-            fecha_nacimiento: formData.get('fecha_nacimiento'),
-            edad: formData.get('edad'),
-            email: formData.get('email'),
-            telefono: formData.get('telefono'),
-            direccion: formData.get('direccion'),
-            experiencia: [],
-            educacion: [],
-            habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
-        };
-
-        console.log('[DEBUG] Datos básicos recopilados:', data);
-
-        // Procesar experiencia
-        const empresas = formData.getAll('empresa[]');
-        empresas.forEach((empresa, index) => {
-            if (empresa.trim()) {
-                console.log(`[DEBUG] Procesando experiencia ${index}:`, empresa);
-                data.experiencia.push({
-                    empresa: empresa.trim(),
-                    cargo: formData.getAll('cargo[]')[index]?.trim() || '',
-                    periodo: `${formData.getAll('fecha_inicio[]')[index]?.trim() || ''} - ${
-                        formData.getAll('trabajo_actual[]')[index] === 'on' 
-                        ? 'Presente' 
-                        : formData.getAll('fecha_fin[]')[index]?.trim() || ''
-                    }`,
-                    descripcion: formData.getAll('descripcion[]')[index]?.trim() || ''
-                });
-            }
-        });
-
-        // Procesar educación
-        const titulos = formData.getAll('titulo[]');
-        titulos.forEach((titulo, index) => {
-            if (titulo.trim()) {
-                console.log(`[DEBUG] Procesando educación ${index}:`, titulo);
-                data.educacion.push({
-                    titulo: titulo.trim(),
-                    institucion: formData.getAll('institucion[]')[index]?.trim() || '',
-                    año: `${formData.getAll('fecha_inicio_edu[]')[index]?.trim() || ''} - ${
-                        formData.getAll('en_curso[]')[index] === 'on'
-                        ? 'En curso'
-                        : formData.getAll('fecha_fin_edu[]')[index]?.trim() || ''
-                    }`
-                });
-            }
-        });
-
-        console.log('[DEBUG] Datos completos a enviar:', JSON.stringify(data, null, 2));
-        
-        // Guardar en localStorage
-        localStorage.setItem('cv_data', JSON.stringify(data));
-
-        // Crear preferencia de pago
-        const response = await fetch('/create_preference', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
-        }
-        
-        const result = await response.json();
-        
-        if (result.id) {
-            window.location.href = `https://www.mercadopago.com.ar/checkout/v1/redirect?preference_id=${result.id}`;
-        } else {
-            throw new Error('No se recibió el ID de preferencia');
-        }
-    } catch (error) {
-        console.error('[ERROR] Error al procesar el pago:', error);
-        alert('Hubo un error al procesar el pago. Por favor, intente nuevamente.');
-    }
 }
 
 async function generarPDF() {
