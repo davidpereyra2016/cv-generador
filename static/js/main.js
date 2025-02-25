@@ -12,6 +12,179 @@ async function initMercadoPago() {
     }
 }
 
+// Event listeners para los inputs
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar la carga de imagen de perfil
+    const profileImageInput = document.getElementById('profileImageInput');
+    const previewImage = document.getElementById('previewImage');
+
+    profileImageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                previewImage.src = imageData;
+                localStorage.setItem('profile_image', imageData);
+                updateCVPreview();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Event listeners para otros campos
+    document.querySelectorAll('input, textarea').forEach(input => {
+        input.addEventListener('input', updateCVPreview);
+    });
+
+    // Event listener para el selector de plantilla
+    document.querySelectorAll('input[name="template"]').forEach(radio => {
+        radio.addEventListener('change', updateCVPreview);
+    });
+
+    // Cargar datos guardados si existen
+    loadSavedData();
+});
+
+function loadSavedData() {
+    const savedImage = localStorage.getItem('profile_image');
+    if (savedImage) {
+        document.getElementById('previewImage').src = savedImage;
+    }
+    updateCVPreview();
+}
+
+function updateCVPreview() {
+    const formData = getFormData();
+    const template = document.querySelector('input[name="template"]:checked').value;
+    const previewContainer = document.getElementById('cvPreview');
+    
+    let previewHTML = '';
+    if (template === 'profesional') {
+        previewHTML = `
+            <div class="cv-preview professional-template">
+                <div class="header-section">
+                    <div class="profile-info">
+                        <h1>${formData.nombre || 'Nombre Completo'}</h1>
+                        <div class="contact-info">
+                            <div class="primary-contact">
+                                ${formData.email ? `<p>Email: ${formData.email}</p>` : ''}
+                                ${formData.telefono ? `<p>Tel: ${formData.telefono}</p>` : ''}
+                                ${formData.direccion ? `<p>${formData.direccion}</p>` : ''}
+                            </div>
+                            <div class="secondary-contact">
+                                ${formData.dni ? `<p>DNI: ${formData.dni}</p>` : ''}
+                                ${formData.fecha_nacimiento ? `<p>Fecha de Nacimiento: ${formData.fecha_nacimiento}</p>` : ''}
+                                ${formData.edad ? `<p>Edad: ${formData.edad}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${formData.profile_image ? `
+                    <div class="profile-image">
+                        <img src="${formData.profile_image}" alt="Foto de perfil">
+                    </div>
+                    ` : ''}
+                </div>
+
+                <!-- Experiencia Laboral -->
+                <div class="section">
+                    <h2>Experiencia Laboral</h2>
+                    ${formData.experiencia.map(exp => `
+                        <div class="experience-item">
+                            <h3>${exp.empresa || ''}</h3>
+                            <p class="position">${exp.cargo || ''}</p>
+                            <p class="period">${exp.periodo || ''}</p>
+                            ${exp.descripcion ? `<p class="description">${exp.descripcion}</p>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Educación -->
+                <div class="section">
+                    <h2>Educación</h2>
+                    ${formData.educacion.map(edu => `
+                        <div class="education-item">
+                            <h3>${edu.titulo || ''}</h3>
+                            <p class="institution">${edu.institucion || ''}</p>
+                            <p class="year">${edu.año || ''}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Habilidades -->
+                ${formData.habilidades.length > 0 ? `
+                    <div class="section">
+                        <h2>Habilidades</h2>
+                        <div class="skills-section">
+                            ${formData.habilidades.map(hab => `
+                                <span class="skill-item">${hab}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>`;
+    } else {
+        // Template básico
+        previewHTML = `
+            <div class="cv-preview basic-template">
+                <h1 class="text-center">${formData.nombre || 'Nombre Completo'}</h1>
+                <div class="contact-info text-center">
+                    ${formData.email ? `<p>Email: ${formData.email}</p>` : ''}
+                    ${formData.telefono ? `<p>Tel: ${formData.telefono}</p>` : ''}
+                    ${formData.direccion ? `<p>${formData.direccion}</p>` : ''}
+                </div>
+                <!-- Resto del contenido básico -->
+            </div>`;
+    }
+    
+    previewContainer.innerHTML = previewHTML;
+}
+
+function getFormData() {
+    const formData = {
+        nombre: document.getElementById('nombre')?.value || '',
+        email: document.getElementById('email')?.value || '',
+        telefono: document.getElementById('telefono')?.value || '',
+        direccion: document.getElementById('direccion')?.value || '',
+        dni: document.getElementById('dni')?.value || '',
+        fecha_nacimiento: document.getElementById('fecha_nacimiento')?.value || '',
+        edad: document.getElementById('edad')?.value || '',
+        experiencia: [],
+        educacion: [],
+        habilidades: [],
+        profile_image: localStorage.getItem('profile_image') || null,
+        template_type: document.querySelector('input[name="template"]:checked')?.value || 'basico'
+    };
+    
+    // Obtener experiencia laboral
+    document.querySelectorAll('.experiencia-item').forEach(item => {
+        formData.experiencia.push({
+            empresa: item.querySelector('[name="empresa"]')?.value || '',
+            cargo: item.querySelector('[name="cargo"]')?.value || '',
+            periodo: item.querySelector('[name="periodo"]')?.value || '',
+            descripcion: item.querySelector('[name="descripcion"]')?.value || ''
+        });
+    });
+    
+    // Obtener educación
+    document.querySelectorAll('.educacion-item').forEach(item => {
+        formData.educacion.push({
+            titulo: item.querySelector('[name="titulo"]')?.value || '',
+            institucion: item.querySelector('[name="institucion"]')?.value || '',
+            año: item.querySelector('[name="año"]')?.value || ''
+        });
+    });
+    
+    // Obtener habilidades
+    document.querySelectorAll('.habilidad-item input').forEach(item => {
+        if (item.value.trim()) {
+            formData.habilidades.push(item.value.trim());
+        }
+    });
+    
+    return formData;
+}
+
 // Función para manejar la carga de la imagen
 function handleImageUpload(event) {
     const file = event.target.files[0];
@@ -345,7 +518,7 @@ async function procesarPago() {
         const response = await fetch('/create_preference', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 template_type: templateType,

@@ -1,14 +1,16 @@
 from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, make_response, current_app
 import mercadopago
 import os
+import json
+import tempfile
+import base64
 from dotenv import load_dotenv
 from datetime import datetime
-import base64
 from io import BytesIO
 from fpdf import FPDF
-import tempfile
-import json
 import uuid
+from PIL import Image
+import io
 
 # Cargar variables de entorno
 load_dotenv()
@@ -272,29 +274,56 @@ def generate_pdf_content(data):
             
         # Encabezado con datos personales
         pdf.set_fill_color(*header_color)
-        pdf.rect(0, 0, 210, 40, 'F')
+        pdf.rect(0, 0, 210, 50, 'F')  # Aumentamos la altura del encabezado
+        
+        # Si es plantilla profesional y hay imagen, agregarla
+        if template_type == 'profesional' and data.get('profile_image'):
+            try:
+                # Decodificar la imagen base64
+                image_data = data['profile_image'].split(',')[1]
+                image_bytes = base64.b64decode(image_data)
+                
+                # Guardar temporalmente la imagen
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_img:
+                    temp_img.write(image_bytes)
+                    temp_img.flush()
+                    
+                    # Agregar imagen al PDF
+                    pdf.image(temp_img.name, x=170, y=5, w=30, h=30)
+                    
+                # Eliminar archivo temporal
+                os.unlink(temp_img.name)
+            except Exception as e:
+                app.logger.error(f"Error al procesar la imagen: {str(e)}")
         
         # Nombre
         pdf.set_font("Arial", 'B', 24)
         pdf.set_text_color(255, 255, 255)  # Blanco
-        pdf.cell(0, 20, txt=data.get('nombre', 'Sin Nombre'), ln=True, align='C')
+        pdf.set_xy(10, 10)
+        pdf.cell(160, 10, txt=data.get('nombre', 'Sin Nombre'), ln=True, align='L')
         
-        # Información de contacto
+        # Información de contacto primaria (en línea)
         pdf.set_font("Arial", '', 11)
-        contact_info = []
-        if data.get('email'): contact_info.append(f"Email: {data.get('email')}")
-        if data.get('telefono'): contact_info.append(f"Tel: {data.get('telefono')}")
-        if data.get('direccion'): contact_info.append(data.get('direccion'))
-        if data.get('dni'): contact_info.append(f"DNI: {data.get('dni')}")
-        if data.get('fecha_nacimiento'): contact_info.append(f"Fecha de Nacimiento: {data.get('fecha_nacimiento')}")
-        if data.get('edad'): contact_info.append(f"Edad: {data.get('edad')}")
+        pdf.set_xy(10, 22)
         
-        pdf.cell(0, 6, txt=" | ".join(contact_info), ln=True, align='C')
+        contact_primary = []
+        if data.get('email'): contact_primary.append(f"Email: {data.get('email')}")
+        if data.get('telefono'): contact_primary.append(f"Tel: {data.get('telefono')}")
+        if data.get('direccion'): contact_primary.append(data.get('direccion'))
         
-        # Resetear color de texto
+        pdf.cell(160, 6, txt=" | ".join(contact_primary), ln=True, align='L')
+        
+        # Información de contacto secundaria (uno debajo del otro)
+        pdf.set_xy(10, 30)
+        if data.get('dni'):
+            pdf.cell(160, 5, txt=f"DNI: {data.get('dni')}", ln=True, align='L')
+        if data.get('fecha_nacimiento'):
+            pdf.cell(160, 5, txt=f"Fecha de Nacimiento: {data.get('fecha_nacimiento')}", ln=True, align='L')
+        if data.get('edad'):
+            pdf.cell(160, 5, txt=f"Edad: {data.get('edad')}", ln=True, align='L')
+        
+        # Resetear color de texto y continuar con el resto del CV
         pdf.set_text_color(*text_color)
-        
-        # Espacio después del encabezado
         pdf.ln(20)
         
         # Experiencia Laboral
