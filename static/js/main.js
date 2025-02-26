@@ -520,7 +520,7 @@ function updatePreview() {
 
     // Agregar imagen de perfil si existe
     const profileImage = document.getElementById('previewImage').src;
-    if (profileImage && !profileImage.includes('default-profile1.png')) {
+    if (profileImage && !profileImage.includes('default-profile')) {
         cvData.profile_image = profileImage;
     }
 
@@ -609,7 +609,7 @@ function obtenerDatosFormulario() {
 
     // Agregar imagen de perfil si existe
     const profileImage = document.getElementById('previewImage').src;
-    if (profileImage && !profileImage.includes('default-profile1.png')) {
+    if (profileImage && !profileImage.includes('default-profile')) {
         cvData.profile_image = profileImage;
     }
 
@@ -745,24 +745,99 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function generarPDF() {
     try {
-        // Recuperar datos del localStorage
-        const cvDataStr = localStorage.getItem('cv_data');
-        console.log('[DEBUG] Datos recuperados de localStorage:', cvDataStr ? cvDataStr.substring(0, 100) + '...' : 'No hay datos');
+        console.log('[DEBUG] Iniciando generación de PDF');
         
-        if (!cvDataStr) {
-            throw new Error('No se encontraron datos del CV');
+        // Recuperar datos del formulario
+        const form = document.getElementById('cvForm');
+        const formData = new FormData(form);
+        
+        // Crear objeto con todos los datos
+        const cvData = {
+            template_type: document.querySelector('input[name="template_type"]:checked').value,
+            nombre: formData.get('nombre'),
+            dni: formData.get('dni'),
+            fecha_nacimiento: formData.get('fecha_nacimiento'),
+            edad: formData.get('edad'),
+            email: formData.get('email'),
+            telefono: formData.get('telefono'),
+            direccion: formData.get('direccion'),
+            experiencia: [],
+            educacion: [],
+            habilidades: []
+        };
+        
+        // Procesar experiencia
+        const empresas = formData.getAll('empresa[]');
+        empresas.forEach((empresa, index) => {
+            if (empresa.trim()) {
+                cvData.experiencia.push({
+                    empresa: empresa.trim(),
+                    cargo: formData.getAll('cargo[]')[index]?.trim() || '',
+                    periodo: `${formData.getAll('fecha_inicio[]')[index]?.trim() || ''} - ${
+                        formData.getAll('trabajo_actual[]')[index] === 'on' 
+                        ? 'Presente' 
+                        : formData.getAll('fecha_fin[]')[index]?.trim() || ''
+                    }`,
+                    descripcion: formData.getAll('descripcion[]')[index]?.trim() || ''
+                });
+            }
+        });
+        
+        // Procesar educación
+        const titulos = formData.getAll('titulo[]');
+        titulos.forEach((titulo, index) => {
+            if (titulo.trim()) {
+                cvData.educacion.push({
+                    titulo: titulo.trim(),
+                    institucion: formData.getAll('institucion[]')[index]?.trim() || '',
+                    año: `${formData.getAll('fecha_inicio_edu[]')[index]?.trim() || ''} - ${
+                        formData.getAll('en_curso[]')[index] === 'on'
+                        ? 'En curso'
+                        : formData.getAll('fecha_fin_edu[]')[index]?.trim() || ''
+                    }`
+                });
+            }
+        });
+        
+        // Procesar habilidades
+        const habilidades = formData.getAll('habilidad[]');
+        habilidades.forEach(habilidad => {
+            if (habilidad.trim()) {
+                cvData.habilidades.push(habilidad.trim());
+            }
+        });
+        
+        // Obtener imagen directamente del elemento img
+        const previewImage = document.getElementById('previewImage');
+        if (previewImage && previewImage.src && !previewImage.src.includes('default-profile')) {
+            // Asegurarse de que la imagen esté optimizada
+            await new Promise((resolve) => {
+                optimizeImage(previewImage.src, (optimizedImage) => {
+                    cvData.profile_image = optimizedImage;
+                    console.log('[DEBUG] Imagen optimizada para PDF, longitud:', optimizedImage.length);
+                    console.log('[DEBUG] Formato de imagen:', optimizedImage.substring(0, 30));
+                    resolve();
+                });
+            });
+        } else {
+            // Intentar obtener del localStorage como respaldo
+            const storedImage = localStorage.getItem('profile_image');
+            if (storedImage) {
+                cvData.profile_image = storedImage;
+                console.log('[DEBUG] Imagen obtenida del localStorage, longitud:', storedImage.length);
+            } else {
+                console.log('[DEBUG] No se encontró imagen');
+            }
         }
         
-        // Parsear los datos
-        const cvData = JSON.parse(cvDataStr);
-        
-        // Asegurarse de que la imagen esté incluida
-        if (!cvData.profile_image && localStorage.getItem('profile_image')) {
-            cvData.profile_image = localStorage.getItem('profile_image');
-            console.log('[DEBUG] Imagen añadida desde localStorage');
-        }
+        // Guardar en localStorage para futuras referencias
+        localStorage.setItem('cv_data', JSON.stringify(cvData));
         
         // Enviar datos al servidor para generar PDF
+        console.log('[DEBUG] Enviando datos al servidor para generar PDF');
+        console.log('[DEBUG] Tipo de plantilla:', cvData.template_type);
+        console.log('[DEBUG] ¿Incluye imagen?:', cvData.profile_image ? 'Sí' : 'No');
+        
         const response = await fetch('/download_pdf', {
             method: 'POST',
             headers: {
@@ -901,6 +976,18 @@ function agregarHabilidad() {
 
 // Función para optimizar la imagen
 function optimizeImage(base64Image, callback) {
+    console.log('[DEBUG] Optimizando imagen, longitud original:', base64Image.length);
+    
+    // Detectar el formato de la imagen
+    let imageFormat = 'image/jpeg'; // Formato predeterminado
+    if (base64Image.startsWith('data:image/')) {
+        const match = base64Image.match(/data:image\/([a-zA-Z]+);/);
+        if (match && match[1]) {
+            imageFormat = 'image/' + match[1].toLowerCase();
+            console.log('[DEBUG] Formato de imagen detectado:', imageFormat);
+        }
+    }
+    
     const img = new Image();
     img.onload = function() {
         // Dimensiones máximas
@@ -910,6 +997,8 @@ function optimizeImage(base64Image, callback) {
         // Calcular nuevas dimensiones manteniendo la relación de aspecto
         let width = img.width;
         let height = img.height;
+        
+        console.log('[DEBUG] Dimensiones originales:', width, 'x', height);
         
         if (width > height) {
             if (width > maxWidth) {
@@ -923,6 +1012,8 @@ function optimizeImage(base64Image, callback) {
             }
         }
         
+        console.log('[DEBUG] Dimensiones optimizadas:', width, 'x', height);
+        
         // Crear canvas para redimensionar
         const canvas = document.createElement('canvas');
         canvas.width = width;
@@ -930,13 +1021,55 @@ function optimizeImage(base64Image, callback) {
         
         // Dibujar imagen redimensionada
         const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF'; // Fondo blanco para imágenes con transparencia
+        ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Convertir a base64 con calidad reducida
-        const optimizedImage = canvas.toDataURL('image/jpeg', 0.8);
-        
-        callback(optimizedImage);
+        // Intentar mantener el formato original si es posible
+        try {
+            // Para PNG, mantener transparencia si es necesario
+            if (imageFormat === 'image/png') {
+                const optimizedImage = canvas.toDataURL('image/png');
+                console.log('[DEBUG] Imagen optimizada como PNG, longitud:', optimizedImage.length);
+                callback(optimizedImage);
+                return;
+            }
+            
+            // Para JPEG, usar alta calidad
+            const optimizedImage = canvas.toDataURL('image/jpeg', 0.95);
+            console.log('[DEBUG] Imagen optimizada como JPEG, longitud:', optimizedImage.length);
+            callback(optimizedImage);
+        } catch (error) {
+            console.error('[ERROR] Error al convertir imagen:', error);
+            // Intentar con formato alternativo si el original falla
+            try {
+                // Si falló JPEG, intentar PNG
+                if (imageFormat === 'image/jpeg') {
+                    const pngImage = canvas.toDataURL('image/png');
+                    console.log('[DEBUG] Imagen convertida a PNG (fallback), longitud:', pngImage.length);
+                    callback(pngImage);
+                } else {
+                    // Si falló PNG u otro, intentar JPEG
+                    const jpegImage = canvas.toDataURL('image/jpeg', 0.95);
+                    console.log('[DEBUG] Imagen convertida a JPEG (fallback), longitud:', jpegImage.length);
+                    callback(jpegImage);
+                }
+            } catch (error2) {
+                console.error('[ERROR] Error al convertir con formato alternativo:', error2);
+                // Devolver la imagen original si todo falla
+                console.log('[DEBUG] Usando imagen original como fallback');
+                callback(base64Image);
+            }
+        }
     };
+    
+    // Manejar errores de carga
+    img.onerror = function(error) {
+        console.error('[ERROR] Error al cargar la imagen para optimizar:', error);
+        // Devolver la imagen original si hay error
+        callback(base64Image);
+    };
+    
     img.src = base64Image;
 }
 

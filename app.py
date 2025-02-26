@@ -310,6 +310,12 @@ def generate_pdf_content(data):
         app.logger.info(f"[DEBUG] Tipo de plantilla: {data.get('template_type', 'No especificado')}")
         app.logger.info(f"[DEBUG] ¿Tiene imagen?: {'Sí' if data.get('profile_image') else 'No'}")
         
+        # Importar módulos necesarios
+        import base64
+        import tempfile
+        import os
+        import re
+        
         pdf = FPDF()
         pdf.add_page()
         
@@ -335,10 +341,23 @@ def generate_pdf_content(data):
             try:
                 # Decodificar la imagen base64
                 image_data = data['profile_image']
-                app.logger.info(f"[DEBUG] Imagen recibida (primeros 50 caracteres): {image_data[:50]}...")
+                app.logger.info(f"[DEBUG] Imagen recibida (longitud): {len(image_data)}")
+                app.logger.info(f"[DEBUG] Primeros 50 caracteres de la imagen: {image_data[:50]}...")
+                
+                # Determinar el formato de la imagen
+                image_format = 'JPEG'  # Formato predeterminado
+                if 'data:image/' in image_data:
+                    # Extraer el formato de la cadena data URL
+                    format_match = re.search(r'data:image/(\w+);base64,', image_data)
+                    if format_match:
+                        detected_format = format_match.group(1).upper()
+                        app.logger.info(f"[DEBUG] Formato de imagen detectado: {detected_format}")
+                        if detected_format in ['JPEG', 'JPG', 'PNG', 'GIF']:
+                            image_format = 'JPEG' if detected_format in ['JPEG', 'JPG'] else detected_format
                 
                 # Asegurarse de que la cadena base64 esté correctamente formateada
                 if ',' in image_data:
+                    app.logger.info(f"[DEBUG] Encontrado separador en la imagen base64")
                     image_data = image_data.split(',')[1]
                 
                 # Decodificar la imagen
@@ -347,26 +366,44 @@ def generate_pdf_content(data):
                     app.logger.info(f"[DEBUG] Imagen decodificada correctamente, tamaño: {len(image_bytes)} bytes")
                 except Exception as e:
                     app.logger.error(f"[ERROR] Error al decodificar la imagen: {str(e)}")
+                    app.logger.error(f"[ERROR] Primeros 50 caracteres de la imagen: {image_data[:50]}...")
                     raise
                 
-                # Guardar temporalmente la imagen
+                # Guardar temporalmente la imagen con la extensión correcta
+                extension = '.jpg' if image_format == 'JPEG' else f'.{image_format.lower()}'
+                
                 try:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_img:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_img:
                         temp_img.write(image_bytes)
                         temp_img.flush()
                         temp_img_path = temp_img.name
-                        app.logger.info(f"[DEBUG] Imagen guardada temporalmente en: {temp_img_path}")
+                        app.logger.info(f"[DEBUG] Imagen guardada temporalmente en: {temp_img_path} con formato {image_format}")
                 except Exception as e:
                     app.logger.error(f"[ERROR] Error al guardar la imagen temporal: {str(e)}")
                     raise
                 
                 # Agregar imagen al PDF
                 try:
-                    pdf.image(temp_img_path, x=170, y=5, w=30, h=30)
-                    app.logger.info("[DEBUG] Imagen agregada al PDF correctamente")
+                    # Usar coordenadas específicas para la plantilla profesional
+                    pdf.image(temp_img_path, x=170, y=5, w=30, h=30, type=image_format)
+                    app.logger.info(f"[DEBUG] Imagen agregada al PDF correctamente con formato {image_format}")
                 except Exception as e:
                     app.logger.error(f"[ERROR] Error al agregar la imagen al PDF: {str(e)}")
-                    raise
+                    app.logger.error(f"[ERROR] Ruta de la imagen: {temp_img_path}")
+                    app.logger.error(f"[ERROR] ¿Existe el archivo?: {os.path.exists(temp_img_path)}")
+                    app.logger.error(f"[ERROR] Tamaño del archivo: {os.path.getsize(temp_img_path) if os.path.exists(temp_img_path) else 'No existe'}")
+                    app.logger.error(f"[ERROR] Intentando con otro método...")
+                    
+                    # Intentar con diferentes formatos si el primero falla
+                    for alt_format in ['JPEG', 'PNG', 'GIF']:
+                        if alt_format != image_format:
+                            try:
+                                app.logger.info(f"[DEBUG] Intentando con formato alternativo: {alt_format}")
+                                pdf.image(temp_img_path, x=170, y=5, w=30, h=30, type=alt_format)
+                                app.logger.info(f"[DEBUG] Imagen agregada al PDF correctamente con formato alternativo {alt_format}")
+                                break
+                            except Exception as e2:
+                                app.logger.error(f"[ERROR] Error con formato alternativo {alt_format}: {str(e2)}")
                 finally:
                     # Eliminar archivo temporal
                     try:
@@ -376,7 +413,9 @@ def generate_pdf_content(data):
                         app.logger.error(f"[ERROR] Error al eliminar archivo temporal: {str(e)}")
             except Exception as e:
                 app.logger.error(f"[ERROR] Error al procesar la imagen: {str(e)}")
-                app.logger.error(f"[ERROR] Detalles de la imagen: {data.get('profile_image')[:50]}...")
+                app.logger.error(f"[ERROR] Tipo de datos de la imagen: {type(data.get('profile_image'))}")
+                # Continuar sin la imagen en caso de error
+                app.logger.info("[INFO] Continuando la generación del PDF sin la imagen debido al error")
         
         # Nombre
         pdf.set_font("Arial", 'B', 24)
