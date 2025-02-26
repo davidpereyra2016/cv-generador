@@ -187,7 +187,10 @@
                     <!-- Botón de pago -->
                     <div class="form-section text-center">
                         <h3>Pagar y descargar CV</h3>
-                        <button type="button" class="btn btn-primary btn-lg" onclick="procesarPago()">Continuar</button>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-primary btn-lg" onclick="procesarPago()">Continuar</button>
+                            <button type="button" class="btn btn-secondary btn-lg" onclick="descargarPDFDirecto()">Descargar PDF</button>
+                        </div>
                         <p style="color: gray" class="mt-2">*Antes de continuar, por favor, revise que los datos esten correctos.</p>
                     </div>
                 </form>

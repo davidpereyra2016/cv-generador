@@ -1182,3 +1182,131 @@ async function iniciarPago() {
         alert('Error al procesar el pago. Por favor, intente nuevamente.');
     }
 }
+
+// Función para descargar PDF directamente sin pago
+async function descargarPDFDirecto() {
+    try {
+        console.log('[DEBUG] Iniciando descarga directa de PDF');
+        
+        // Recuperar datos del formulario
+        const form = document.getElementById('cvForm');
+        const formData = new FormData(form);
+        
+        // Crear objeto con todos los datos
+        const cvData = {
+            template_type: document.querySelector('input[name="template_type"]:checked').value,
+            nombre: formData.get('nombre'),
+            dni: formData.get('dni'),
+            fecha_nacimiento: formData.get('fecha_nacimiento'),
+            edad: formData.get('edad'),
+            email: formData.get('email'),
+            telefono: formData.get('telefono'),
+            direccion: formData.get('direccion'),
+            experiencia: [],
+            educacion: [],
+            habilidades: []
+        };
+        
+        // Procesar experiencia
+        const empresas = formData.getAll('empresa[]');
+        empresas.forEach((empresa, index) => {
+            if (empresa.trim()) {
+                cvData.experiencia.push({
+                    empresa: empresa.trim(),
+                    cargo: formData.getAll('cargo[]')[index]?.trim() || '',
+                    periodo: `${formData.getAll('fecha_inicio[]')[index]?.trim() || ''} - ${
+                        formData.getAll('trabajo_actual[]')[index] === 'on' 
+                        ? 'Presente' 
+                        : formData.getAll('fecha_fin[]')[index]?.trim() || ''
+                    }`,
+                    descripcion: formData.getAll('descripcion[]')[index]?.trim() || ''
+                });
+            }
+        });
+        
+        // Procesar educación
+        const titulos = formData.getAll('titulo[]');
+        titulos.forEach((titulo, index) => {
+            if (titulo.trim()) {
+                cvData.educacion.push({
+                    titulo: titulo.trim(),
+                    institucion: formData.getAll('institucion[]')[index]?.trim() || '',
+                    año: `${formData.getAll('fecha_inicio_edu[]')[index]?.trim() || ''} - ${
+                        formData.getAll('en_curso[]')[index] === 'on'
+                        ? 'En curso'
+                        : formData.getAll('fecha_fin_edu[]')[index]?.trim() || ''
+                    }`
+                });
+            }
+        });
+        
+        // Procesar habilidades
+        const habilidades = formData.getAll('habilidad[]');
+        habilidades.forEach(habilidad => {
+            if (habilidad.trim()) {
+                cvData.habilidades.push(habilidad.trim());
+            }
+        });
+        
+        // Obtener imagen del preview
+        const previewImage = document.getElementById('previewImage');
+        if (previewImage && previewImage.src && !previewImage.src.includes('default-profile')) {
+            // Asegurarse de que la imagen esté optimizada
+            await new Promise((resolve) => {
+                optimizeImage(previewImage.src, (optimizedImage) => {
+                    cvData.profile_image = optimizedImage;
+                    console.log('[DEBUG] Imagen optimizada para PDF, longitud:', optimizedImage.length);
+                    console.log('[DEBUG] Formato de imagen:', optimizedImage.substring(0, 30));
+                    resolve();
+                });
+            });
+        } else {
+            // Intentar obtener del localStorage como respaldo
+            const storedImage = localStorage.getItem('profile_image');
+            if (storedImage) {
+                cvData.profile_image = storedImage;
+                console.log('[DEBUG] Imagen obtenida del localStorage, longitud:', storedImage.length);
+            } else {
+                console.log('[DEBUG] No se encontró imagen');
+            }
+        }
+        
+        // Enviar datos al servidor para generar PDF
+        console.log('[DEBUG] Enviando datos al servidor para generar PDF');
+        console.log('[DEBUG] Tipo de plantilla:', cvData.template_type);
+        console.log('[DEBUG] ¿Incluye imagen?:', cvData.profile_image ? 'Sí' : 'No');
+        
+        const response = await fetch('/download_pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(cvData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al generar el PDF');
+        }
+
+        // Obtener el blob del PDF
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'cv.pdf';
+        document.body.appendChild(a);
+        a.click();
+        
+        // Limpiar
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 100);
+
+    } catch (error) {
+        console.error('[ERROR] Error al generar el PDF:', error);
+        alert('Hubo un error al generar el PDF: ' + error.message);
+    }
+}
