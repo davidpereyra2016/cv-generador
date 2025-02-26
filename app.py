@@ -280,25 +280,39 @@ def download_pdf():
         else:
             app.logger.warning("[WARNING] No se encontró imagen en los datos")
         
-        # Generar PDF
-        pdf = generate_pdf_content(data)
-        
-        # Crear archivo temporal
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-            pdf.output(tmp_file.name)
+        # Generar PDF con el contenido requerido
+        try:
+            # Generar el PDF
+            pdf = generate_pdf_content(data)
             
-            # Leer el archivo
-            with open(tmp_file.name, 'rb') as f:
-                pdf_bytes = f.read()
+            # Crear archivo temporal
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                # Guardar el PDF en el archivo temporal
+                pdf.output(tmp_file.name)
+                tmp_file_path = tmp_file.name
+                app.logger.info(f"[DEBUG] PDF generado y guardado en: {tmp_file_path}")
                 
-            # Eliminar archivo temporal
-            os.unlink(tmp_file.name)
-            
-            # Enviar respuesta
-            response = make_response(pdf_bytes)
-            response.headers['Content-Type'] = 'application/pdf'
-            response.headers['Content-Disposition'] = 'attachment; filename=cv.pdf'
-            return response
+                # Leer el archivo generado
+                with open(tmp_file_path, 'rb') as f:
+                    pdf_bytes = f.read()
+                    app.logger.info(f"[DEBUG] PDF leído correctamente, tamaño: {len(pdf_bytes)} bytes")
+                
+                # Eliminar archivo temporal
+                try:
+                    os.unlink(tmp_file_path)
+                    app.logger.info(f"[DEBUG] Archivo temporal eliminado: {tmp_file_path}")
+                except Exception as e:
+                    app.logger.error(f"[ERROR] Error al eliminar archivo temporal: {str(e)}")
+                
+                # Crear y enviar la respuesta
+                response = make_response(pdf_bytes)
+                response.headers['Content-Type'] = 'application/pdf'
+                response.headers['Content-Disposition'] = 'attachment; filename=cv.pdf'
+                app.logger.info("[INFO] PDF enviado correctamente al cliente")
+                return response
+        except Exception as e:
+            app.logger.error(f"[ERROR] Error durante la generación o entrega del PDF: {str(e)}")
+            raise
             
     except Exception as e:
         app.logger.error(f"[ERROR] Error generando PDF: {str(e)}")
@@ -339,21 +353,14 @@ def generate_pdf_content(data):
         # Si es plantilla profesional y hay imagen, agregarla
         if template_type == 'profesional' and data.get('profile_image'):
             try:
+                # Importar PIL para manejar las imágenes
+                from PIL import Image
+                import io
+                
                 # Decodificar la imagen base64
                 image_data = data['profile_image']
                 app.logger.info(f"[DEBUG] Imagen recibida (longitud): {len(image_data)}")
                 app.logger.info(f"[DEBUG] Primeros 50 caracteres de la imagen: {image_data[:50]}...")
-                
-                # Determinar el formato de la imagen
-                image_format = 'JPEG'  # Formato predeterminado
-                if 'data:image/' in image_data:
-                    # Extraer el formato de la cadena data URL
-                    format_match = re.search(r'data:image/(\w+);base64,', image_data)
-                    if format_match:
-                        detected_format = format_match.group(1).upper()
-                        app.logger.info(f"[DEBUG] Formato de imagen detectado: {detected_format}")
-                        if detected_format in ['JPEG', 'JPG', 'PNG', 'GIF']:
-                            image_format = 'JPEG' if detected_format in ['JPEG', 'JPG'] else detected_format
                 
                 # Asegurarse de que la cadena base64 esté correctamente formateada
                 if ',' in image_data:
@@ -364,53 +371,49 @@ def generate_pdf_content(data):
                 try:
                     image_bytes = base64.b64decode(image_data)
                     app.logger.info(f"[DEBUG] Imagen decodificada correctamente, tamaño: {len(image_bytes)} bytes")
-                except Exception as e:
-                    app.logger.error(f"[ERROR] Error al decodificar la imagen: {str(e)}")
-                    app.logger.error(f"[ERROR] Primeros 50 caracteres de la imagen: {image_data[:50]}...")
-                    raise
-                
-                # Guardar temporalmente la imagen con la extensión correcta
-                extension = '.jpg' if image_format == 'JPEG' else f'.{image_format.lower()}'
-                
-                try:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_img:
-                        temp_img.write(image_bytes)
-                        temp_img.flush()
-                        temp_img_path = temp_img.name
-                        app.logger.info(f"[DEBUG] Imagen guardada temporalmente en: {temp_img_path} con formato {image_format}")
-                except Exception as e:
-                    app.logger.error(f"[ERROR] Error al guardar la imagen temporal: {str(e)}")
-                    raise
-                
-                # Agregar imagen al PDF
-                try:
-                    # Usar coordenadas específicas para la plantilla profesional
-                    pdf.image(temp_img_path, x=170, y=5, w=30, h=30, type=image_format)
-                    app.logger.info(f"[DEBUG] Imagen agregada al PDF correctamente con formato {image_format}")
-                except Exception as e:
-                    app.logger.error(f"[ERROR] Error al agregar la imagen al PDF: {str(e)}")
-                    app.logger.error(f"[ERROR] Ruta de la imagen: {temp_img_path}")
-                    app.logger.error(f"[ERROR] ¿Existe el archivo?: {os.path.exists(temp_img_path)}")
-                    app.logger.error(f"[ERROR] Tamaño del archivo: {os.path.getsize(temp_img_path) if os.path.exists(temp_img_path) else 'No existe'}")
-                    app.logger.error(f"[ERROR] Intentando con otro método...")
                     
-                    # Intentar con diferentes formatos si el primero falla
-                    for alt_format in ['JPEG', 'PNG', 'GIF']:
-                        if alt_format != image_format:
-                            try:
-                                app.logger.info(f"[DEBUG] Intentando con formato alternativo: {alt_format}")
-                                pdf.image(temp_img_path, x=170, y=5, w=30, h=30, type=alt_format)
-                                app.logger.info(f"[DEBUG] Imagen agregada al PDF correctamente con formato alternativo {alt_format}")
-                                break
-                            except Exception as e2:
-                                app.logger.error(f"[ERROR] Error con formato alternativo {alt_format}: {str(e2)}")
-                finally:
+                    # Crear un objeto de imagen con PIL
+                    img = Image.open(io.BytesIO(image_bytes))
+                    app.logger.info(f"[DEBUG] Imagen abierta con PIL: formato={img.format}, tamaño={img.size}")
+                    
+                    # Redimensionar la imagen si es necesario
+                    max_size = (300, 300)
+                    if img.width > max_size[0] or img.height > max_size[1]:
+                        img.thumbnail(max_size, Image.LANCZOS)
+                        app.logger.info(f"[DEBUG] Imagen redimensionada a {img.size}")
+                    
+                    # Convertir a RGB si tiene transparencia (modo RGBA)
+                    if img.mode == 'RGBA':
+                        rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+                        rgb_img.paste(img, mask=img.split()[3])  # Usar el canal alfa como máscara
+                        img = rgb_img
+                        app.logger.info("[DEBUG] Imagen convertida de RGBA a RGB")
+                    
+                    # Guardar como JPEG en un archivo temporal
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_img:
+                        img.save(temp_img.name, 'JPEG', quality=95)
+                        temp_img_path = temp_img.name
+                        app.logger.info(f"[DEBUG] Imagen guardada como JPEG en: {temp_img_path}")
+                    
+                    # Agregar imagen al PDF - usar 'jpg' en minúsculas para FPDF 1.7.2
+                    try:
+                        pdf.image(temp_img_path, x=170, y=5, w=30, h=30, type='jpg')
+                        app.logger.info("[DEBUG] Imagen agregada al PDF correctamente")
+                    except Exception as e:
+                        app.logger.error(f"[ERROR] Error al agregar la imagen al PDF: {str(e)}")
+                        app.logger.error(f"[ERROR] Ruta de la imagen: {temp_img_path}")
+                        app.logger.error(f"[ERROR] ¿Existe el archivo?: {os.path.exists(temp_img_path)}")
+                        raise
+                    
                     # Eliminar archivo temporal
                     try:
                         os.unlink(temp_img_path)
                         app.logger.info("[DEBUG] Archivo temporal de imagen eliminado")
                     except Exception as e:
                         app.logger.error(f"[ERROR] Error al eliminar archivo temporal: {str(e)}")
+                except Exception as e:
+                    app.logger.error(f"[ERROR] Error al procesar la imagen con PIL: {str(e)}")
+                    raise
             except Exception as e:
                 app.logger.error(f"[ERROR] Error al procesar la imagen: {str(e)}")
                 app.logger.error(f"[ERROR] Tipo de datos de la imagen: {type(data.get('profile_image'))}")
@@ -542,24 +545,36 @@ def generate_pdf_content(data):
 
 def generate_pdf(data):
     try:
+        app.logger.info("[DEBUG] Iniciando generate_pdf")
+        
         # Generar PDF
         pdf = generate_pdf_content(data)
         
         # Crear archivo temporal
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+            app.logger.info(f"[DEBUG] Generando PDF en archivo temporal: {tmp_file.name}")
             pdf.output(tmp_file.name)
+            tmp_path = tmp_file.name
             
-            # Leer el archivo y devolverlo como respuesta
-            with open(tmp_file.name, 'rb') as f:
-                pdf_bytes = f.read()
-            
-            # Eliminar archivo temporal
-            os.unlink(tmp_file.name)
-            
-            return BytesIO(pdf_bytes)
-            
+        # Leer el archivo y devolverlo como respuesta
+        app.logger.info(f"[DEBUG] Leyendo archivo PDF generado: {tmp_path}")
+        with open(tmp_path, 'rb') as f:
+            pdf_bytes = f.read()
+            app.logger.info(f"[DEBUG] PDF leído, tamaño: {len(pdf_bytes)} bytes")
+        
+        # Eliminar archivo temporal
+        try:
+            os.unlink(tmp_path)
+            app.logger.info(f"[DEBUG] Archivo temporal eliminado: {tmp_path}")
+        except Exception as e:
+            app.logger.error(f"[ERROR] Error al eliminar archivo temporal: {str(e)}")
+        
+        # Crear BytesIO para manejar el PDF en memoria
+        pdf_buffer = BytesIO(pdf_bytes)
+        app.logger.info("[DEBUG] PDF convertido a BytesIO")
+        return pdf_buffer
     except Exception as e:
-        current_app.logger.error(f"Error generando PDF: {str(e)}")
+        app.logger.error(f"[ERROR] Error en generate_pdf: {str(e)}")
         raise
 
 if __name__ == '__main__':
