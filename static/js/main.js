@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('generarPDF').addEventListener('click', generarPDF);
     
     // Event listener para el botón de pagar
-    document.getElementById('pagarButton').addEventListener('click', iniciarPago);
+    document.getElementById('pagarButton').addEventListener('click', procesarPago);
     
     // Inicializar con una experiencia, educación y habilidad vacías
     agregarExperiencia();
@@ -673,6 +673,21 @@ async function procesarPago() {
                 });
             }
         });
+
+        // Procesar y guardar la imagen
+        const previewImage = document.getElementById('previewImage');
+        if (previewImage && previewImage.src && !previewImage.src.includes('default-profile')) {
+            // Optimizar y guardar la imagen
+            await new Promise((resolve) => {
+                optimizeImage(previewImage.src, (optimizedImage) => {
+                    data.profile_image = optimizedImage;
+                    // Guardar la imagen optimizada en localStorage
+                    localStorage.setItem('profile_image', optimizedImage);
+                    console.log('[DEBUG] Imagen optimizada guardada en localStorage');
+                    resolve();
+                });
+            });
+        }
 
         console.log('[DEBUG] Datos completos a enviar:', JSON.stringify(data, null, 2));
         

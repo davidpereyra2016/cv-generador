@@ -102,20 +102,32 @@ def create_preference():
 @app.route('/save_form_data', methods=['POST'])
 def save_form_data():
     try:
-        form_data = request.get_json()
+        if not request.is_json:
+            return jsonify({"error": "Se requiere JSON"}), 400
+            
+        data = request.get_json()
         
         # Generar un ID único para el formulario
         form_id = str(uuid.uuid4())
         
-        # Crear el archivo JSON temporal
+        # Guardar los datos en un archivo JSON
         json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
         
+        # Asegurarse de que el directorio existe
+        os.makedirs(os.path.dirname(json_path), exist_ok=True)
+        
+        app.logger.info(f"[DEBUG] Guardando datos en: {json_path}")
+        app.logger.info(f"[DEBUG] Datos a guardar: {str(data)[:100]}...")
+        
         with open(json_path, 'w', encoding='utf-8') as f:
-            json.dump(form_data, f, ensure_ascii=False)
+            json.dump(data, f, ensure_ascii=False, indent=2)
             
+        app.logger.info(f"[DEBUG] Datos guardados exitosamente")
+        
         return jsonify({"form_id": form_id})
+        
     except Exception as e:
-        current_app.logger.error(f"Error saving form data: {str(e)}")
+        app.logger.error(f"[ERROR] Error al guardar datos del formulario: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/success')
@@ -124,6 +136,7 @@ def success():
         # Obtener parámetros de la URL
         payment_id = request.args.get('payment_id')
         status = request.args.get('status')
+        external_reference = request.args.get('external_reference')  # Mercado Pago devuelve el form_id aquí
         
         if status != 'approved':
             return redirect(url_for('failure'))
@@ -135,36 +148,35 @@ def success():
                 if 'response' in payment_info:
                     current_app.logger.info(f"Pago confirmado: {payment_info['response']}")
                     
-                    # Obtener el external_reference que contiene el form_id
-                    form_id = payment_info['response'].get('external_reference')
+                    # Obtener el form_id del external_reference o del payment_info
+                    form_id = external_reference or payment_info['response'].get('external_reference')
                     
                     if form_id:
-                        # Cargar datos del formulario
+                        # Verificar que existe el archivo JSON
                         json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
                         if os.path.exists(json_path):
+                            current_app.logger.info(f"[DEBUG] Archivo de datos encontrado: {json_path}")
                             with open(json_path, 'r', encoding='utf-8') as f:
                                 form_data = json.load(f)
-                                
+                            
+                            # Renderizar success.html con el form_id
                             return render_template('success.html',
-                                                template_type=form_data.get('template_type', 'basico'),
-                                                payment_id=payment_id,
-                                                form_id=form_id)
-                    
-                    # Si no hay form_id o no se encuentra el archivo, usar localStorage como respaldo
-                    return render_template('success.html',
-                                        template_type=request.args.get('template_type', 'basico'),
-                                        payment_id=payment_id,
-                                        use_localstorage=True)
+                                               template_type=form_data.get('template_type', 'basico'),
+                                               payment_id=payment_id,
+                                               form_id=form_id)
+                        else:
+                            current_app.logger.error(f"[ERROR] No se encontró el archivo de datos: {json_path}")
+                    else:
+                        current_app.logger.error("[ERROR] No se encontró form_id en la respuesta del pago")
             except Exception as e:
-                current_app.logger.error(f"Error al verificar pago: {str(e)}")
+                current_app.logger.error(f"[ERROR] Error al verificar pago: {str(e)}")
         
-        return render_template('success.html',
-                            template_type=request.args.get('template_type', 'basico'),
-                            payment_id=payment_id,
-                            use_localstorage=True)
+        # Si no se encuentra el form_id o hay algún error, mostrar mensaje de error
+        return render_template('error.html',
+                           message="No se pudieron recuperar los datos del CV. Por favor, intente nuevamente.")
         
     except Exception as e:
-        current_app.logger.error(f"Error en success: {str(e)}")
+        current_app.logger.error(f"[ERROR] Error en success: {str(e)}")
         return str(e), 500
 
 @app.route('/failure')
@@ -273,6 +285,19 @@ def download_pdf():
             return jsonify({"error": "JSON inválido"}), 400
         
         app.logger.info(f"[DEBUG] Datos recibidos para PDF: {str(data)[:100]}...")
+        
+        # Si se proporciona form_id, cargar datos del archivo JSON
+        if 'form_id' in data:
+            form_id = data['form_id']
+            json_path = os.path.join(PDF_FOLDER, f'form_{form_id}.json')
+            
+            if os.path.exists(json_path):
+                app.logger.info(f"[DEBUG] Cargando datos del archivo: {json_path}")
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            else:
+                app.logger.error(f"[ERROR] No se encontró el archivo: {json_path}")
+                return jsonify({"error": "Datos no encontrados"}), 404
         
         # Verificar si hay imagen
         if 'profile_image' in data:

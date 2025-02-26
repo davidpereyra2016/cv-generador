@@ -91,42 +91,35 @@
 
     <script>
         function generatePDF() {
-            let fetchPromise;
-            
-            {% if use_localstorage %}
-            const cvData = JSON.parse(localStorage.getItem('cv_data'));
-            if (!cvData) {
-                alert('No se encontraron los datos del CV. Por favor, complete el formulario nuevamente.');
-                window.location.href = '/';
-                return;
-            }
-            
-            fetchPromise = fetch('/generate_pdf', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    template_type: '{{ template_type }}',
-                    cv_data: cvData
-                })
-            });
-            {% else %}
-            const formId = '{{ form_id }}';
-            
-            fetchPromise = fetch('/generate_pdf', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    form_id: formId,
+            try {
+                let cvData;
+                {% if form_id %}
+                // Si tenemos form_id, usarlo directamente
+                cvData = {
+                    form_id: '{{ form_id }}',
                     template_type: '{{ template_type }}'
-                })
-            });
-            {% endif %}
+                };
+                console.log('[DEBUG] Usando form_id:', cvData.form_id);
+                {% else %}
+                // Intentar recuperar datos del localStorage como respaldo
+                cvData = JSON.parse(localStorage.getItem('cv_data'));
+                if (!cvData) {
+                    alert('No se encontraron los datos del CV. Por favor, complete el formulario nuevamente.');
+                    window.location.href = '/';
+                    return;
+                }
+                {% endif %}
 
-            fetchPromise
+                console.log('[DEBUG] Datos a enviar:', cvData);
+
+                // Usar el endpoint /download_pdf
+                fetch('/download_pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(cvData)
+                })
                 .then(response => {
                     if (!response.ok) {
                         return response.json().then(data => {
@@ -146,8 +139,13 @@
                     document.body.removeChild(a);
                 })
                 .catch(error => {
+                    console.error('[ERROR] Error al generar el PDF:', error);
                     alert('Error: ' + error.message);
                 });
+            } catch (error) {
+                console.error('[ERROR] Error en generatePDF:', error);
+                alert('Error al generar el PDF: ' + error.message);
+            }
         }
     </script>
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
