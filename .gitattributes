@@ -1,0 +1,5 @@
+# Configuración de merge para archivos específicos
+templates/index.html merge=ours
+
+# Configuración general
+* text=auto
