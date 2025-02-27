@@ -189,7 +189,9 @@
                         <h3>Pagar y descargar CV</h3>
                         <div class="d-flex gap-2 justify-content-center">
                             <button type="button" class="btn btn-primary btn-lg" onclick="procesarPago()">Continuar</button>
+                            {% if config.get('ENVIRONMENT', 'development') != 'production' %}
                             <button type="button" class="btn btn-secondary btn-lg" onclick="descargarPDFDirecto()">Descargar PDF</button>
+                            {% endif %}
                         </div>
                         <p style="color: gray" class="mt-2">*Antes de continuar, por favor, revise que los datos esten correctos.</p>
                     </div>
