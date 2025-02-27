@@ -57,7 +57,7 @@ def start_feature(feature_name):
     print(f"\nRama feature/{feature_name} creada. Puedes comenzar a trabajar en ella.")
     print("Cuando termines, ejecuta: python gitflow.py finish-feature feature_name")
 
-def finish_feature(feature_name, merge_locally=None):
+def finish_feature(feature_name, merge_locally=None, delete_branch=None):
     """Finaliza una rama feature y opcionalmente la fusiona con develop"""
     feature_branch = f"feature/{feature_name}"
     
@@ -92,8 +92,12 @@ def finish_feature(feature_name, merge_locally=None):
         run_command(f"git merge --no-ff {feature_branch} -m \"Merge feature '{feature_name}' into develop\"")
         
         # Preguntar si se desea eliminar la rama feature
-        print("\n¿Deseas eliminar la rama feature? (s/n)")
-        delete_choice = input().lower()
+        if delete_branch is None:
+            print("\n¿Deseas eliminar la rama feature? (s/n)")
+            delete_choice = input().lower()
+        else:
+            delete_choice = 's' if delete_branch else 'n'
+            
         if delete_choice.startswith('s'):
             run_command(f"git branch -d {feature_branch}")
             print(f"\nRama {feature_branch} eliminada localmente.")
@@ -246,13 +250,15 @@ GitFlow Helper Script
 Uso: python gitflow.py [comando] [argumentos]
 
 Comandos disponibles:
-  start-feature <nombre>                 Inicia una nueva rama feature
-  finish-feature <nombre> [true/false]   Finaliza una rama feature, opcionalmente la fusiona con develop y crea un PR
-  start-release <version>                Inicia una nueva rama release
-  finish-release <version>               Finaliza una rama release, opcionalmente la fusiona con main y develop, crea un tag y PRs
-  start-hotfix <version>                 Inicia una nueva rama hotfix
-  finish-hotfix <version>                Finaliza una rama hotfix, opcionalmente la fusiona con main y develop, crea un tag y PRs
-  help                                   Muestra esta ayuda
+  start-feature <nombre>                           Inicia una nueva rama feature
+  finish-feature <nombre> [merge] [delete]         Finaliza una rama feature, opcionalmente la fusiona con develop y elimina la rama
+                                                   [merge]: true/false para fusionar automáticamente con develop
+                                                   [delete]: true/false para eliminar la rama feature después de fusionar
+  start-release <version>                          Inicia una nueva rama release
+  finish-release <version>                         Finaliza una rama release, opcionalmente la fusiona con main y develop, crea un tag y PRs
+  start-hotfix <version>                           Inicia una nueva rama hotfix
+  finish-hotfix <version>                          Finaliza una rama hotfix, opcionalmente la fusiona con main y develop, crea un tag y PRs
+  help                                             Muestra esta ayuda
     """)
 
 def main():
@@ -267,9 +273,12 @@ def main():
         return start_feature(sys.argv[2])
     elif command == "finish-feature" and len(sys.argv) >= 3:
         merge_locally = None
+        delete_branch = None
         if len(sys.argv) >= 4:
             merge_locally = sys.argv[3].lower() == 'true'
-        return finish_feature(sys.argv[2], merge_locally)
+        if len(sys.argv) >= 5:
+            delete_branch = sys.argv[4].lower() == 'true'
+        return finish_feature(sys.argv[2], merge_locally, delete_branch)
     elif command == "start-release" and len(sys.argv) >= 3:
         return start_release(sys.argv[2])
     elif command == "finish-release" and len(sys.argv) >= 3:
