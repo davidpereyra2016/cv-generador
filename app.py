@@ -30,10 +30,12 @@ if not os.getenv('VERCEL_ENV'):
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     PDF_FOLDER = 'bd_pdf'
     os.makedirs(PDF_FOLDER, exist_ok=True)
+    app.config['ENVIRONMENT'] = 'development'
 else:
     # En Vercel (producción)
     UPLOAD_FOLDER = tempfile.gettempdir()
     PDF_FOLDER = tempfile.gettempdir()
+    app.config['ENVIRONMENT'] = 'production'
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
