@@ -614,6 +614,91 @@ h2 {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Estilos para selectores de color */
+.color-selector {
+    margin-top: 15px;
+}
+
+.color-option {
+    cursor: pointer;
+    margin: 0 5px;
+    position: relative;
+}
+
+.color-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.color-circle {
+    display: block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #e0e0e0;
+    transition: all 0.2s ease;
+}
+
+.color-option input[type="radio"]:checked + .color-circle {
+    transform: scale(1.2);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #1a4971;
+}
+
+/* Estilos para los diferentes colores de plantilla profesional */
+.template-professional.azul-marino .header-section {
+    background-color: #1a4971;
+}
+
+.template-professional.azul-marino h2,
+.template-professional.azul-marino h3 {
+    color: #1a4971;
+}
+
+.template-professional.amarillo-claro .header-section {
+    background-color: #f9d56e;
+}
+
+.template-professional.amarillo-claro h2,
+.template-professional.amarillo-claro h3 {
+    color: #d4a81e;
+}
+
+.template-professional.rosado-pastel .header-section {
+    background-color: #f8c8dc;
+}
+
+.template-professional.rosado-pastel h2,
+.template-professional.rosado-pastel h3 {
+    color: #e75480;
+}
+
+.template-professional.morado .header-section {
+    background-color: #8e44ad;
+}
+
+.template-professional.morado h2,
+.template-professional.morado h3 {
+    color: #8e44ad;
+}
+
+/* Ajustes de texto para cada color */
+.template-professional.amarillo-claro .header-section h1,
+.template-professional.amarillo-claro .header-section p,
+.template-professional.rosado-pastel .header-section h1,
+.template-professional.rosado-pastel .header-section p {
+    color: #333;
+}
+
+.template-professional.azul-marino .header-section h1,
+.template-professional.azul-marino .header-section p,
+.template-professional.morado .header-section h1,
+.template-professional.morado .header-section p {
+    color: #fff;
+}
+
 /* Mejoras en los botones */
 .btn-primary {
     background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);

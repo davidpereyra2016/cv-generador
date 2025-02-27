@@ -58,12 +58,27 @@ def create_preference():
         data = request.get_json()
         
         template_type = data.get("template_type", "basico")
+        template_color = data.get("template_color", "azul-marino")
         external_reference = data.get("external_reference")
         
         if template_type == "profesional":
             price = 10
         else:
             price = 5
+        
+        # Cargar los datos existentes del formulario
+        json_path = os.path.join(PDF_FOLDER, f'form_{external_reference}.json')
+        if os.path.exists(json_path):
+            with open(json_path, 'r', encoding='utf-8') as f:
+                form_data = json.load(f)
+                # Actualizar el color en los datos guardados
+                form_data['template_color'] = template_color
+                app.logger.info(f"[DEBUG] Actualizando color en datos guardados: {template_color}")
+            
+            # Guardar los datos actualizados
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump(form_data, f, ensure_ascii=False, indent=2)
+                app.logger.info(f"[DEBUG] Datos actualizados guardados con color: {template_color}")
         
         # Crear el objeto de preferencia
         preference_data = {
@@ -109,6 +124,13 @@ def save_form_data():
             
         data = request.get_json()
         
+        # Verificar el color de la plantilla
+        template_type = data.get('template_type')
+        template_color = data.get('template_color')
+        
+        app.logger.info(f"[DEBUG] Tipo de plantilla recibido: {template_type}")
+        app.logger.info(f"[DEBUG] Color de plantilla recibido: {template_color}")
+        
         # Generar un ID único para el formulario
         form_id = str(uuid.uuid4())
         
@@ -124,7 +146,7 @@ def save_form_data():
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
             
-        app.logger.info(f"[DEBUG] Datos guardados exitosamente")
+        app.logger.info(f"[DEBUG] Datos guardados exitosamente con color: {data.get('template_color')}")
         
         return jsonify({"form_id": form_id})
         
@@ -161,9 +183,18 @@ def success():
                             with open(json_path, 'r', encoding='utf-8') as f:
                                 form_data = json.load(f)
                             
-                            # Renderizar success.html con el form_id
+                            # Obtener el color de la plantilla
+                            template_type = form_data.get('template_type', 'basico')
+                            # template_color = form_data.get('template_color', 'azul-marino')
+                            template_color = form_data.get('template_color')
+                            
+                            current_app.logger.info(f"[DEBUG] Tipo de plantilla: {template_type}")
+                            current_app.logger.info(f"[DEBUG] Color de plantilla: {template_color}")
+                            
+                            # Renderizar success.html con el form_id y template_color
                             return render_template('success.html',
-                                               template_type=form_data.get('template_type', 'basico'),
+                                               template_type=template_type,
+                                               template_color=template_color,
                                                payment_id=payment_id,
                                                form_id=form_id)
                         else:
@@ -287,6 +318,11 @@ def download_pdf():
             return jsonify({"error": "JSON inválido"}), 400
         
         app.logger.info(f"[DEBUG] Datos recibidos para PDF: {str(data)[:100]}...")
+        app.logger.info(f"[DEBUG] Color recibido: {data.get('template_color', 'No especificado')}")
+        
+        # Guardar la imagen y el color si están presentes en los datos directos
+        profile_image = data.get('profile_image')
+        template_color = data.get('template_color')
         
         # Si se proporciona form_id, cargar datos del archivo JSON
         if 'form_id' in data:
@@ -296,16 +332,42 @@ def download_pdf():
             if os.path.exists(json_path):
                 app.logger.info(f"[DEBUG] Cargando datos del archivo: {json_path}")
                 with open(json_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
+                    stored_data = json.load(f)
+                    
+                # Mantener la imagen del perfil si se proporcionó en los datos directos
+                if profile_image:
+                    stored_data['profile_image'] = profile_image
+                    app.logger.info("[DEBUG] Usando imagen proporcionada en los datos directos")
+                elif 'profile_image' in stored_data:
+                    app.logger.info("[DEBUG] Usando imagen del archivo JSON almacenado")
+                else:
+                    app.logger.warning("[WARNING] No se encontró imagen ni en los datos directos ni en el archivo JSON")
+                
+                # Mantener el color si se proporcionó en los datos directos
+                if template_color:
+                    stored_data['template_color'] = template_color
+                    app.logger.info(f"[DEBUG] Usando color proporcionado en los datos directos: {template_color}")
+                elif 'template_color' in stored_data:
+                    app.logger.info(f"[DEBUG] Usando color del archivo JSON almacenado: {stored_data['template_color']}")
+                else:
+                    app.logger.warning("[WARNING] No se encontró color ni en los datos directos ni en el archivo JSON")
+                
+                # Actualizar otros campos desde los datos directos
+                stored_data['template_type'] = data.get('template_type', stored_data.get('template_type', 'basico'))
+                
+                data = stored_data
             else:
                 app.logger.error(f"[ERROR] No se encontró el archivo: {json_path}")
                 return jsonify({"error": "Datos no encontrados"}), 404
         
-        # Verificar si hay imagen
+        # Verificar si hay imagen después de todo el proceso
         if 'profile_image' in data:
-            app.logger.info(f"[DEBUG] Imagen encontrada en los datos, longitud: {len(data['profile_image'])}")
+            app.logger.info(f"[DEBUG] Imagen encontrada en los datos finales, longitud: {len(data['profile_image'])}")
         else:
-            app.logger.warning("[WARNING] No se encontró imagen en los datos")
+            app.logger.warning("[WARNING] No se encontró imagen en los datos finales")
+            
+        # Verificar el color final
+        app.logger.info(f"[DEBUG] Color final a usar: {data.get('template_color', 'No especificado')}")
         
         # Generar PDF con el contenido requerido
         try:
@@ -363,16 +425,37 @@ def generate_pdf_content(data):
         # Determinar tipo de plantilla
         template_type = data.get('template_type', 'basico')
         
-        # Configuración de colores
+        # Obtener color seleccionado (solo para plantilla profesional)
+        template_color = data.get('template_color', 'azul-marino')
+        
+        # Configuración de colores según la plantilla y el color seleccionado
         if template_type == 'profesional':
-            header_color = (26, 73, 113)  # #1a4971
-            text_color = (68, 68, 68)  # #444444
-            accent_color = (26, 73, 113)  # #1a4971
+            if template_color == 'azul-marino':
+                header_color = (26, 73, 113)  # #1a4971 - Azul marino
+                text_color = (68, 68, 68)  # #444444
+                accent_color = (26, 73, 113)  # #1a4971
+            elif template_color == 'amarillo-claro':
+                header_color = (242, 201, 76)  # #F2C94C - Amarillo claro
+                text_color = (68, 68, 68)  # #444444
+                accent_color = (242, 201, 76)  # #F2C94C
+            elif template_color == 'rosado-pastel':
+                header_color = (242, 166, 166)  # #F2A6A6 - Rosado pastel
+                text_color = (68, 68, 68)  # #444444
+                accent_color = (242, 166, 166)  # #F2A6A6
+            elif template_color == 'morado':
+                header_color = (149, 91, 165)  # #955BA5 - Morado
+                text_color = (68, 68, 68)  # #444444
+                accent_color = (149, 91, 165)  # #955BA5
+            else:
+                # Valor por defecto (azul marino)
+                header_color = (26, 73, 113)  # #1a4971
+                text_color = (68, 68, 68)  # #444444
+                accent_color = (26, 73, 113)  # #1a4971
         else:
             header_color = (100, 100, 100)  # Cambiado de #4a4a4a a un gris más claro
             text_color = (0, 0, 0)  # #000000
             accent_color = (74, 74, 74)  # #4a4a4a
-            
+        
         # Encabezado con datos personales
         pdf.set_fill_color(*header_color)
         pdf.rect(0, 0, 210, 50, 'F')  # Aumentamos la altura del encabezado
