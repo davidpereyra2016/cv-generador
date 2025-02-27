@@ -106,32 +106,21 @@ body {
 
 .preview-section {
     background-color: #f8f9fa;
-    min-height: 100vh;
     border-left: 1px solid #dee2e6;
     padding: 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.preview-section h2 {
-    color: #1a4971;
-    margin-bottom: 25px;
-    font-weight: 600;
     position: relative;
-    padding-bottom: 10px;
+    height: auto;
 }
 
-.preview-section h2:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 50px;
-    height: 3px;
-    background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
-    border-radius: 3px;
+.preview-container {
+    position: sticky;
+    top: 20px;
+    width: 100%;
+    max-width: 800px;
+    transition: all 0.3s ease;
 }
 
 .cv-preview-container {
@@ -720,6 +709,17 @@ h2 {
 
     .profile-info h1 {
         font-size: 1.5em;
+    }
+}
+
+@media (max-width: 768px) {
+    .preview-container {
+        position: relative;
+        top: 0;
+    }
+    
+    .preview-section {
+        margin-top: 30px;
     }
 }
 
