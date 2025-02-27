@@ -117,7 +117,7 @@ def start_release(version):
     print(f"\nRama release/v{version} creada. Puedes realizar ajustes finales.")
     print("Cuando termines, ejecuta: python gitflow.py finish-release version")
 
-def finish_release(version):
+def finish_release(version, merge_locally=None, create_tag=None):
     """Finaliza una rama release, la fusiona con main y develop, y crea un tag."""
     print(f"Finalizando release: {version}")
     current_branch = get_current_branch()
@@ -136,27 +136,50 @@ def finish_release(version):
     run_command(f"git push -u origin release/v{version}")
     
     # Fusionar con main y develop localmente (opcional, se puede hacer mediante PR)
-    print("\n¿Deseas fusionar la release con main y develop localmente? (s/n)")
-    choice = input().lower()
-    if choice == 's' or choice == 'si' or choice == 'sí' or choice == 'y' or choice == 'yes':
+    if merge_locally is None:
+        print("\n¿Deseas fusionar la release con main y develop localmente? (s/n)")
+        choice = input().lower()
+    else:
+        choice = 's' if merge_locally else 'n'
+        
+    if choice.startswith('s'):
         print("Fusionando con main...")
         run_command("git checkout main")
         run_command("git pull")  # Asegurarse de tener la última versión de main
-        run_command(f"git merge --no-ff release/v{version} -m \"Merge release/v{version} into main\"")
+        run_command(f"git merge --no-ff release/v{version} -m \"Merge release v{version} into main\"")
         
-        # Crear tag en main
-        print(f"Creando tag v{version}...")
-        run_command(f"git tag -a v{version} -m \"Version {version}\"")
+        # Crear tag
+        if create_tag is None:
+            print("\n¿Deseas crear un tag para esta versión? (s/n)")
+            tag_choice = input().lower()
+        else:
+            tag_choice = 's' if create_tag else 'n'
+            
+        if tag_choice.startswith('s'):
+            tag_name = f"v{version}"
+            run_command(f"git tag -a {tag_name} -m \"Version {version}\"")
+            run_command("git push --tags")
+            print(f"Tag {tag_name} creado y enviado al repositorio remoto.")
         
         print("Fusionando con develop...")
         run_command("git checkout develop")
         run_command("git pull")  # Asegurarse de tener la última versión de develop
-        run_command(f"git merge --no-ff release/v{version} -m \"Merge release/v{version} into develop\"")
+        run_command(f"git merge --no-ff release/v{version} -m \"Merge release v{version} into develop\"")
         
-        # Push cambios y tags
-        run_command("git push origin main develop --tags")
-        print("Release fusionada con main y develop exitosamente.")
-        print(f"Tag v{version} creado y publicado.")
+        # Push de los cambios
+        print("Enviando cambios al repositorio remoto...")
+        run_command("git push origin main")
+        run_command("git push origin develop")
+        
+        # Eliminar rama release
+        print("\n¿Deseas eliminar la rama release? (s/n)")
+        delete_choice = input().lower()
+        if delete_choice.startswith('s'):
+            run_command("git checkout develop")  # Asegurarse de no estar en la rama a eliminar
+            run_command(f"git branch -d release/v{version}")
+            print(f"Rama release/v{version} eliminada localmente.")
+        
+        print("Release finalizada y fusionada con main y develop exitosamente.")
     else:
         print("No se realizó la fusión local. Puedes hacerlo mediante Pull Requests.")
     
@@ -169,9 +192,6 @@ def finish_release(version):
     print("\nRelease finalizada. Crea Pull Requests visitando:")
     print(f"PR a main: {pr_main_url}")
     print(f"PR a develop: {pr_develop_url}")
-    
-    # Abrir el navegador con las URLs de los PRs
-    run_command(f"start {pr_main_url}")
     
     return 0
 
@@ -255,9 +275,11 @@ Comandos disponibles:
                                                    [merge]: true/false para fusionar automáticamente con develop
                                                    [delete]: true/false para eliminar la rama feature después de fusionar
   start-release <version>                          Inicia una nueva rama release
-  finish-release <version>                         Finaliza una rama release, opcionalmente la fusiona con main y develop, crea un tag y PRs
+  finish-release <version> [merge] [tag]           Finaliza una rama release, la fusiona con main y develop, y crea un tag
+                                                   [merge]: true/false para fusionar automáticamente con main y develop
+                                                   [tag]: true/false para crear un tag automáticamente
   start-hotfix <version>                           Inicia una nueva rama hotfix
-  finish-hotfix <version>                          Finaliza una rama hotfix, opcionalmente la fusiona con main y develop, crea un tag y PRs
+  finish-hotfix <version>                          Finaliza una rama hotfix, la fusiona con main y develop, y crea un tag
   help                                             Muestra esta ayuda
     """)
 
@@ -282,7 +304,13 @@ def main():
     elif command == "start-release" and len(sys.argv) >= 3:
         return start_release(sys.argv[2])
     elif command == "finish-release" and len(sys.argv) >= 3:
-        return finish_release(sys.argv[2])
+        merge_locally = None
+        create_tag = None
+        if len(sys.argv) >= 4:
+            merge_locally = sys.argv[3].lower() == 'true'
+        if len(sys.argv) >= 5:
+            create_tag = sys.argv[4].lower() == 'true'
+        return finish_release(sys.argv[2], merge_locally, create_tag)
     elif command == "start-hotfix" and len(sys.argv) >= 3:
         return start_hotfix(sys.argv[2])
     elif command == "finish-hotfix" and len(sys.argv) >= 3:
