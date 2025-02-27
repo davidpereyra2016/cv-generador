@@ -1,0 +1,58 @@
+# Configuración de GitFlow para cv-generador
+
+## Ramas Principales
+- `main`: Código en producción
+- `develop`: Rama principal de desarrollo
+
+## Ramas de Soporte
+- `feature/*`: Para nuevas funcionalidades (ej: feature/login)
+- `release/*`: Para preparar nuevas versiones (ej: release/v1.0.0)
+- `hotfix/*`: Para correcciones urgentes en producción (ej: hotfix/v1.0.1)
+- `bugfix/*`: Para correcciones de errores no críticos (ej: bugfix/error-imagen)
+
+## Flujo de Trabajo
+1. El desarrollo comienza en la rama `develop`
+2. Para cada nueva funcionalidad:
+   ```
+   git checkout develop
+   git pull
+   git checkout -b feature/nombre-funcionalidad
+   # Desarrollar la funcionalidad
+   git add .
+   git commit -m "Descripción de los cambios"
+   git push -u origin feature/nombre-funcionalidad
+   # Crear Pull Request a develop en GitHub
+   ```
+
+3. Para preparar una versión:
+   ```
+   git checkout develop
+   git pull
+   git checkout -b release/vX.Y.Z
+   # Realizar ajustes finales y pruebas
+   git add .
+   git commit -m "Preparación para versión X.Y.Z"
+   git push -u origin release/vX.Y.Z
+   # Crear Pull Request a main y develop en GitHub
+   ```
+
+4. Para corregir un error en producción:
+   ```
+   git checkout main
+   git pull
+   git checkout -b hotfix/vX.Y.Z
+   # Corregir el error
+   git add .
+   git commit -m "Corrección de error crítico"
+   git push -u origin hotfix/vX.Y.Z
+   # Crear Pull Request a main y develop en GitHub
+   ```
+
+## Convenciones de Commit
+- feat: Nueva funcionalidad
+- fix: Corrección de error
+- docs: Cambios en documentación
+- style: Cambios de formato, espacios, etc.
+- refactor: Refactorización de código
+- test: Adición o modificación de tests
+- chore: Tareas de mantenimiento
