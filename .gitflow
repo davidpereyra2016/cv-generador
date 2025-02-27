@@ -1,0 +1,113 @@
+# Configuración de GitFlow para cv-generador
+
+## Ramas Principales
+- `main`: Código en producción
+- `develop`: Rama principal de desarrollo
+
+## Ramas de Soporte
+- `feature/*`: Para nuevas funcionalidades (ej: feature/login)
+- `release/*`: Para preparar nuevas versiones (ej: release/v1.0.0)
+- `hotfix/*`: Para correcciones urgentes en producción (ej: hotfix/v1.0.1)
+- `bugfix/*`: Para correcciones de errores no críticos (ej: bugfix/error-imagen)
+
+## Flujo de Trabajo
+1. El desarrollo comienza en la rama `develop`
+2. Para cada nueva funcionalidad:
+   ```
+   git checkout develop
+   git pull
+   git checkout -b feature/nombre-funcionalidad
+   # Desarrollar la funcionalidad
+   git add .
+   git commit -m "Descripción de los cambios"
+   git push -u origin feature/nombre-funcionalidad
+   # Crear Pull Request a develop en GitHub
+   
+   # Al finalizar la feature (después de aprobar el PR):
+   git checkout develop
+   git pull
+   git merge --no-ff feature/nombre-funcionalidad
+   git push origin develop
+   ```
+
+3. Para preparar una versión:
+   ```
+   git checkout develop
+   git pull
+   git checkout -b release/vX.Y.Z
+   # Realizar ajustes finales y pruebas
+   git add .
+   git commit -m "Preparación para versión X.Y.Z"
+   git push -u origin release/vX.Y.Z
+   # Crear Pull Request a main y develop en GitHub
+   
+   # Al finalizar la release (después de aprobar los PRs):
+   git checkout main
+   git pull
+   git merge --no-ff release/vX.Y.Z
+   git tag -a vX.Y.Z -m "Version X.Y.Z"
+   
+   git checkout develop
+   git pull
+   git merge --no-ff release/vX.Y.Z
+   
+   git push origin main develop --tags
+   ```
+
+4. Para corregir un error en producción:
+   ```
+   git checkout main
+   git pull
+   git checkout -b hotfix/vX.Y.Z
+   # Corregir el error
+   git add .
+   git commit -m "Corrección de error crítico"
+   git push -u origin hotfix/vX.Y.Z
+   # Crear Pull Request a main y develop en GitHub
+   
+   # Al finalizar el hotfix (después de aprobar los PRs):
+   git checkout main
+   git pull
+   git merge --no-ff hotfix/vX.Y.Z
+   git tag -a vX.Y.Z -m "Version X.Y.Z"
+   
+   git checkout develop
+   git pull
+   git merge --no-ff hotfix/vX.Y.Z
+   
+   git push origin main develop --tags
+   ```
+
+## Convenciones de Commit
+- feat: Nueva funcionalidad
+- fix: Corrección de error
+- docs: Cambios en documentación
+- style: Cambios de formato, espacios, etc.
+- refactor: Refactorización de código
+- test: Adición o modificación de tests
+- chore: Tareas de mantenimiento
+
+## Uso del Script de Ayuda
+Para facilitar el uso de GitFlow, puedes utilizar el script `gitflow.py`:
+
+```
+# Iniciar una feature
+python gitflow.py start-feature nombre-funcionalidad
+
+# Finalizar una feature (incluye opción de fusión con develop)
+python gitflow.py finish-feature nombre-funcionalidad
+
+# Iniciar una release
+python gitflow.py start-release 1.0.0
+
+# Finalizar una release (incluye opción de fusión con main y develop, y creación de tag)
+python gitflow.py finish-release 1.0.0
+
+# Iniciar un hotfix
+python gitflow.py start-hotfix 1.0.1
+
+# Finalizar un hotfix (incluye opción de fusión con main y develop, y creación de tag)
+python gitflow.py finish-hotfix 1.0.1
+
+# Ver ayuda
+python gitflow.py help
