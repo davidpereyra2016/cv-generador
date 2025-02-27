@@ -36,7 +36,7 @@ def start_feature(feature_name):
     print("Cuando termines, ejecuta: python gitflow.py finish-feature feature_name")
 
 def finish_feature(feature_name):
-    """Finaliza una rama feature y crea un pull request."""
+    """Finaliza una rama feature, la fusiona con develop y crea un pull request."""
     print(f"Finalizando feature: {feature_name}")
     current_branch = subprocess.check_output(
         "git rev-parse --abbrev-ref HEAD", 
@@ -55,6 +55,19 @@ def finish_feature(feature_name):
     
     # Push a la rama remota
     run_command(f"git push -u origin feature/{feature_name}")
+    
+    # Fusionar con develop localmente (opcional, se puede hacer mediante PR)
+    print("\n¿Deseas fusionar la feature con develop localmente? (s/n)")
+    choice = input().lower()
+    if choice == 's' or choice == 'si' or choice == 'sí' or choice == 'y' or choice == 'yes':
+        print("Fusionando con develop...")
+        run_command("git checkout develop")
+        run_command("git pull")  # Asegurarse de tener la última versión de develop
+        run_command(f"git merge --no-ff feature/{feature_name} -m \"Merge feature/{feature_name} into develop\"")
+        run_command("git push origin develop")
+        print("Feature fusionada con develop exitosamente.")
+    else:
+        print("No se realizó la fusión local. Puedes hacerlo mediante un Pull Request.")
     
     # Generar URL para crear PR
     repo_url = subprocess.check_output(
@@ -88,7 +101,7 @@ def start_release(version):
     print("Cuando termines, ejecuta: python gitflow.py finish-release version")
 
 def finish_release(version):
-    """Finaliza una rama release y crea pull requests a main y develop."""
+    """Finaliza una rama release, la fusiona con main y develop, y crea un tag."""
     print(f"Finalizando release: {version}")
     current_branch = subprocess.check_output(
         "git rev-parse --abbrev-ref HEAD", 
@@ -107,6 +120,31 @@ def finish_release(version):
     
     # Push a la rama remota
     run_command(f"git push -u origin release/v{version}")
+    
+    # Fusionar con main y develop localmente (opcional, se puede hacer mediante PR)
+    print("\n¿Deseas fusionar la release con main y develop localmente? (s/n)")
+    choice = input().lower()
+    if choice == 's' or choice == 'si' or choice == 'sí' or choice == 'y' or choice == 'yes':
+        print("Fusionando con main...")
+        run_command("git checkout main")
+        run_command("git pull")  # Asegurarse de tener la última versión de main
+        run_command(f"git merge --no-ff release/v{version} -m \"Merge release/v{version} into main\"")
+        
+        # Crear tag en main
+        print(f"Creando tag v{version}...")
+        run_command(f"git tag -a v{version} -m \"Version {version}\"")
+        
+        print("Fusionando con develop...")
+        run_command("git checkout develop")
+        run_command("git pull")  # Asegurarse de tener la última versión de develop
+        run_command(f"git merge --no-ff release/v{version} -m \"Merge release/v{version} into develop\"")
+        
+        # Push cambios y tags
+        run_command("git push origin main develop --tags")
+        print("Release fusionada con main y develop exitosamente.")
+        print(f"Tag v{version} creado y publicado.")
+    else:
+        print("No se realizó la fusión local. Puedes hacerlo mediante Pull Requests.")
     
     # Generar URLs para crear PRs
     repo_url = subprocess.check_output(
@@ -142,7 +180,7 @@ def start_hotfix(version):
     print("Cuando termines, ejecuta: python gitflow.py finish-hotfix version")
 
 def finish_hotfix(version):
-    """Finaliza una rama hotfix y crea pull requests a main y develop."""
+    """Finaliza una rama hotfix, la fusiona con main y develop, y crea un tag."""
     print(f"Finalizando hotfix: {version}")
     current_branch = subprocess.check_output(
         "git rev-parse --abbrev-ref HEAD", 
@@ -161,6 +199,31 @@ def finish_hotfix(version):
     
     # Push a la rama remota
     run_command(f"git push -u origin hotfix/v{version}")
+    
+    # Fusionar con main y develop localmente (opcional, se puede hacer mediante PR)
+    print("\n¿Deseas fusionar el hotfix con main y develop localmente? (s/n)")
+    choice = input().lower()
+    if choice == 's' or choice == 'si' or choice == 'sí' or choice == 'y' or choice == 'yes':
+        print("Fusionando con main...")
+        run_command("git checkout main")
+        run_command("git pull")  # Asegurarse de tener la última versión de main
+        run_command(f"git merge --no-ff hotfix/v{version} -m \"Merge hotfix/v{version} into main\"")
+        
+        # Crear tag en main
+        print(f"Creando tag v{version}...")
+        run_command(f"git tag -a v{version} -m \"Version {version}\"")
+        
+        print("Fusionando con develop...")
+        run_command("git checkout develop")
+        run_command("git pull")  # Asegurarse de tener la última versión de develop
+        run_command(f"git merge --no-ff hotfix/v{version} -m \"Merge hotfix/v{version} into develop\"")
+        
+        # Push cambios y tags
+        run_command("git push origin main develop --tags")
+        print("Hotfix fusionado con main y develop exitosamente.")
+        print(f"Tag v{version} creado y publicado.")
+    else:
+        print("No se realizó la fusión local. Puedes hacerlo mediante Pull Requests.")
     
     # Generar URLs para crear PRs
     repo_url = subprocess.check_output(
@@ -195,11 +258,11 @@ Uso: python gitflow.py [comando] [argumentos]
 
 Comandos disponibles:
   start-feature <nombre>     Inicia una nueva rama feature
-  finish-feature <nombre>    Finaliza una rama feature y crea un PR
+  finish-feature <nombre>    Finaliza una rama feature, opcionalmente la fusiona con develop y crea un PR
   start-release <version>    Inicia una nueva rama release
-  finish-release <version>   Finaliza una rama release y crea PRs
+  finish-release <version>   Finaliza una rama release, opcionalmente la fusiona con main y develop, crea un tag y PRs
   start-hotfix <version>     Inicia una nueva rama hotfix
-  finish-hotfix <version>    Finaliza una rama hotfix y crea PRs
+  finish-hotfix <version>    Finaliza una rama hotfix, opcionalmente la fusiona con main y develop, crea un tag y PRs
   help                       Muestra esta ayuda
     """)
 
