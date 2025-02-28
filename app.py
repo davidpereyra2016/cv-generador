@@ -185,8 +185,7 @@ def success():
                             
                             # Obtener el color de la plantilla
                             template_type = form_data.get('template_type', 'basico')
-                            # template_color = form_data.get('template_color', 'azul-marino')
-                            template_color = form_data.get('template_color')
+                            template_color = form_data.get('template_color', 'azul-marino')
                             
                             current_app.logger.info(f"[DEBUG] Tipo de plantilla: {template_type}")
                             current_app.logger.info(f"[DEBUG] Color de plantilla: {template_color}")

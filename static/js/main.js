@@ -609,6 +609,7 @@ async function procesarPago() {
             },
             body: JSON.stringify({
                 template_type: data.template_type,
+                template_color: document.querySelector('input[name="template_color"]:checked')?.value || 'azul-marino',
                 external_reference: formId
             })
         });
