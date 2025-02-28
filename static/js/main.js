@@ -151,24 +151,20 @@ function generateBasicTemplate(data) {
     return `
     <div class="cv-preview template-basic">
         <div class="header-section">
-            <div class="row align-items-center">
-                <div class="col-md-9">
-                    <div class="profile-info">
-                        <h1 class="text-black-basic">${data.nombre || ''}</h1>
-                        <div class="contact-info-basic">
-                            ${data.email ? `<p>Email: ${data.email}</p>` : ''}
-                            ${data.telefono ? `<p>Telefono: ${data.telefono}</p>` : ''}
-                            ${data.direccion ? `<p>Dirección: ${data.direccion}</p>` : ''}
-                            ${data.dni ? `<p>DNI: ${data.dni}</p>` : ''}
-                            ${data.fecha_nacimiento ? `<p>Fecha de nacimiento: ${data.fecha_nacimiento}</p>` : ''}
-                            ${data.edad ? `<p>Edad: ${data.edad}</p>` : ''}
-                        </div>
+            <div class="row g-0">
+                <div class="col-9">
+                    <h1>${data.nombre || ''}</h1>
+                    <div class="contact-info-basic">
+                        <p>DNI: ${data.dni || ''}</p>
+                        <p>Fecha de Nacimiento: ${data.fecha_nacimiento || ''}</p>
+                        <p>Edad: ${data.edad || ''}</p>
+                        <p>Email: ${data.email || ''} | Tel: ${data.telefono || ''} | Dirección: ${data.direccion || ''}</p>
                     </div>
                 </div>
                 ${data.profile_image ? `
-                <div class="col-md-3">
+                <div class="col-3">
                     <div class="profile-image">
-                        <img src="${data.profile_image}" alt="Foto de perfil" class="img-fluid">
+                        <img src="${data.profile_image}" alt="Foto de perfil">
                     </div>
                 </div>
                 ` : ''}
@@ -221,24 +217,20 @@ function generateProTemplate(data, templateColor) {
     return `
     <div class="cv-preview template-professional ${templateColor}">
         <div class="header-section">
-            <div class="row align-items-center">
-                <div class="col-md-9">
-                    <div class="profile-info">
-                        <h1 class="text-black-professional">${data.nombre || ''}</h1>
-                        <div class="contact-info-professional">
-                            ${data.email ? `<p>Email: ${data.email}</p>` : ''}
-                            ${data.telefono ? `<p>Telefono: ${data.telefono}</p>` : ''}
-                            ${data.direccion ? `<p>Dirección: ${data.direccion}</p>` : ''}
-                            ${data.dni ? `<p>DNI: ${data.dni}</p>` : ''}
-                            ${data.fecha_nacimiento ? `<p>Fecha de nacimiento: ${data.fecha_nacimiento}</p>` : ''}
-                            ${data.edad ? `<p>Edad: ${data.edad}</p>` : ''}
-                        </div>
+            <div class="row g-0">
+                <div class="col-9">
+                    <h1>${data.nombre || ''}</h1>
+                    <div class="contact-info-professional">
+                        <p>DNI: ${data.dni || ''}</p>
+                        <p>Fecha de Nacimiento: ${data.fecha_nacimiento || ''}</p>
+                        <p>Edad: ${data.edad || ''}</p>
+                        <p>Email: ${data.email || ''} | Tel: ${data.telefono || ''} | Dirección: ${data.direccion || ''}</p>
                     </div>
                 </div>
                 ${data.profile_image ? `
-                <div class="col-md-3">
+                <div class="col-3">
                     <div class="profile-image">
-                        <img src="${data.profile_image}" alt="Foto de perfil" class="img-fluid">
+                        <img src="${data.profile_image}" alt="Foto de perfil">
                     </div>
                 </div>
                 ` : ''}

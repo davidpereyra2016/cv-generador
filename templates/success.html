@@ -87,6 +87,8 @@
                             <i class="fas fa-home"></i> Volver al Inicio
                         </a>
                     </div>
+                    <br>
+                    <p class="lead">Correo de soporte: soporte.generadorcv@gmail.com</p>
                 </div>
             </div>
         </div>
@@ -108,7 +110,6 @@
                 const profileImage = localStorage.getItem('profile_image');
                 if (profileImage) {
                     cvData.profile_image = profileImage;
-                    console.log('[DEBUG] Imagen recuperada del localStorage para PDF, longitud:', profileImage.length);
                 } else {
                     console.log('[DEBUG] No se encontró imagen en localStorage para PDF');
                 }
@@ -125,9 +126,6 @@
                     return;
                 }
                 {% endif %}
-
-                console.log('[DEBUG] Datos a enviar:', cvData);
-
                 // Usar el endpoint /download_pdf
                 fetch('/download_pdf', {
                     method: 'POST',
@@ -155,11 +153,9 @@
                     document.body.removeChild(a);
                 })
                 .catch(error => {
-                    console.error('[ERROR] Error al generar el PDF:', error);
                     alert('Error: ' + error.message);
                 });
             } catch (error) {
-                console.error('[ERROR] Error en generatePDF:', error);
                 alert('Error al generar el PDF: ' + error.message);
             }
         }

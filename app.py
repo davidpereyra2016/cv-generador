@@ -374,6 +374,19 @@ def download_pdf():
                 app.logger.error(f"[ERROR] No se encontró el archivo: {json_path}")
                 return jsonify({"error": "Datos no encontrados"}), 404
         
+        # Aplicar capitalize a los campos necesarios
+        nombre = capitalize_text(data.get('nombre', ''))
+        
+        experiencia = data.get('experiencia', [])
+        for exp in experiencia:
+            exp['empresa'] = capitalize_text(exp.get('empresa', ''))
+            exp['cargo'] = capitalize_text(exp.get('cargo', ''))
+            
+        educacion = data.get('educacion', [])
+        for edu in educacion:
+            edu['titulo'] = capitalize_text(edu.get('titulo', ''))
+            edu['institucion'] = capitalize_text(edu.get('institucion', ''))
+        
         # Verificar si hay imagen después de todo el proceso
         if 'profile_image' in data:
             app.logger.info(f"[DEBUG] Imagen encontrada en los datos finales, longitud: {len(data['profile_image'])}")
@@ -420,6 +433,12 @@ def download_pdf():
     except Exception as e:
         app.logger.error(f"[ERROR] Error generando PDF: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+def capitalize_text(text):
+    """Capitaliza cada palabra en el texto."""
+    if text:
+        return ' '.join(word.capitalize() for word in text.split())
+    return ''
 
 def generate_pdf_content(data):
     try:
@@ -548,7 +567,7 @@ def generate_pdf_content(data):
         pdf.set_font("Arial", 'B', 24)
         pdf.set_text_color(255, 255, 255)  # Blanco
         pdf.set_xy(10, 10)
-        pdf.cell(160, 10, txt=data.get('nombre', 'Sin Nombre'), ln=True, align='L')
+        pdf.cell(160, 10, txt=capitalize_text(data.get('nombre', 'Sin Nombre')), ln=True, align='L')
         
         # Información de contacto secundaria (uno debajo del otro)
         pdf.set_font("Arial", '', 11)
@@ -576,12 +595,12 @@ def generate_pdf_content(data):
         # Experiencia Laboral
         pdf.set_font("Arial", 'B', 16)
         pdf.set_text_color(*accent_color)
-        pdf.cell(0, 10, txt="EXPERIENCIA LABORAL", ln=True, align='L')
+        pdf.cell(0, 10, txt="Experiencia Laboral", ln=True, align='L')
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(5)
         
-        experiencias = data.get('experiencia', [])
-        for exp in experiencias:
+        experiencia = data.get('experiencia', [])
+        for exp in experiencia:
             # Empresa y periodo en la misma línea
             pdf.set_font("Arial", 'B', 12)
             pdf.set_text_color(*accent_color)
@@ -592,7 +611,7 @@ def generate_pdf_content(data):
             empresa_width = pdf.get_string_width(empresa)
             
             # Imprimir empresa
-            pdf.cell(empresa_width + 5, 8, txt=empresa, align='L')
+            pdf.cell(empresa_width + 5, 8, txt=capitalize_text(empresa), align='L')
             
             # Imprimir periodo a la derecha
             pdf.set_font("Arial", '', 10)
@@ -602,7 +621,7 @@ def generate_pdf_content(data):
             # Cargo
             pdf.set_font("Arial", 'I', 11)
             pdf.set_text_color(*text_color)
-            pdf.cell(0, 6, txt=exp.get('cargo', ''), ln=True, align='L')
+            pdf.cell(0, 6, txt=capitalize_text(exp.get('cargo', '')), ln=True, align='L')
             
             # Descripción
             if exp.get('descripcion'):
@@ -615,7 +634,7 @@ def generate_pdf_content(data):
         pdf.ln(5)
         pdf.set_font("Arial", 'B', 16)
         pdf.set_text_color(*accent_color)
-        pdf.cell(0, 10, txt="EDUCACIÓN", ln=True, align='L')
+        pdf.cell(0, 10, txt="Educación", ln=True, align='L')
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(5)
         
@@ -631,7 +650,7 @@ def generate_pdf_content(data):
             titulo_width = pdf.get_string_width(titulo)
             
             # Imprimir título
-            pdf.cell(titulo_width + 5, 8, txt=titulo, align='L')
+            pdf.cell(titulo_width + 5, 8, txt=capitalize_text(titulo), align='L')
             
             # Imprimir año a la derecha
             pdf.set_font("Arial", '', 10)
@@ -641,7 +660,7 @@ def generate_pdf_content(data):
             # Institución
             pdf.set_font("Arial", 'I', 11)
             pdf.set_text_color(*text_color)
-            pdf.cell(0, 6, txt=edu.get('institucion', ''), ln=True, align='L')
+            pdf.cell(0, 6, txt=capitalize_text(edu.get('institucion', '')), ln=True, align='L')
             
             pdf.ln(5)
         
@@ -650,7 +669,7 @@ def generate_pdf_content(data):
             pdf.ln(5)
             pdf.set_font("Arial", 'B', 16)
             pdf.set_text_color(*accent_color)
-            pdf.cell(0, 10, txt="HABILIDADES", ln=True, align='L')
+            pdf.cell(0, 10, txt="Habilidades", ln=True, align='L')
             pdf.line(10, pdf.get_y(), 200, pdf.get_y())
             pdf.ln(5)
             

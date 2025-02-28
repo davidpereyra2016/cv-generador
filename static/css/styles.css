@@ -449,59 +449,74 @@ h2 {
 }
 
 /* Estilos para la vista previa del CV */
-#cvPreview {
-    font-family: 'Roboto', Arial, sans-serif;
-    padding: 30px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    border-radius: 15px;
-    transition: all 0.3s ease;
-    background-color: white;
-    max-width: 100%;
+.cv-preview {
+    background: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-size: 12px;
+    line-height: 1.4;
+    max-width: 800px;
     margin: 0 auto;
-    overflow: hidden;
 }
 
-#cvPreview h1 {
-    /* color: white; */
-    margin-bottom: 20px;
+.cv-preview .header-section {
+    background-color: #1a4971;
+    color: white;
+    padding: 20px;
+    margin: -20px -20px 20px -20px;
 }
 
-#cvPreview h2 {
-    color: #34495e;
-    border-bottom: 2px solid #3498db;
-    padding-bottom: 5px;
-    margin-top: 20px;
-}
-
-#cvPreview .contact-info {
-    margin: 15px 0;
-    /* color: #7f8c8d; */
-}
-.contact-info-basic {
-    color: #7f8c8d;
-}
-.contact-info-professional {
+.cv-preview .header-section h1 {
+    font-size: 18px;
+    margin: 0 0 10px 0;
     color: white;
 }
 
-#cvPreview .education-item,
-#cvPreview .experience-item {
-    margin: 15px 0;
+.cv-preview .contact-info-basic {
+    font-size: 11px;
+    margin-top: 5px;
 }
 
-#cvPreview .skills-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+.cv-preview .contact-info-basic p {
+    margin: 0;
+    line-height: 1.3;
 }
 
-#cvPreview .skill-item {
-    background-color: #e1f5fe;
-    padding: 5px 10px;
-    border-radius: 15px;
+.cv-preview .profile-image {
+    text-align: right;
+}
+
+.cv-preview .profile-image img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid white;
+}
+
+.cv-preview .content-section {
+    margin-top: 20px;
+}
+
+.cv-preview .content-section h2 {
     font-size: 14px;
+    color: #1a4971;
+    border-bottom: 1px solid #1a4971;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.cv-preview .content-section p {
+    margin: 0 0 5px 0;
+    font-size: 11px;
+}
+
+.template-basic .header-section {
+    background-color: #1a4971;
+}
+
+.template-basic .profile-info {
+    padding-right: 20px;
 }
 
 /* Estilos base compartidos */
@@ -871,7 +886,7 @@ body {
     height: 180px;
     border-radius: 50%;
     overflow: hidden;
-    border: 3px solid #fff;
+    border: 3px solid white;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
 }
@@ -1005,4 +1020,13 @@ body {
     font-size: 14px;
     color: #6c757d;
     margin-top: 15px;
+}
+
+/* Capitalize para nombres y títulos en la vista previa */
+.cv-preview h1,
+.cv-preview .education-item h3,
+.cv-preview .education-item .institucion,
+.cv-preview .experience-item h3,
+.cv-preview .experience-item .empresa {
+    text-transform: capitalize;
 }
