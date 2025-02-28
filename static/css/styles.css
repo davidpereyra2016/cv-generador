@@ -1,17 +1,208 @@
+/* Estilos generales */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Roboto', sans-serif;
+    color: #333;
+}
+
+.container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Estilos para el título principal */
+.main-title {
+    color: #1a4971;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    margin-bottom: 15px;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 10px;
+}
+
+.main-title:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
+    border-radius: 3px;
+}
+
+/* Mejoras en la sección de formulario */
+.col-md-6.p-4 {
+    padding: 30px !important;
+}
+
+/* Mejoras en los iconos */
+.fas {
+    color: #1a4971;
+}
+
+.btn .fas {
+    color: inherit;
+}
+
+/* Mejoras en los checkboxes */
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    margin-top: 0.25em;
+    border-color: #1a4971;
+}
+
+.form-check-input:checked {
+    background-color: #1a4971;
+    border-color: #1a4971;
+}
+
+.form-check-label {
+    padding-left: 5px;
+    font-size: 14px;
+}
+
+/* Mejoras en los elementos de habilidad */
+.habilidad-item {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.habilidad-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
+}
+
+/* Mejoras en los mensajes de ayuda */
+.form-text {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+/* Mejoras en la responsividad */
+@media (max-width: 768px) {
+    .template-selector {
+        flex-direction: column;
+    }
+    
+    .template-option {
+        margin-bottom: 20px;
+    }
+    
+    .col-md-6.p-4 {
+        padding: 15px !important;
+    }
+}
+
 .preview-section {
     background-color: #f8f9fa;
-    min-height: 100vh;
     border-left: 1px solid #dee2e6;
-    padding: 20px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    height: auto;
+}
+
+.preview-container {
+    position: sticky;
+    top: 20px;
+    width: 100%;
+    max-width: 800px;
+    transition: all 0.3s ease;
+}
+
+.cv-preview-container {
+    width: 100%;
+    max-width: 800px;
+    transition: all 0.3s ease;
 }
 
 #cvPreview {
+    font-family: 'Roboto', Arial, sans-serif;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    transition: all 0.3s ease;
     background-color: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    min-height: 800px;
     max-width: 100%;
     margin: 0 auto;
     overflow: hidden;
+}
+
+#cvPreview h1 {
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+#cvPreview h2 {
+    color: #34495e;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 8px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+#cvPreview .contact-info {
+    margin: 15px 0;
+    line-height: 1.6;
+}
+
+.contact-info-basic {
+    color: #7f8c8d;
+}
+
+.contact-info-professional {
+    color: white;
+}
+
+#cvPreview .education-item,
+#cvPreview .experience-item {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+#cvPreview .education-item:hover,
+#cvPreview .experience-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transform: translateY(-2px);
+}
+
+#cvPreview .skills-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+#cvPreview .skill-item {
+    background-color: #e1f5fe;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+#cvPreview .skill-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 
 .text-black-basic {
@@ -198,6 +389,11 @@ h2 {
     cursor: pointer;
     max-width: 300px; /* Asegurar mismo tamaño máximo */
     margin: 0 auto;
+    transition: transform 0.3s ease;
+}
+
+.template-option:hover {
+    transform: translateY(-5px);
 }
 
 .template-option input[type="radio"] {
@@ -211,42 +407,58 @@ h2 {
     text-align: center;
     transition: all 0.3s ease;
     background: #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     height: 100%; /* Asegurar misma altura */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    overflow: hidden;
 }
 
 .template-option input[type="radio"]:checked + .template-card {
     border-color: #1a4971;
-    box-shadow: 0 0 15px rgba(26,73,113,0.3);
-}
-
-.template-card img {
-    width: 100%;
-    height: 200px; /* Altura fija para todas las imágenes */
-    object-fit: contain; /* Mantener proporción sin recortar */
-    border-radius: 5px;
-    margin-bottom: 15px;
+    box-shadow: 0 8px 20px rgba(26,73,113,0.3);
+    transform: scale(1.02);
 }
 
 .template-card h3 {
     color: #1a4971;
     margin: 0;
-    font-size: 1.2em;
+    font-size: 1.4em;
+    font-weight: 600;
 }
 
 .template-card p {
     color: #666;
-    font-size: 0.9em;
-    margin: 10px 0 0;
+    font-size: 0.95em;
+    margin: 15px 0;
+    line-height: 1.5;
+}
+
+.price-amount {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 10px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.price-amount .h3 {
+    font-weight: 700;
+    color: #1a4971;
 }
 
 /* Estilos para la vista previa del CV */
 #cvPreview {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
     padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    background-color: white;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
 }
 
 #cvPreview h1 {
@@ -402,13 +614,136 @@ h2 {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Estilos para el formulario principal */
+/* Estilos para selectores de color */
+.color-selector {
+    margin-top: 15px;
+}
+
+.color-option {
+    cursor: pointer;
+    margin: 0 5px;
+    position: relative;
+}
+
+.color-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.color-circle {
+    display: block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #e0e0e0;
+    transition: all 0.2s ease;
+}
+
+.color-option input[type="radio"]:checked + .color-circle {
+    transform: scale(1.2);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #1a4971;
+}
+
+/* Estilos para los diferentes colores de plantilla profesional */
+.template-professional.azul-marino .header-section {
+    background-color: #1a4971;
+}
+
+.template-professional.azul-marino h2,
+.template-professional.azul-marino h3 {
+    color: #1a4971;
+}
+
+.template-professional.amarillo-claro .header-section {
+    background-color: #f9d56e;
+}
+
+.template-professional.amarillo-claro h2,
+.template-professional.amarillo-claro h3 {
+    color: #d4a81e;
+}
+
+.template-professional.rosado-pastel .header-section {
+    background-color: #f8c8dc;
+}
+
+.template-professional.rosado-pastel h2,
+.template-professional.rosado-pastel h3 {
+    color: #e75480;
+}
+
+.template-professional.morado .header-section {
+    background-color: #8e44ad;
+}
+
+.template-professional.morado h2,
+.template-professional.morado h3 {
+    color: #8e44ad;
+}
+
+/* Ajustes de texto para cada color */
+.template-professional.amarillo-claro .header-section h1,
+.template-professional.amarillo-claro .header-section p,
+.template-professional.rosado-pastel .header-section h1,
+.template-professional.rosado-pastel .header-section p {
+    color: #333;
+}
+
+.template-professional.azul-marino .header-section h1,
+.template-professional.azul-marino .header-section p,
+.template-professional.morado .header-section h1,
+.template-professional.morado .header-section p {
+    color: #fff;
+}
+
+/* Mejoras en los botones */
+.btn-primary {
+    background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
+    border: none;
+    padding: 12px 25px;
+    font-weight: 600;
+    border-radius: 30px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #15395a 0%, #1e2b3a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    border: none;
+    padding: 12px 25px;
+    font-weight: 600;
+    border-radius: 30px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+
+/* Mejoras en el formulario */
 .form-section {
     background: white;
-    border-radius: 10px;
+    border-radius: 15px;
     padding: 25px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.form-section:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
 .form-section h3 {
@@ -416,107 +751,7 @@ h2 {
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 2px solid #1a4971;
-}
-
-.form-floating {
-    margin-bottom: 15px;
-}
-
-.form-floating > label {
-    padding-left: 15px;
-}
-
-.form-control {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 12px 15px;
-    transition: all 0.3s ease;
-}
-
-.form-control:focus {
-    border-color: #1a4971;
-    box-shadow: 0 0 0 0.2rem rgba(26,73,113,0.25);
-}
-
-/* Estilos para la sección de imagen de perfil */
-.profile-upload {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.profile-preview {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 2px solid #ddd;
-}
-
-.profile-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.upload-button {
-    position: relative;
-}
-
-.upload-button input[type="file"] {
-    position: absolute;
-    top: 0;
-    left: 0;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-}
-
-/* Estilos para los botones de acción */
-.action-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.btn-add {
-    background-color: #1a4971;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-add:hover {
-    background-color: #15395a;
-}
-
-.btn-remove {
-    color: #dc3545;
-    background: none;
-    border: none;
-    padding: 0;
-    font: inherit;
-    cursor: pointer;
-    outline: inherit;
-}
-
-.btn-remove:hover {
-    color: #bd2130;
-}
-
-/* Animaciones */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.form-section {
-    animation: fadeIn 0.5s ease-out;
+    font-weight: 600;
 }
 
 /* Estilos responsivos */
@@ -562,6 +797,17 @@ h2 {
     }
 }
 
+@media (max-width: 768px) {
+    .preview-container {
+        position: relative;
+        top: 0;
+    }
+    
+    .preview-section {
+        margin-top: 30px;
+    }
+}
+
 /* Estilo para el fondo de todas las páginas */
 body {
     background-color: white; /* Azul celeste claro */
@@ -582,4 +828,181 @@ body {
     min-height: 100vh;
     border-left: 1px solid #dee2e6;
     padding: 20px;
+}
+
+/* Mejoras en los campos de formulario */
+.form-floating {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-floating > label {
+    padding-left: 15px;
+    color: #495057;
+    font-weight: 500;
+}
+
+.form-control {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    background-color: #f8f9fa;
+}
+
+.form-control:focus {
+    border-color: #1a4971;
+    box-shadow: 0 0 0 0.2rem rgba(26,73,113,0.15);
+    background-color: #fff;
+}
+
+/* Mejoras en la sección de imagen de perfil */
+.profile-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.profile-preview {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #fff;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.profile-preview:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.profile-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.5s ease;
+}
+
+.upload-button {
+    position: relative;
+    margin-top: 10px;
+}
+
+.upload-button .btn {
+    padding: 10px 20px;
+    border-radius: 30px;
+    background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
+    color: white;
+    font-weight: 500;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.upload-button .btn:hover {
+    background: linear-gradient(135deg, #15395a 0%, #1e2b3a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+
+.upload-button input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+/* Mejoras en los elementos de educación y experiencia */
+.educacion-item, .experiencia-item {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border-left: 4px solid #1a4971;
+}
+
+.educacion-item:hover, .experiencia-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transform: translateY(-3px);
+}
+
+/* Mejoras en los botones de acción */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.btn-add {
+    background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.btn-add:hover {
+    background: linear-gradient(135deg, #15395a 0%, #1e2b3a 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+}
+
+.btn-remove {
+    color: #dc3545;
+    background: none;
+    border: none;
+    padding: 8px 15px;
+    font: inherit;
+    cursor: pointer;
+    outline: inherit;
+    transition: all 0.3s ease;
+    border-radius: 30px;
+}
+
+.btn-remove:hover {
+    color: #bd2130;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-section {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Mejoras en la sección de botones finales */
+.form-section.text-center {
+    padding: 30px;
+}
+
+.form-section.text-center h3 {
+    margin-bottom: 25px;
+}
+
+.d-flex.gap-2.justify-content-center {
+    margin-bottom: 20px;
+}
+
+.form-section.text-center p {
+    font-size: 14px;
+    color: #6c757d;
+    margin-top: 15px;
 }

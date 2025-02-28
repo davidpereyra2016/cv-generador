@@ -71,6 +71,9 @@
                     <div class="template-info">
                         <h4>Detalles de tu compra:</h4>
                         <p>Plantilla seleccionada: <strong>{{ template_type.capitalize() }}</strong></p>
+                        {% if template_type == 'profesional' %}
+                        <p>Color seleccionado: <strong>{{ template_color.replace('-', ' ').capitalize() }}</strong></p>
+                        {% endif %}
                         {% if payment_id %}
                         <p>ID de Pago: <strong>{{ payment_id }}</strong></p>
                         {% endif %}
@@ -97,9 +100,22 @@
                 // Si tenemos form_id, usarlo directamente
                 cvData = {
                     form_id: '{{ form_id }}',
-                    template_type: '{{ template_type }}'
+                    template_type: '{{ template_type }}',
+                    template_color: '{{ template_color }}'  // Este es el color del JSON guardado
                 };
+                
+                // Obtener la imagen del localStorage y agregarla a los datos
+                const profileImage = localStorage.getItem('profile_image');
+                if (profileImage) {
+                    cvData.profile_image = profileImage;
+                    console.log('[DEBUG] Imagen recuperada del localStorage para PDF, longitud:', profileImage.length);
+                } else {
+                    console.log('[DEBUG] No se encontró imagen en localStorage para PDF');
+                }
+                
                 console.log('[DEBUG] Usando form_id:', cvData.form_id);
+                console.log('[DEBUG] Tipo de plantilla:', cvData.template_type);
+                console.log('[DEBUG] Color de plantilla:', cvData.template_color);
                 {% else %}
                 // Intentar recuperar datos del localStorage como respaldo
                 cvData = JSON.parse(localStorage.getItem('cv_data'));

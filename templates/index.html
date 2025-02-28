@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de CV</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://sdk.mercadopago.com/js/v2"></script>
 </head>
@@ -13,13 +17,16 @@
         <div class="row">
             <!-- Formulario -->
             <div class="col-md-6 p-4">
-                <h2 class="text-center mb-4">Crea tu Currículum Vitae</h2>
+                <div class="text-center mb-4">
+                    <h2 class="main-title">Crea tu Currículum Vitae</h2>
+                    <p class="text-muted">Diseña tu CV profesional en minutos</p>
+                </div>
                 
                 <form id="cvForm">
                     <!-- Selector de plantilla -->
                      
                     <div class="form-section">
-                        <h3>Elige tu Plantilla</h3>
+                        <h3><i class="fas fa-palette me-2"></i>Elige tu Plantilla</h3>
                         <div class="template-selector">
                             <label class="template-option">
                                 <input type="radio" name="template_type" value="basico" checked>
@@ -43,6 +50,27 @@
                                         <span class="h3 text-primary">${{ precio_profesional }}</span>
                                         <span class="text-muted">ARS</span>
                                     </div>
+                                    <div class="color-selector mt-3">
+                                        <p class="text-muted mb-2">Selecciona un color:</p>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <label class="color-option">
+                                                <input type="radio" name="template_color" value="azul-marino" checked>
+                                                <span class="color-circle" style="background-color: #1a4971;"></span>
+                                            </label>
+                                            <label class="color-option">
+                                                <input type="radio" name="template_color" value="amarillo-claro">
+                                                <span class="color-circle" style="background-color: #f9d56e;"></span>
+                                            </label>
+                                            <label class="color-option">
+                                                <input type="radio" name="template_color" value="rosado-pastel">
+                                                <span class="color-circle" style="background-color: #f8c8dc;"></span>
+                                            </label>
+                                            <label class="color-option">
+                                                <input type="radio" name="template_color" value="morado">
+                                                <span class="color-circle" style="background-color: #8e44ad;"></span>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </label>
                         </div>
@@ -51,14 +79,14 @@
 
                     <!-- Foto de perfil -->
                     <div class="form-section">
-                        <h3>Foto de Perfil</h3>
+                        <h3><i class="fas fa-camera me-2"></i>Foto de Perfil</h3>
                         <div class="profile-upload">
                             <div class="profile-preview">
                                 <img id="previewImage" src="/static/img/default-profile.png" alt="Vista previa">
                             </div>
                             <div class="upload-button">
                                 <label for="profileImageInput" class="btn btn-outline-primary">
-                                    <i class="fas fa-upload"></i> Seleccionar Foto
+                                    <i class="fas fa-upload me-2"></i> Seleccionar Foto
                                 </label>
                                 <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
                                 <small class="form-text text-muted mt-2">Tamaño máximo: 2MB. La imagen se redimensionará a 300x300px.</small>
@@ -68,7 +96,7 @@
 
                     <!-- Información Personal -->
                     <div class="form-section">
-                        <h3>Información Personal</h3>
+                        <h3><i class="fas fa-user me-2"></i>Información Personal</h3>
                         <div class="form-floating mb-3">
                             <input type="text" class="form-control" id="nombre" name="nombre" placeholder=" ">
                             <label for="nombre">Nombre Completo</label>
@@ -94,14 +122,14 @@
                             <label for="telefono">Teléfono</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="direccion" name="direccion" placeholder=" ">
+                            <textarea class="form-control" id="direccion" name="direccion" placeholder=" " style="height: 100px"></textarea>
                             <label for="direccion">Dirección</label>
                         </div>
                     </div>
 
                     <!-- Educación -->
                     <div class="form-section">
-                        <h3>Educación</h3>
+                        <h3><i class="fas fa-graduation-cap me-2"></i>Educación</h3>
                         <div id="educacionContainer">
                             <div class="educacion-item">
                                 <div class="row">
@@ -129,13 +157,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarEducacion()">Agregar Educación</button>
+                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarEducacion()">
+                                <i class="fas fa-plus me-2"></i>Agregar Educación
+                            </button>
                         </div>
                     </div>
 
                     <!-- Experiencia Laboral -->
                     <div class="form-section">
-                        <h3>Experiencia Laboral</h3>
+                        <h3><i class="fas fa-briefcase me-2"></i>Experiencia Laboral</h3>
                         <div id="experienciaContainer">
                             <div class="experiencia-item">
                                 <div class="row">
@@ -169,28 +199,34 @@
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarExperiencia()">Agregar Experiencia</button>
+                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarExperiencia()">
+                                <i class="fas fa-plus me-2"></i>Agregar Experiencia
+                            </button>
                         </div>
                     </div>
 
                     <!-- Habilidades -->
                     <div class="form-section">
-                        <h3>Habilidades</h3>
+                        <h3><i class="fas fa-star me-2"></i>Habilidades</h3>
                         <div id="habilidadesContainer">
                             <!-- Los elementos de habilidades se agregarán aquí -->
                         </div>
                         <button type="button" class="btn-add" onclick="agregarHabilidad()">
-                            <i class="fas fa-plus"></i> Agregar Habilidad
+                            <i class="fas fa-plus me-2"></i> Agregar Habilidad
                         </button>
                     </div>
 
                     <!-- Botón de pago -->
                     <div class="form-section text-center">
-                        <h3>Pagar y descargar CV</h3>
+                        <h3><i class="fas fa-file-pdf me-2"></i>Pagar y descargar CV</h3>
                         <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-primary btn-lg" onclick="procesarPago()">Continuar</button>
+                            <button type="button" class="btn btn-primary btn-lg" onclick="procesarPago()">
+                                <i class="fas fa-credit-card me-2"></i>Continuar
+                            </button>
                             {% if config.get('ENVIRONMENT', 'development') != 'production' %}
-                            <button type="button" class="btn btn-secondary btn-lg" onclick="descargarPDFDirecto()">Descargar PDF</button>
+                            <button type="button" class="btn btn-secondary btn-lg" onclick="descargarPDFDirecto()">
+                                <i class="fas fa-download me-2"></i>Descargar PDF
+                            </button>
                             {% endif %}
                         </div>
                         <p style="color: gray" class="mt-2">*Antes de continuar, por favor, revise que los datos esten correctos.</p>
@@ -199,9 +235,11 @@
             </div>
 
             <!-- Vista previa -->
-            <div class="col-md-6 p-4">
-                <h2 class="text-center mb-4">Vista Previa</h2>
-                <div id="cvPreview" class="cv-preview-container"></div>
+            <div class="col-md-6 p-4 preview-section">
+                <div class="preview-container">
+                    <h2 class="text-center mb-4">Vista Previa</h2>
+                    <div id="cvPreview" class="cv-preview-container"></div>
+                </div>
             </div>
         </div>
     </div>

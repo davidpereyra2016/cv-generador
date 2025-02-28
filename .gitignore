@@ -4,3 +4,5 @@ __pycache__/
 bd_pdf/
 static/uploads/
 .vercel
+.gitflow
+.gitattributes
