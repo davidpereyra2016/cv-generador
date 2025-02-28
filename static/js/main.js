@@ -64,6 +64,11 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', updateCVPreview);
     });
 
+    // Event listener para el selector de color de plantilla
+    document.querySelectorAll('input[name="template_color"]').forEach(radio => {
+        radio.addEventListener('change', updateCVPreview);
+    });
+
     // Cargar datos guardados si existen
     loadSavedData();
     
@@ -104,180 +109,42 @@ function loadSavedData() {
 }
 
 function updateCVPreview() {
-    // Obtener todos los datos del formulario
-    const nombre = document.getElementById('nombre').value;
-    const email = document.getElementById('email').value;
-    const telefono = document.getElementById('telefono').value;
-    const direccion = document.getElementById('direccion').value;
-    const dni = document.getElementById('dni').value;
-    const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
-    const edad = document.getElementById('edad').value;
-    
-    // Obtener experiencia laboral
-    const empresas = Array.from(document.querySelectorAll('[name="empresa"]')).map(input => input.value);
-    const cargos = Array.from(document.querySelectorAll('[name="cargo"]')).map(input => input.value);
-    const periodos = Array.from(document.querySelectorAll('[name="periodo"]')).map(input => input.value);
-    const descripciones = Array.from(document.querySelectorAll('[name="descripcion"]')).map(input => input.value);
-    
-    // Obtener educación
-    const titulos = Array.from(document.querySelectorAll('[name="titulo"]')).map(input => input.value);
-    const instituciones = Array.from(document.querySelectorAll('[name="institucion"]')).map(input => input.value);
-    const fechasInicioEdu = Array.from(document.querySelectorAll('[name="fecha_inicio_edu"]')).map(input => input.value);
-    const fechasFinEdu = Array.from(document.querySelectorAll('[name="fecha_fin_edu"]')).map(input => input.value);
-    const enCurso = Array.from(document.querySelectorAll('[name="en_curso"]')).map(input => input.checked ? 'on' : 'off');
-    
-    // Obtener habilidades
-    const habilidades = Array.from(document.querySelectorAll('[name="habilidad"]')).map(input => input.value);
-    
-    // Obtener tipo de plantilla
-    const templateType = document.querySelector('input[name="template_type"]:checked').value;
-    
-    // Obtener imagen de perfil - SIEMPRE obtener la imagen del localStorage
-    const profileImage = localStorage.getItem('profile_image');
-    console.log('[DEBUG] Imagen recuperada para vista previa:', profileImage ? 'Sí (longitud: ' + profileImage.length + ')' : 'No');
-    
-    // Crear objeto con todos los datos
-    const cvData = {
-        nombre,
-        email,
-        telefono,
-        direccion,
-        dni,
-        fecha_nacimiento: fechaNacimiento,
-        edad,
-        experiencia: [],
-        educacion: [],
-        habilidades,
-        template_type: templateType,
-        profile_image: profileImage
-    };
-    
-    // Agregar experiencia laboral
-    for (let i = 0; i < empresas.length; i++) {
-        if (empresas[i] || cargos[i] || periodos[i] || descripciones[i]) {
-            cvData.experiencia.push({
-                empresa: empresas[i] || '',
-                cargo: cargos[i] || '',
-                periodo: periodos[i] || '',
-                descripcion: descripciones[i] || ''
-            });
+    try {
+        // Obtener datos del formulario
+        const formData = obtenerDatosFormulario();
+        
+        // Obtener tipo de plantilla seleccionada
+        const templateType = document.querySelector('input[name="template_type"]:checked').value;
+        
+        // Obtener color seleccionado (solo para plantilla profesional)
+        let templateColor = null;
+        if (templateType === 'profesional') {
+            const colorSelected = document.querySelector('input[name="template_color"]:checked');
+            if (colorSelected) {
+                templateColor = colorSelected.value;
+            }
         }
-    }
-    
-    // Agregar educación
-    for (let i = 0; i < titulos.length; i++) {
-        if (titulos[i] || instituciones[i]) {
-            cvData.educacion.push({
-                titulo: titulos[i] || '',
-                institucion: instituciones[i] || '',
-                año: `${fechasInicioEdu[i] || ''} - ${enCurso[i] === 'on' ? 'En curso' : fechasFinEdu[i] || ''}`
-            });
+        
+        // Obtener imagen de perfil directamente del localStorage
+        const profileImage = localStorage.getItem('profile_image');
+        if (profileImage) {
+            formData.profile_image = profileImage;
+            console.log('[DEBUG] Imagen recuperada del localStorage para vista previa');
         }
-    }
-    
-    // Guardar en localStorage para usar después
-    localStorage.setItem('cv_data', JSON.stringify(cvData));
-    
-    // Para depuración
-    console.log('[DEBUG] Datos guardados en localStorage:', JSON.stringify(cvData).substring(0, 100) + '...');
-    
-    // Actualizar vista previa
-    const template = document.querySelector('input[name="template_type"]:checked').value;
-    const previewHtml = template === 'basico' ? 
-        generateBasicTemplate(cvData) : 
-        generateProTemplate(cvData);
-    
-    document.getElementById('cvPreview').innerHTML = previewHtml;
-}
-
-function updatePreview() {
-    const form = document.getElementById('cvForm');
-    const formData = new FormData(form);
-    
-    // Obtener todos los datos del formulario
-    const nombre = document.getElementById('nombre').value;
-    const email = document.getElementById('email').value;
-    const telefono = document.getElementById('telefono').value;
-    const direccion = document.getElementById('direccion').value;
-    const dni = document.getElementById('dni').value;
-    const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
-    const edad = document.getElementById('edad').value;
-    
-    // Obtener experiencia laboral
-    const empresas = Array.from(document.querySelectorAll('[name="empresa"]')).map(input => input.value);
-    const cargos = Array.from(document.querySelectorAll('[name="cargo"]')).map(input => input.value);
-    const periodos = Array.from(document.querySelectorAll('[name="periodo"]')).map(input => input.value);
-    const descripciones = Array.from(document.querySelectorAll('[name="descripcion"]')).map(input => input.value);
-    
-    // Obtener educación
-    const titulos = Array.from(document.querySelectorAll('[name="titulo"]')).map(input => input.value);
-    const instituciones = Array.from(document.querySelectorAll('[name="institucion"]')).map(input => input.value);
-    const fechasInicioEdu = Array.from(document.querySelectorAll('[name="fecha_inicio_edu"]')).map(input => input.value);
-    const fechasFinEdu = Array.from(document.querySelectorAll('[name="fecha_fin_edu"]')).map(input => input.value);
-    const enCurso = Array.from(document.querySelectorAll('[name="en_curso"]')).map(input => input.checked ? 'on' : 'off');
-    
-    // Obtener habilidades
-    const habilidades = Array.from(document.querySelectorAll('[name="habilidad"]')).map(input => input.value);
-    
-    // Obtener tipo de plantilla
-    const templateType = document.querySelector('input[name="template_type"]:checked').value;
-    
-    // Obtener imagen de perfil - SIEMPRE obtener la imagen del localStorage
-    const profileImage = localStorage.getItem('profile_image');
-    console.log('[DEBUG] Imagen recuperada para vista previa:', profileImage ? 'Sí (longitud: ' + profileImage.length + ')' : 'No');
-    
-    // Crear objeto con todos los datos
-    const cvData = {
-        nombre,
-        email,
-        telefono,
-        direccion,
-        dni,
-        fecha_nacimiento: fechaNacimiento,
-        edad,
-        experiencia: [],
-        educacion: [],
-        habilidades,
-        template_type: templateType,
-        profile_image: profileImage
-    };
-    
-    // Agregar experiencia laboral
-    for (let i = 0; i < empresas.length; i++) {
-        if (empresas[i] || cargos[i] || periodos[i] || descripciones[i]) {
-            cvData.experiencia.push({
-                empresa: empresas[i] || '',
-                cargo: cargos[i] || '',
-                periodo: periodos[i] || '',
-                descripcion: descripciones[i] || ''
-            });
+        
+        // Generar HTML según el tipo de plantilla
+        let previewHTML = '';
+        if (templateType === 'profesional') {
+            previewHTML = generateProTemplate(formData, templateColor);
+        } else {
+            previewHTML = generateBasicTemplate(formData);
         }
+        
+        // Actualizar el contenedor de vista previa
+        document.getElementById('cvPreview').innerHTML = previewHTML;
+    } catch (error) {
+        console.error('Error al actualizar la vista previa:', error);
     }
-    
-    // Agregar educación
-    for (let i = 0; i < titulos.length; i++) {
-        if (titulos[i] || instituciones[i]) {
-            cvData.educacion.push({
-                titulo: titulos[i] || '',
-                institucion: instituciones[i] || '',
-                año: `${fechasInicioEdu[i] || ''} - ${enCurso[i] === 'on' ? 'En curso' : fechasFinEdu[i] || ''}`
-            });
-        }
-    }
-    
-    // Guardar en localStorage para usar después
-    localStorage.setItem('cv_data', JSON.stringify(cvData));
-    
-    // Para depuración
-    console.log('[DEBUG] Datos guardados en localStorage:', JSON.stringify(cvData).substring(0, 100) + '...');
-    
-    // Actualizar vista previa
-    const template = document.querySelector('input[name="template_type"]:checked').value;
-    const previewHtml = template === 'basico' ? 
-        generateBasicTemplate(cvData) : 
-        generateProTemplate(cvData);
-    
-    document.getElementById('cvPreview').innerHTML = previewHtml;
 }
 
 function generateBasicTemplate(data) {
@@ -350,9 +217,9 @@ function generateBasicTemplate(data) {
     </div>`;
 }
 
-function generateProTemplate(data) {
+function generateProTemplate(data, templateColor) {
     return `
-    <div class="cv-preview template-professional">
+    <div class="cv-preview template-professional ${templateColor}">
         <div class="header-section">
             <div class="row align-items-center">
                 <div class="col-md-9">
@@ -468,8 +335,22 @@ function updatePreview() {
         reader.readAsDataURL(fileInput.files[0]);
     }
 
+    // Obtener tipo de plantilla
+    const templateType = document.querySelector('input[name="template_type"]:checked').value;
+    
+    // Obtener color seleccionado (solo para plantilla profesional)
+    let templateColor = null;
+    if (templateType === 'profesional') {
+        const colorSelected = document.querySelector('input[name="template_color"]:checked');
+        if (colorSelected) {
+            templateColor = colorSelected.value;
+            console.log('[DEBUG] Color seleccionado:', templateColor);
+        }
+    }
+
     const cvData = {
-        template_type: document.querySelector('input[name="template_type"]:checked').value,
+        template_type: templateType,
+        template_color: templateColor, // Añadir el color seleccionado
         nombre: formData.get('nombre'),
         dni: formData.get('dni'),
         fecha_nacimiento: formData.get('fecha_nacimiento'),
@@ -557,8 +438,22 @@ function obtenerDatosFormulario() {
     const form = document.getElementById('cvForm');
     const formData = new FormData(form);
     
+    // Obtener tipo de plantilla y color
+    const templateType = document.querySelector('input[name="template_type"]:checked').value;
+    
+    // Obtener color seleccionado (solo para plantilla profesional)
+    let templateColor = null;
+    if (templateType === 'profesional') {
+        const colorSelected = document.querySelector('input[name="template_color"]:checked');
+        if (colorSelected) {
+            templateColor = colorSelected.value;
+            console.log('[DEBUG] Color seleccionado:', templateColor);
+        }
+    }
+    
     const cvData = {
-        template_type: document.querySelector('input[name="template_type"]:checked').value,
+        template_type: templateType,
+        template_color: templateColor,
         nombre: formData.get('nombre'),
         dni: formData.get('dni'),
         fecha_nacimiento: formData.get('fecha_nacimiento'),
@@ -607,11 +502,18 @@ function obtenerDatosFormulario() {
         }
     });
 
-    // Agregar imagen de perfil si existe
-    const profileImage = document.getElementById('previewImage').src;
-    if (profileImage && !profileImage.includes('default-profile')) {
+    // SIEMPRE obtener la imagen de perfil del localStorage
+    const profileImage = localStorage.getItem('profile_image');
+    if (profileImage) {
         cvData.profile_image = profileImage;
+        console.log('[DEBUG] Imagen recuperada del localStorage en obtenerDatosFormulario, longitud:', profileImage.length);
+    } else {
+        console.log('[DEBUG] No se encontró imagen en localStorage');
     }
+
+    // Guardar datos completos en localStorage incluyendo el color
+    localStorage.setItem('cv_data', JSON.stringify(cvData));
+    console.log('[DEBUG] Datos guardados en localStorage con color:', templateColor);
 
     return cvData;
 }
@@ -674,21 +576,6 @@ async function procesarPago() {
             }
         });
 
-        // Procesar y guardar la imagen
-        const previewImage = document.getElementById('previewImage');
-        if (previewImage && previewImage.src && !previewImage.src.includes('default-profile')) {
-            // Optimizar y guardar la imagen
-            await new Promise((resolve) => {
-                optimizeImage(previewImage.src, (optimizedImage) => {
-                    data.profile_image = optimizedImage;
-                    // Guardar la imagen optimizada en localStorage
-                    localStorage.setItem('profile_image', optimizedImage);
-                    console.log('[DEBUG] Imagen optimizada guardada en localStorage');
-                    resolve();
-                });
-            });
-        }
-
         console.log('[DEBUG] Datos completos a enviar:', JSON.stringify(data, null, 2));
         
         // Guardar en localStorage
@@ -721,7 +608,8 @@ async function procesarPago() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                template_type: data.template_type, // Usar el mismo valor de la plantilla
+                template_type: data.template_type,
+                template_color: document.querySelector('input[name="template_color"]:checked')?.value || 'azul-marino',
                 external_reference: formId
             })
         });
@@ -752,6 +640,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('cvForm').addEventListener('input', updatePreview);
     document.querySelectorAll('input[name="template_type"]').forEach(radio => {
         radio.addEventListener('change', updatePreview);
+    });
+    
+    // Listener para selectores de color (solo para plantilla profesional)
+    document.querySelectorAll('input[name="template_color"]').forEach(colorRadio => {
+        colorRadio.addEventListener('change', updatePreview);
     });
     
     // Listener para carga de imagen
@@ -1204,93 +1097,20 @@ async function descargarPDFDirecto() {
         console.log('[DEBUG] Iniciando descarga directa de PDF');
         
         // Recuperar datos del formulario
-        const form = document.getElementById('cvForm');
-        const formData = new FormData(form);
+        const cvData = obtenerDatosFormulario();
         
-        // Crear objeto con todos los datos
-        const cvData = {
-            template_type: document.querySelector('input[name="template_type"]:checked').value,
-            nombre: formData.get('nombre'),
-            dni: formData.get('dni'),
-            fecha_nacimiento: formData.get('fecha_nacimiento'),
-            edad: formData.get('edad'),
-            email: formData.get('email'),
-            telefono: formData.get('telefono'),
-            direccion: formData.get('direccion'),
-            experiencia: [],
-            educacion: [],
-            habilidades: []
-        };
-        
-        // Procesar experiencia
-        const empresas = formData.getAll('empresa[]');
-        empresas.forEach((empresa, index) => {
-            if (empresa.trim()) {
-                cvData.experiencia.push({
-                    empresa: empresa.trim(),
-                    cargo: formData.getAll('cargo[]')[index]?.trim() || '',
-                    periodo: `${formData.getAll('fecha_inicio[]')[index]?.trim() || ''} - ${
-                        formData.getAll('trabajo_actual[]')[index] === 'on' 
-                        ? 'Presente' 
-                        : formData.getAll('fecha_fin[]')[index]?.trim() || ''
-                    }`,
-                    descripcion: formData.getAll('descripcion[]')[index]?.trim() || ''
-                });
-            }
-        });
-        
-        // Procesar educación
-        const titulos = formData.getAll('titulo[]');
-        titulos.forEach((titulo, index) => {
-            if (titulo.trim()) {
-                cvData.educacion.push({
-                    titulo: titulo.trim(),
-                    institucion: formData.getAll('institucion[]')[index]?.trim() || '',
-                    año: `${formData.getAll('fecha_inicio_edu[]')[index]?.trim() || ''} - ${
-                        formData.getAll('en_curso[]')[index] === 'on'
-                        ? 'En curso'
-                        : formData.getAll('fecha_fin_edu[]')[index]?.trim() || ''
-                    }`
-                });
-            }
-        });
-        
-        // Procesar habilidades
-        const habilidades = formData.getAll('habilidad[]');
-        habilidades.forEach(habilidad => {
-            if (habilidad.trim()) {
-                cvData.habilidades.push(habilidad.trim());
-            }
-        });
-        
-        // Obtener imagen del preview
-        const previewImage = document.getElementById('previewImage');
-        if (previewImage && previewImage.src && !previewImage.src.includes('default-profile')) {
-            // Asegurarse de que la imagen esté optimizada
-            await new Promise((resolve) => {
-                optimizeImage(previewImage.src, (optimizedImage) => {
-                    cvData.profile_image = optimizedImage;
-                    console.log('[DEBUG] Imagen optimizada para PDF, longitud:', optimizedImage.length);
-                    console.log('[DEBUG] Formato de imagen:', optimizedImage.substring(0, 30));
-                    resolve();
-                });
-            });
+        // Asegurarse de que la imagen esté incluida
+        const profileImage = localStorage.getItem('profile_image');
+        if (profileImage) {
+            cvData.profile_image = profileImage;
+            console.log('[DEBUG] Imagen recuperada del localStorage para PDF, longitud:', profileImage.length);
         } else {
-            // Intentar obtener del localStorage como respaldo
-            const storedImage = localStorage.getItem('profile_image');
-            if (storedImage) {
-                cvData.profile_image = storedImage;
-                console.log('[DEBUG] Imagen obtenida del localStorage, longitud:', storedImage.length);
-            } else {
-                console.log('[DEBUG] No se encontró imagen');
-            }
+            console.log('[DEBUG] No se encontró imagen en localStorage para PDF');
         }
         
-        // Enviar datos al servidor para generar PDF
-        console.log('[DEBUG] Enviando datos al servidor para generar PDF');
-        console.log('[DEBUG] Tipo de plantilla:', cvData.template_type);
-        console.log('[DEBUG] ¿Incluye imagen?:', cvData.profile_image ? 'Sí' : 'No');
+        console.log('[DEBUG] Enviando datos para generar PDF:', JSON.stringify(cvData).substring(0, 100) + '...');
         
+        // Enviar solicitud al servidor
         const response = await fetch('/download_pdf', {
             method: 'POST',
             headers: {
@@ -1298,30 +1118,35 @@ async function descargarPDFDirecto() {
             },
             body: JSON.stringify(cvData)
         });
-
+        
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Error al generar el PDF');
         }
-
+        
         // Obtener el blob del PDF
         const blob = await response.blob();
+        
+        // Crear URL para el blob
         const url = window.URL.createObjectURL(blob);
+        
+        // Crear elemento <a> para descargar
         const a = document.createElement('a');
-        a.style.display = 'none';
         a.href = url;
         a.download = 'cv.pdf';
         document.body.appendChild(a);
+        
+        // Hacer clic para descargar
         a.click();
         
         // Limpiar
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 100);
-
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        console.log('[DEBUG] PDF descargado correctamente');
+        
     } catch (error) {
-        console.error('[ERROR] Error al generar el PDF:', error);
-        alert('Hubo un error al generar el PDF: ' + error.message);
+        console.error('[ERROR] Error al descargar PDF:', error);
+        alert('Error al generar el PDF: ' + error.message);
     }
 }

@@ -117,7 +117,7 @@ def start_release(version):
     print(f"\nRama release/v{version} creada. Puedes realizar ajustes finales.")
     print("Cuando termines, ejecuta: python gitflow.py finish-release version")
 
-def finish_release(version, merge_locally=None, create_tag=None):
+def finish_release(version, merge_locally=None, create_tag=None, delete_branch=None):
     """Finaliza una rama release, la fusiona con main y develop, y crea un tag."""
     print(f"Finalizando release: {version}")
     current_branch = get_current_branch()
@@ -172,8 +172,12 @@ def finish_release(version, merge_locally=None, create_tag=None):
         run_command("git push origin develop")
         
         # Eliminar rama release
-        print("\n¿Deseas eliminar la rama release? (s/n)")
-        delete_choice = input().lower()
+        if delete_branch is None:
+            print("\n¿Deseas eliminar la rama release? (s/n)")
+            delete_choice = input().lower()
+        else:
+            delete_choice = 's' if delete_branch else 'n'
+            
         if delete_choice.startswith('s'):
             run_command("git checkout develop")  # Asegurarse de no estar en la rama a eliminar
             run_command(f"git branch -d release/v{version}")
@@ -275,9 +279,10 @@ Comandos disponibles:
                                                    [merge]: true/false para fusionar automáticamente con develop
                                                    [delete]: true/false para eliminar la rama feature después de fusionar
   start-release <version>                          Inicia una nueva rama release
-  finish-release <version> [merge] [tag]           Finaliza una rama release, la fusiona con main y develop, y crea un tag
+  finish-release <version> [merge] [tag] [delete]  Finaliza una rama release, la fusiona con main y develop, y crea un tag
                                                    [merge]: true/false para fusionar automáticamente con main y develop
                                                    [tag]: true/false para crear un tag automáticamente
+                                                   [delete]: true/false para eliminar la rama release después de fusionar
   start-hotfix <version>                           Inicia una nueva rama hotfix
   finish-hotfix <version>                          Finaliza una rama hotfix, la fusiona con main y develop, y crea un tag
   help                                             Muestra esta ayuda
@@ -306,11 +311,14 @@ def main():
     elif command == "finish-release" and len(sys.argv) >= 3:
         merge_locally = None
         create_tag = None
+        delete_branch = None
         if len(sys.argv) >= 4:
             merge_locally = sys.argv[3].lower() == 'true'
         if len(sys.argv) >= 5:
             create_tag = sys.argv[4].lower() == 'true'
-        return finish_release(sys.argv[2], merge_locally, create_tag)
+        if len(sys.argv) >= 6:
+            delete_branch = sys.argv[5].lower() == 'true'
+        return finish_release(sys.argv[2], merge_locally, create_tag, delete_branch)
     elif command == "start-hotfix" and len(sys.argv) >= 3:
         return start_hotfix(sys.argv[2])
     elif command == "finish-hotfix" and len(sys.argv) >= 3:
