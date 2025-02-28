@@ -39,6 +39,19 @@ else:
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Configuración de precios según entorno
+if app.config['ENVIRONMENT'] == 'production':
+    # En producción (rama main)
+    PRECIO_BASICO = 1500
+    PRECIO_PROFESIONAL = 2000
+else:
+    # En desarrollo (ramas develop, feature, etc.)
+    PRECIO_BASICO = 5
+    PRECIO_PROFESIONAL = 10
+
+app.config['PRECIO_BASICO'] = PRECIO_BASICO
+app.config['PRECIO_PROFESIONAL'] = PRECIO_PROFESIONAL
+
 # Configuración de MercadoPago
 mp_access_token = os.getenv('MP_ACCESS_TOKEN')
 mp_public_key = os.getenv('MP_PUBLIC_KEY')
@@ -50,7 +63,9 @@ sdk = mercadopago.SDK(mp_access_token)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', 
+                          precio_basico=app.config['PRECIO_BASICO'],
+                          precio_profesional=app.config['PRECIO_PROFESIONAL'])
 
 @app.route('/create_preference', methods=['POST'])
 def create_preference():
@@ -61,9 +76,9 @@ def create_preference():
         external_reference = data.get("external_reference")
         
         if template_type == "profesional":
-            price = 10
+            price = app.config['PRECIO_PROFESIONAL']
         else:
-            price = 5
+            price = app.config['PRECIO_BASICO']
         
         # Crear el objeto de preferencia
         preference_data = {
