@@ -216,7 +216,7 @@ function generateBasicTemplate(data) {
 function generateProTemplate(data, templateColor) {
     return `
     <div class="cv-preview template-professional ${templateColor}">
-        <div class="header-section">
+        <div class="header-section ${templateColor}">
             <div class="row g-0">
                 <div class="col-9">
                     <h1>${data.nombre || ''}</h1>
