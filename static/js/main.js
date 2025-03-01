@@ -282,8 +282,7 @@ function generateProTemplate(data, templateColor) {
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
-        // Verificar tamaño máximo (2MB) como cargar mas de 2 megas ? 
-        // 2 megas = 2 * 1024 * 1024 bytes
+     
         const maxImageSize = 10 * 1024 * 1024; // 10 megas
 
         if (file.size > maxImageSize) {
