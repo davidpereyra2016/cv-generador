@@ -152,7 +152,7 @@ function generateBasicTemplate(data) {
     <div class="cv-preview template-basic">
         <div class="header-section">
             <div class="row g-0">
-                <div class="col-9">
+                <div class="col-md-9 col-sm-12">
                     <h1>${data.nombre || ''}</h1>
                     <div class="contact-info-basic">
                         <p>DNI: ${data.dni || ''}</p>
@@ -162,7 +162,7 @@ function generateBasicTemplate(data) {
                     </div>
                 </div>
                 ${data.profile_image ? `
-                <div class="col-3">
+                <div class="col-md-3 col-sm-12">
                     <div class="profile-image">
                         <img src="${data.profile_image}" alt="Foto de perfil">
                     </div>
@@ -216,9 +216,9 @@ function generateBasicTemplate(data) {
 function generateProTemplate(data, templateColor) {
     return `
     <div class="cv-preview template-professional ${templateColor}">
-        <div class="header-section ${templateColor}">
+        <div class="header-section">
             <div class="row g-0">
-                <div class="col-9">
+                <div class="col-md-9 col-sm-12">
                     <h1>${data.nombre || ''}</h1>
                     <div class="contact-info-professional">
                         <p>DNI: ${data.dni || ''}</p>
@@ -228,7 +228,7 @@ function generateProTemplate(data, templateColor) {
                     </div>
                 </div>
                 ${data.profile_image ? `
-                <div class="col-3">
+                <div class="col-md-3 col-sm-12">
                     <div class="profile-image">
                         <img src="${data.profile_image}" alt="Foto de perfil">
                     </div>
