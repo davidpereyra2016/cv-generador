@@ -216,7 +216,7 @@ function generateBasicTemplate(data) {
 function generateProTemplate(data, templateColor) {
     return `
     <div class="cv-preview template-professional ${templateColor}">
-        <div class="header-section">
+        <div class="header-section ${templateColor}">
             <div class="row g-0">
                 <div class="col-9">
                     <h1>${data.nombre || ''}</h1>
@@ -282,12 +282,14 @@ function generateProTemplate(data, templateColor) {
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
-        // Verificar tamaño máximo (2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            alert('La imagen es demasiado grande. El tamaño máximo permitido es 2MB.');
+     
+        const maxImageSize = 10 * 1024 * 1024; // 10 megas
+
+        if (file.size > maxImageSize) {
+            alert(`La imagen es demasiado grande. El tamaño máximo permitido es ${maxImageSize / (1024 * 1024)}MB.`);
             return;
         }
-        
+
         const reader = new FileReader();
         reader.onload = function(e) {
             const imageData = e.target.result;

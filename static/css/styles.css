@@ -397,7 +397,10 @@ h2 {
 }
 
 .template-option input[type="radio"] {
-    display: none;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .template-card {
@@ -574,16 +577,16 @@ h2 {
 }
 
 .template-basic .contact-info-basic {
-    color: #4d4d4d;
+    color: #ffffff;
 }
 
 /* Estilos para plantilla profesional */
-.template-professional .header-section {
+/* .template-professional .header-section {
     background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
     color: white;
     padding: 30px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
+} */
 
 .template-professional .profile-info h1 {
     font-size: 2.2em;
@@ -629,6 +632,23 @@ h2 {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Asegurar que los bordes de h2 cambien según el color seleccionado */
+.template-professional.azul-marino h2 {
+    border-bottom: 3px solid #1a4971;
+}
+
+.template-professional.amarillo-claro h2 {
+    border-bottom: 3px solid #d4a81e;
+}
+
+.template-professional.rosado-pastel h2 {
+    border-bottom: 3px solid #e75480;
+}
+
+.template-professional.morado h2 {
+    border-bottom: 3px solid #8e44ad;
+}
+
 /* Estilos para selectores de color */
 .color-selector {
     margin-top: 15px;
@@ -672,6 +692,15 @@ h2 {
     color: #1a4971;
 }
 
+.template-professional.azul-marino .experience-item,
+.template-professional.azul-marino .education-item {
+    border-left: 4px solid #1a4971;
+}
+
+.template-professional.azul-marino .skill-item {
+    background: linear-gradient(135deg, #1a4971 0%, #2c3e50 100%);
+}
+
 .template-professional.amarillo-claro .header-section {
     background-color: #f9d56e;
 }
@@ -679,6 +708,15 @@ h2 {
 .template-professional.amarillo-claro h2,
 .template-professional.amarillo-claro h3 {
     color: #d4a81e;
+}
+
+.template-professional.amarillo-claro .experience-item,
+.template-professional.amarillo-claro .education-item {
+    border-left: 4px solid #d4a81e;
+}
+
+.template-professional.amarillo-claro .skill-item {
+    background: linear-gradient(135deg, #f9d56e 0%, #d4a81e 100%);
 }
 
 .template-professional.rosado-pastel .header-section {
@@ -690,6 +728,15 @@ h2 {
     color: #e75480;
 }
 
+.template-professional.rosado-pastel .experience-item,
+.template-professional.rosado-pastel .education-item {
+    border-left: 4px solid #e75480;
+}
+
+.template-professional.rosado-pastel .skill-item {
+    background: linear-gradient(135deg, #f8c8dc 0%, #e75480 100%);
+}
+
 .template-professional.morado .header-section {
     background-color: #8e44ad;
 }
@@ -697,6 +744,15 @@ h2 {
 .template-professional.morado h2,
 .template-professional.morado h3 {
     color: #8e44ad;
+}
+
+.template-professional.morado .experience-item,
+.template-professional.morado .education-item {
+    border-left: 4px solid #8e44ad;
+}
+
+.template-professional.morado .skill-item {
+    background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%);
 }
 
 /* Ajustes de texto para cada color */
