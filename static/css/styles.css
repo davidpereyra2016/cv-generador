@@ -127,6 +127,8 @@ body {
     width: 100%;
     max-width: 800px;
     transition: all 0.3s ease;
+    overflow: hidden; /* Evita que el contenido sobresalga */
+    margin: 0 auto;
 }
 
 #cvPreview {
@@ -488,6 +490,8 @@ h2 {
 
 .cv-preview .profile-image {
     text-align: right;
+    max-width: 100%; /* Asegura que no sobresalga del contenedor */
+    height: auto;
 }
 
 .cv-preview .profile-image img {
@@ -495,6 +499,8 @@ h2 {
     height: 100px;
     border-radius: 50%;
     border: 3px solid white;
+    object-fit: cover; /* Mantiene la proporción de la imagen */
+    max-width: 100%; /* Asegura que la imagen no sobresalga */
 }
 
 .cv-preview .content-section {
@@ -1085,4 +1091,80 @@ body {
 .cv-preview .experience-item h3,
 .cv-preview .experience-item .empresa {
     text-transform: capitalize;
+}
+
+/* Mejoras en la vista previa */
+.cv-preview-container {
+    width: 100%;
+    max-width: 800px;
+    transition: all 0.3s ease;
+    overflow: hidden; /* Evita que el contenido sobresalga */
+    margin: 0 auto;
+}
+
+/* Mejoras en la imagen de perfil para responsividad */
+.cv-preview .profile-image {
+    text-align: right;
+    max-width: 100%; /* Asegura que no sobresalga del contenedor */
+    height: auto;
+}
+
+.cv-preview .profile-image img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid white;
+    object-fit: cover; /* Mantiene la proporción de la imagen */
+    max-width: 100%; /* Asegura que la imagen no sobresalga */
+}
+
+/* Estilos responsivos adicionales */
+@media (max-width: 768px) {
+    .cv-preview-container {
+        padding: 0 10px; /* Añade padding en dispositivos móviles */
+    }
+    
+    .cv-preview .header-section {
+        padding: 15px; /* Reduce el padding en dispositivos móviles */
+    }
+    
+    .cv-preview .profile-image {
+        width: auto; /* Ajusta el ancho automáticamente */
+        height: auto;
+        margin-left: 0; /* Elimina el margen en dispositivos móviles */
+        text-align: center; /* Centra la imagen en dispositivos móviles */
+    }
+    
+    .cv-preview .profile-image img {
+        width: 80px; /* Reduce el tamaño en dispositivos móviles */
+        height: 80px;
+    }
+    
+    .cv-preview .row.g-0 {
+        display: flex;
+        flex-direction: column; /* Apila los elementos en dispositivos móviles */
+    }
+    
+    .cv-preview .col-9,
+    .cv-preview .col-3 {
+        width: 100%; /* Ocupa todo el ancho en dispositivos móviles */
+        margin-bottom: 10px;
+    }
+}
+
+/* Ajustes adicionales para dispositivos muy pequeños */
+@media (max-width: 480px) {
+    .cv-preview .profile-image img {
+        width: 70px; /* Reduce aún más el tamaño en dispositivos muy pequeños */
+        height: 70px;
+    }
+    
+    .cv-preview .header-section h1 {
+        font-size: 16px; /* Reduce el tamaño del título en dispositivos muy pequeños */
+    }
+    
+    .cv-preview .contact-info-professional p,
+    .cv-preview .contact-info-basic p {
+        font-size: 10px; /* Reduce el tamaño del texto en dispositivos muy pequeños */
+    }
 }
