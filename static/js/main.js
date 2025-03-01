@@ -216,7 +216,7 @@ function generateBasicTemplate(data) {
 function generateProTemplate(data, templateColor) {
     return `
     <div class="cv-preview template-professional ${templateColor}">
-        <div class="header-section">
+        <div class="header-section ${templateColor}">
             <div class="row g-0">
                 <div class="col-9">
                     <h1>${data.nombre || ''}</h1>
@@ -282,8 +282,7 @@ function generateProTemplate(data, templateColor) {
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
-        // Verificar tamaño máximo (2MB) como cargar mas de 2 megas ? 
-        // 2 megas = 2 * 1024 * 1024 bytes
+     
         const maxImageSize = 10 * 1024 * 1024; // 10 megas
 
         if (file.size > maxImageSize) {
