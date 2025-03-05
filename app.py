@@ -10,6 +10,7 @@ from io import BytesIO
 from fpdf import FPDF
 import uuid
 import requests
+from openai import OpenAI
 
 try:
     from PIL import Image
@@ -54,7 +55,7 @@ app.config['PRECIO_BASICO'] = PRECIO_BASICO
 app.config['PRECIO_PROFESIONAL'] = PRECIO_PROFESIONAL
 
 # Configuración de la API de DeepSeek R1
-DEEPSEEK_API_URL = os.getenv('DEEPSEEK_API_URL', 'https://api.deepseek.com/v1/chat/completions')
+DEEPSEEK_API_URL = os.getenv('DEEPSEEK_API_URL', 'https://api.deepseek.com')
 DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', 'sk-96d47eba0ab945178f790df8e8497cff')
 
 # Configuración de MercadoPago
@@ -744,24 +745,33 @@ def generar_resumen_ia():
         data = request.json
         prompt = data.get('prompt', '')
         
+        app.logger.info(f"[DEBUG] Datos recibidos para generación de resumen: {str(data)[:200]}...")
+        app.logger.info(f"[DEBUG] Prompt recibido: {prompt[:200]}...")
+        
         if not prompt:
+            app.logger.warning("[WARNING] No se proporcionó un prompt válido")
             return jsonify({'error': 'No se proporcionó un prompt válido'}), 400
         
         # Verificar si la API key está configurada
         if not DEEPSEEK_API_KEY:
-            # Si no hay API key, generar un resumen genérico para desarrollo
+            app.logger.warning("[WARNING] No se encontró API key configurada")
             resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
             return jsonify({'resumen': resumen_generico})
         
-        # Configurar la solicitud a la API de DeepSeek R1
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {DEEPSEEK_API_KEY}'
-        }
+        app.logger.info(f"[DEBUG] Usando API key: {DEEPSEEK_API_KEY[:5]}...")
         
-        payload = {
-            'model': 'deepseek-reasoner',
-            'messages': [
+        # Configurar el cliente de OpenAI con la URL y clave de DeepSeek
+        client = OpenAI(
+            api_key=DEEPSEEK_API_KEY,
+            base_url=DEEPSEEK_API_URL
+        )
+        
+        app.logger.info("[DEBUG] Iniciando solicitud a la API de DeepSeek")
+        
+        # Realizar la solicitud a la API
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
                 {
                     'role': 'system',
                     'content': 'Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados.'
@@ -771,26 +781,23 @@ def generar_resumen_ia():
                     'content': prompt
                 }
             ],
-            'temperature': 0.7,
-            'max_tokens': 300
-        }
+            temperature=0.7,
+            max_tokens=300
+        )
         
-        # Realizar la solicitud a la API
-        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
+        app.logger.info(f"[DEBUG] Respuesta de la API recibida: {str(response)[:200]}...")
         
-        # Procesar la respuesta
-        if response.status_code == 200:
-            response_data = response.json()
-            resumen = response_data.get('choices', [{}])[0].get('message', {}).get('content', '')
+        if response.choices:
+            resumen = response.choices[0].message.content
+            app.logger.info(f"[DEBUG] Resumen generado: {resumen[:200]}...")
             return jsonify({'resumen': resumen})
         else:
-            # En caso de error, devolver un mensaje genérico
+            app.logger.warning("[WARNING] No se recibieron opciones en la respuesta de la API")
             resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
             return jsonify({'resumen': resumen_generico})
             
     except Exception as e:
         app.logger.error(f"[ERROR] Error al generar resumen con IA: {str(e)}")
-        # En caso de error, devolver un mensaje genérico
         resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
         return jsonify({'resumen': resumen_generico})
 
