@@ -491,7 +491,7 @@ def generate_pdf_content(data):
         
         # Encabezado con datos personales
         pdf.set_fill_color(*header_color)
-        pdf.rect(0, 0, 210, 40, 'F')  # Reducimos la altura del encabezado de 50 a 40
+        pdf.rect(0, 0, 210, 50, 'F')  # Reducimos la altura del encabezado de 50 a 40
         
         # Si es plantilla profesional y hay imagen, agregarla
         if template_type == 'profesional' and data.get('profile_image'):
