@@ -10,7 +10,6 @@ from io import BytesIO
 from fpdf import FPDF
 import uuid
 import requests
-from openai import OpenAI
 
 try:
     from PIL import Image
@@ -754,33 +753,46 @@ def generar_resumen_ia():
             resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
             return jsonify({'resumen': resumen_generico})
         
-        # Configurar cliente OpenAI para DeepSeek
-        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com/v1")
+        # Configurar la solicitud a la API de DeepSeek R1
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {DEEPSEEK_API_KEY}'
+        }
         
-        # Realizar la solicitud a la API
-        response = client.chat.completions.create(
-            model="deepseek-reasoner",
-            messages=[
+        payload = {
+            'model': 'deepseek-reasoner',
+            'messages': [
                 {
-                    "role": "system", 
-                    "content": "Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados."
+                    'role': 'system',
+                    'content': 'Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados.'
                 },
                 {
-                    "role": "user", 
-                    "content": prompt
+                    'role': 'user',
+                    'content': prompt
                 }
             ],
-            temperature=0.7,
-            max_tokens=300
-        )
+            'temperature': 0.7,
+            'max_tokens': 300
+        }
         
-        # Obtener el resumen de la respuesta
-        resumen = response.choices[0].message.content
-        return jsonify({'resumen': resumen})
+        # Realizar la solicitud a la API
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
+        
+        # Procesar la respuesta
+        if response.status_code == 200:
+            response_data = response.json()
+            resumen = response_data.get('choices', [{}])[0].get('message', {}).get('content', '')
+            return jsonify({'resumen': resumen})
+        else:
+            # En caso de error, devolver un mensaje genérico
+            resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
+            return jsonify({'resumen': resumen_generico})
             
     except Exception as e:
         app.logger.error(f"[ERROR] Error al generar resumen con IA: {str(e)}")
-        return jsonify({'error': f'Error al generar el resumen: {str(e)}'}), 500
+        # En caso de error, devolver un mensaje genérico
+        resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
+        return jsonify({'resumen': resumen_generico})
 
 if __name__ == '__main__':
     # En desarrollo

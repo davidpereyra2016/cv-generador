@@ -1185,6 +1185,10 @@ function agregarResumen() {
     // Preparar los datos para la IA
     const prompt = generarPromptParaIA(datosFormulario);
     
+    // Agregar logs para depuración
+    console.log('[DEBUG] Datos del formulario para IA:', datosFormulario);
+    console.log('[DEBUG] Prompt generado para IA:', prompt);
+    
     // Llamar a la API de DeepSeek R1
     fetch('/generar_resumen_ia', {
         method: 'POST',
