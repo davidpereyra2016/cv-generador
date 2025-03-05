@@ -55,7 +55,7 @@ app.config['PRECIO_BASICO'] = PRECIO_BASICO
 app.config['PRECIO_PROFESIONAL'] = PRECIO_PROFESIONAL
 
 # Configuración de la API de OpenRouter R1
-OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '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')
 OPENROUTER_API_URL = os.getenv('OPENROUTER_API_URL', 'https://openrouter.ai/api/v1')
 
 # Configuración de MercadoPago
