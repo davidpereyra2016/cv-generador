@@ -9,6 +9,7 @@ from datetime import datetime
 from io import BytesIO
 from fpdf import FPDF
 import uuid
+import requests
 
 try:
     from PIL import Image
@@ -51,6 +52,10 @@ else:
 
 app.config['PRECIO_BASICO'] = PRECIO_BASICO
 app.config['PRECIO_PROFESIONAL'] = PRECIO_PROFESIONAL
+
+# Configuración de la API de DeepSeek R1
+DEEPSEEK_API_URL = os.getenv('DEEPSEEK_API_URL', 'https://api.deepseek.com/v1/chat/completions')
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')
 
 # Configuración de MercadoPago
 mp_access_token = os.getenv('MP_ACCESS_TOKEN')
@@ -592,6 +597,19 @@ def generate_pdf_content(data):
         pdf.set_text_color(*text_color)
         pdf.ln(5)  # Reducido de 20 a 5 para disminuir el espacio
         
+        # Resumen Profesional (si existe)
+        if data.get('resumen'):
+            pdf.set_font("Arial", 'B', 16)
+            pdf.set_text_color(*accent_color)
+            pdf.cell(0, 10, txt="Resumen Profesional", ln=True, align='L')
+            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+            pdf.ln(5)
+            
+            pdf.set_font("Arial", '', 11)
+            pdf.set_text_color(*text_color)
+            pdf.multi_cell(0, 6, txt=data.get('resumen', ''))
+            pdf.ln(5)
+        
         # Experiencia Laboral
         pdf.set_font("Arial", 'B', 16)
         pdf.set_text_color(*accent_color)
@@ -719,9 +737,63 @@ def generate_pdf(data):
         app.logger.error(f"[ERROR] Error en generate_pdf: {str(e)}")
         raise
 
+@app.route('/generar_resumen_ia', methods=['POST'])
+def generar_resumen_ia():
+    try:
+        # Obtener el prompt del request
+        data = request.json
+        prompt = data.get('prompt', '')
+        
+        if not prompt:
+            return jsonify({'error': 'No se proporcionó un prompt válido'}), 400
+        
+        # Verificar si la API key está configurada
+        if not DEEPSEEK_API_KEY:
+            # Si no hay API key, generar un resumen genérico para desarrollo
+            resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
+            return jsonify({'resumen': resumen_generico})
+        
+        # Configurar la solicitud a la API de DeepSeek R1
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {DEEPSEEK_API_KEY}'
+        }
+        
+        payload = {
+            'model': 'deepseek-chat',
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': 'Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados.'
+                },
+                {
+                    'role': 'user',
+                    'content': prompt
+                }
+            ],
+            'temperature': 0.7,
+            'max_tokens': 300
+        }
+        
+        # Realizar la solicitud a la API
+        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
+        
+        # Procesar la respuesta
+        if response.status_code == 200:
+            response_data = response.json()
+            resumen = response_data.get('choices', [{}])[0].get('message', {}).get('content', '')
+            return jsonify({'resumen': resumen})
+        else:
+            # En caso de error, devolver un mensaje genérico
+            return jsonify({'error': f'Error al comunicarse con la IA: {response.status_code}'}), 500
+            
+    except Exception as e:
+        return jsonify({'error': f'Error al generar el resumen: {str(e)}'}), 500
+
 if __name__ == '__main__':
     # En desarrollo
     app.run(host='0.0.0.0', port=5000)
 else:
     # En producción (Vercel)
+    app.debug = False
     application = app

@@ -172,6 +172,15 @@ function generateBasicTemplate(data) {
         </div>
 
         <div class="content-section">
+            ${data.resumen ? `
+                <section class="mb-4">
+                    <h2>Resumen Profesional</h2>
+                    <div class="resumen-profesional">
+                        <p>${data.resumen}</p>
+                    </div>
+                </section>
+            ` : ''}
+
             ${data.experiencia && data.experiencia.length ? `
                 <section class="mb-4">
                     <h2>Experiencia Laboral</h2>
@@ -238,6 +247,15 @@ function generateProTemplate(data, templateColor) {
         </div>
 
         <div class="content-section">
+            ${data.resumen ? `
+                <section class="mb-4">
+                    <h2>Resumen Profesional</h2>
+                    <div class="resumen-profesional">
+                        <p>${data.resumen}</p>
+                    </div>
+                </section>
+            ` : ''}
+
             ${data.experiencia && data.experiencia.length ? `
                 <section class="mb-4">
                     <h2>Experiencia Laboral</h2>
@@ -455,6 +473,7 @@ function obtenerDatosFormulario() {
         email: formData.get('email'),
         telefono: formData.get('telefono'),
         direccion: formData.get('direccion'),
+        resumen: formData.get('resumen'),
         experiencia: [],
         educacion: [],
         habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
@@ -1143,4 +1162,88 @@ async function descargarPDFDirecto() {
         console.error('[ERROR] Error al descargar PDF:', error);
         alert('Error al generar el PDF: ' + error.message);
     }
+}
+
+// Función para agregar resumen
+function agregarResumen() {
+    // Obtener los datos del formulario para enviar a la IA
+    const datosFormulario = obtenerDatosFormulario();
+    
+    // Mostrar indicador de carga
+    const resumenContainer = document.getElementById('resumenContainer');
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'resumen-loading';
+    loadingIndicator.className = 'text-center my-3';
+    loadingIndicator.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Generando resumen con IA...</span></div><p class="mt-2">Generando resumen profesional con IA...</p>';
+    
+    resumenContainer.appendChild(loadingIndicator);
+    
+    // Preparar los datos para la IA
+    const prompt = generarPromptParaIA(datosFormulario);
+    
+    // Llamar a la API de DeepSeek R1
+    fetch('/generar_resumen_ia', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: prompt })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Eliminar indicador de carga
+        document.getElementById('resumen-loading').remove();
+        
+        // Actualizar el campo de resumen con la respuesta de la IA
+        if (data.resumen) {
+            document.getElementById('resumen').value = data.resumen;
+            // Actualizar la vista previa
+            updateCVPreview();
+        } else {
+            alert('No se pudo generar el resumen. Por favor, intenta de nuevo.');
+        }
+    })
+    .catch(error => {
+        console.error('Error al generar resumen con IA:', error);
+        // Eliminar indicador de carga
+        if (document.getElementById('resumen-loading')) {
+            document.getElementById('resumen-loading').remove();
+        }
+        alert('Error al comunicarse con la IA. Por favor, intenta de nuevo más tarde.');
+    });
+}
+
+// Función para generar el prompt para la IA basado en los datos del formulario
+function generarPromptParaIA(datos) {
+    let prompt = "Genera un resumen profesional conciso y atractivo para un CV basado en la siguiente información:\n\n";
+    
+    // Datos personales
+    prompt += `Nombre: ${datos.nombre || 'No especificado'}\n`;
+    if (datos.edad) prompt += `Edad: ${datos.edad}\n`;
+    
+    // Experiencia laboral
+    if (datos.experiencia && datos.experiencia.length > 0) {
+        prompt += "\nExperiencia laboral:\n";
+        datos.experiencia.forEach((exp, index) => {
+            prompt += `${index + 1}. ${exp.empresa || 'Empresa'} - ${exp.cargo || 'Cargo'} (${exp.periodo || 'Periodo no especificado'})\n`;
+            if (exp.descripcion) prompt += `   Descripción: ${exp.descripcion}\n`;
+        });
+    }
+    
+    // Educación
+    if (datos.educacion && datos.educacion.length > 0) {
+        prompt += "\nEducación:\n";
+        datos.educacion.forEach((edu, index) => {
+            prompt += `${index + 1}. ${edu.titulo || 'Título'} - ${edu.institucion || 'Institución'} (${edu.año || 'Año no especificado'})\n`;
+        });
+    }
+    
+    // Habilidades
+    if (datos.habilidades && datos.habilidades.length > 0) {
+        prompt += "\nHabilidades: " + datos.habilidades.join(", ") + "\n";
+    }
+    
+    prompt += "\nInstrucciones: Genera un resumen profesional de aproximadamente 3-4 oraciones que destaque la experiencia, formación y habilidades más relevantes. El tono debe ser profesional y orientado a resultados. No uses frases genéricas como 'Soy un profesional apasionado'. Enfócate en logros concretos y valor añadido.";
+    
+    return prompt;
 }
