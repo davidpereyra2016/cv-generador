@@ -548,6 +548,7 @@ async function procesarPago() {
             email: formData.get('email'),
             telefono: formData.get('telefono'),
             direccion: formData.get('direccion'),
+            resumen: formData.get('resumen'),
             experiencia: [],
             educacion: [],
             habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
@@ -1012,6 +1013,7 @@ async function iniciarPago() {
             email: formData.get('email'),
             telefono: formData.get('telefono'),
             direccion: formData.get('direccion'),
+            resumen: formData.get('resumen'),
             experiencia: [],
             educacion: [],
             habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
