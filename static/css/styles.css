@@ -1168,3 +1168,156 @@ body {
         font-size: 10px; /* Reduce el tamaño del texto en dispositivos muy pequeños */
     }
 }
+
+/* Estilos para la plantilla amarillo-claro basados en la imagen de referencia */
+.template-professional.amarillo-claro .header-section {
+    background-color: #f9d56e;
+    padding: 25px;
+    border-radius: 0;
+}
+
+.template-professional.amarillo-claro h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: #333;
+    text-transform: uppercase;
+}
+
+.template-professional.amarillo-claro h2 {
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 2px solid #d4a81e;
+    padding-bottom: 8px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.template-professional.amarillo-claro h3 {
+    color: #d4a81e;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+.template-professional.amarillo-claro .contact-info-professional p {
+    color: #333;
+    font-family: 'Roboto', sans-serif;
+    margin-bottom: 5px;
+}
+
+.template-professional.amarillo-claro .experience-item,
+.template-professional.amarillo-claro .education-item {
+    border-left: 4px solid #d4a81e;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+}
+
+.template-professional.amarillo-claro .skill-item {
+    background: #f9d56e;
+    color: #333;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 5px;
+    display: inline-block;
+}
+
+.template-professional.amarillo-claro .content-section {
+    padding: 25px;
+    background-color: white;
+}
+
+/* Estilos para la plantilla morado basados en la imagen de referencia */
+.template-professional.morado .header-section {
+    background-color: #3a2449;
+    padding: 25px;
+    border-radius: 0;
+}
+
+.template-professional.morado h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: white;
+    text-transform: uppercase;
+}
+
+.template-professional.morado h2 {
+    color: #3a2449;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 2px solid #8e44ad;
+    padding-bottom: 8px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.template-professional.morado h3 {
+    color: #8e44ad;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+.template-professional.morado .contact-info-professional p {
+    color: white;
+    font-family: 'Roboto', sans-serif;
+    margin-bottom: 5px;
+}
+
+.template-professional.morado .experience-item,
+.template-professional.morado .education-item {
+    border-left: 4px solid #8e44ad;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+}
+
+.template-professional.morado .skill-item {
+    background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 5px;
+    display: inline-block;
+}
+
+.template-professional.morado .content-section {
+    padding: 25px;
+    background-color: white;
+}
+
+/* Ajustes para la imagen de perfil */
+.template-professional .profile-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+    border: 3px solid white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.template-professional .profile-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Ajustes específicos para la plantilla amarillo-claro */
+.template-professional.amarillo-claro .profile-image {
+    border: 3px solid #d4a81e;
+}
+
+/* Ajustes específicos para la plantilla morado */
+.template-professional.morado .profile-image {
+    border: 3px solid white;
+}

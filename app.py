@@ -468,17 +468,17 @@ def generate_pdf_content(data):
                 text_color = (68, 68, 68)  # #444444
                 accent_color = (26, 73, 113)  # #1a4971
             elif template_color == 'amarillo-claro':
-                header_color = (242, 201, 76)  # #F2C94C - Amarillo claro
-                text_color = (68, 68, 68)  # #444444
-                accent_color = (242, 201, 76)  # #F2C94C
+                header_color = (249, 213, 110)  # #f9d56e - Amarillo claro (actualizado)
+                text_color = (51, 51, 51)  # #333333
+                accent_color = (212, 168, 30)  # #d4a81e - Tono más oscuro para acentos
             elif template_color == 'rosado-pastel':
                 header_color = (242, 166, 166)  # #F2A6A6 - Rosado pastel
                 text_color = (68, 68, 68)  # #444444
                 accent_color = (242, 166, 166)  # #F2A6A6
             elif template_color == 'morado':
-                header_color = (149, 91, 165)  # #955BA5 - Morado
+                header_color = (58, 36, 73)  # #3a2449 - Morado oscuro (actualizado)
                 text_color = (68, 68, 68)  # #444444
-                accent_color = (149, 91, 165)  # #955BA5
+                accent_color = (142, 68, 173)  # #8e44ad - Morado para acentos
             else:
                 # Valor por defecto (azul marino)
                 header_color = (26, 73, 113)  # #1a4971
@@ -565,12 +565,21 @@ def generate_pdf_content(data):
         
         # Nombre
         pdf.set_font("Arial", 'B', 24)
-        pdf.set_text_color(255, 255, 255)  # Blanco
+        # Ajustar color del texto según la plantilla
+        if template_type == 'profesional':
+            if template_color in ['azul-marino', 'morado']:
+                pdf.set_text_color(255, 255, 255)  # Blanco para fondos oscuros
+            else:
+                pdf.set_text_color(51, 51, 51)  # Oscuro para fondos claros
+        else:
+            pdf.set_text_color(255, 255, 255)  # Blanco por defecto
+        
         pdf.set_xy(10, 10)
         pdf.cell(160, 10, txt=capitalize_text(data.get('nombre', 'Sin Nombre')), ln=True, align='L')
         
         # Información de contacto secundaria (uno debajo del otro)
         pdf.set_font("Arial", '', 11)
+        # Mantener el mismo color de texto que el nombre
         pdf.set_xy(10, 30)
         if data.get('dni'):
             pdf.cell(160, 5, txt=f"DNI: {data.get('dni')}", ln=True, align='L')
@@ -599,85 +608,73 @@ def generate_pdf_content(data):
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(5)
         
-        experiencia = data.get('experiencia', [])
-        for exp in experiencia:
-            # Empresa y periodo en la misma línea
-            pdf.set_font("Arial", 'B', 12)
-            pdf.set_text_color(*accent_color)
-            empresa = exp.get('empresa', '')
-            periodo = exp.get('periodo', '')
-            
-            # Calcular ancho del texto de la empresa
-            empresa_width = pdf.get_string_width(empresa)
-            
-            # Imprimir empresa
-            pdf.cell(empresa_width + 5, 8, txt=capitalize_text(empresa), align='L')
-            
-            # Imprimir periodo a la derecha
+        # Iterar sobre cada experiencia
+        pdf.set_text_color(*text_color)  # Restaurar color de texto
+        pdf.set_font("Arial", 'B', 12)
+        
+        if data.get('experiencia'):
+            for exp in data.get('experiencia'):
+                # Cargo
+                pdf.cell(0, 8, txt=exp.get('cargo', ''), ln=True, align='L')
+                
+                # Empresa y periodo
+                pdf.set_font("Arial", 'I', 10)
+                pdf.cell(0, 6, txt=f"{exp.get('empresa', '')} | {exp.get('periodo', '')}", ln=True, align='L')
+                
+                # Descripción
+                if exp.get('descripcion'):
+                    pdf.set_font("Arial", '', 10)
+                    pdf.multi_cell(0, 5, txt=exp.get('descripcion', ''))
+                
+                pdf.ln(5)
+        else:
             pdf.set_font("Arial", '', 10)
-            pdf.set_text_color(*text_color)
-            pdf.cell(0, 8, txt=periodo, ln=True, align='R')
-            
-            # Cargo
-            pdf.set_font("Arial", 'I', 11)
-            pdf.set_text_color(*text_color)
-            pdf.cell(0, 6, txt=capitalize_text(exp.get('cargo', '')), ln=True, align='L')
-            
-            # Descripción
-            if exp.get('descripcion'):
-                pdf.set_font("Arial", '', 10)
-                pdf.multi_cell(0, 6, txt=exp.get('descripcion', ''))
-            
-            pdf.ln(5)
+            pdf.cell(0, 8, txt="No se ha agregado experiencia laboral", ln=True, align='L')
+        
+        pdf.ln(5)
         
         # Educación
-        pdf.ln(5)
         pdf.set_font("Arial", 'B', 16)
         pdf.set_text_color(*accent_color)
         pdf.cell(0, 10, txt="Educación", ln=True, align='L')
         pdf.line(10, pdf.get_y(), 200, pdf.get_y())
         pdf.ln(5)
         
-        educacion = data.get('educacion', [])
-        for edu in educacion:
-            # Título y año en la misma línea
-            pdf.set_font("Arial", 'B', 12)
-            pdf.set_text_color(*accent_color)
-            titulo = edu.get('titulo', '')
-            anio = edu.get('año', '')
-            
-            # Calcular ancho del texto del título
-            titulo_width = pdf.get_string_width(titulo)
-            
-            # Imprimir título
-            pdf.cell(titulo_width + 5, 8, txt=capitalize_text(titulo), align='L')
-            
-            # Imprimir año a la derecha
+        # Iterar sobre cada educación
+        pdf.set_text_color(*text_color)  # Restaurar color de texto
+        pdf.set_font("Arial", 'B', 12)
+        
+        if data.get('educacion'):
+            for edu in data.get('educacion'):
+                # Título
+                pdf.cell(0, 8, txt=edu.get('titulo', ''), ln=True, align='L')
+                
+                # Institución y año
+                pdf.set_font("Arial", 'I', 10)
+                pdf.cell(0, 6, txt=f"{edu.get('institucion', '')} | {edu.get('año', '')}", ln=True, align='L')
+                
+                pdf.ln(5)
+        else:
             pdf.set_font("Arial", '', 10)
-            pdf.set_text_color(*text_color)
-            pdf.cell(0, 8, txt=anio, ln=True, align='R')
-            
-            # Institución
-            pdf.set_font("Arial", 'I', 11)
-            pdf.set_text_color(*text_color)
-            pdf.cell(0, 6, txt=capitalize_text(edu.get('institucion', '')), ln=True, align='L')
-            
-            pdf.ln(5)
+            pdf.cell(0, 8, txt="No se ha agregado información educativa", ln=True, align='L')
+        
+        pdf.ln(5)
         
         # Habilidades
         if data.get('habilidades'):
-            pdf.ln(5)
             pdf.set_font("Arial", 'B', 16)
             pdf.set_text_color(*accent_color)
             pdf.cell(0, 10, txt="Habilidades", ln=True, align='L')
             pdf.line(10, pdf.get_y(), 200, pdf.get_y())
             pdf.ln(5)
             
-            # Crear lista de habilidades
-            pdf.set_font("Arial", '', 11)
-            pdf.set_text_color(*text_color)
-            for habilidad in data.get('habilidades', []):
-                pdf.cell(0, 6, txt="- " + habilidad, ln=True, align='L')  # Usando guión en lugar de bullet point
+            # Listar habilidades
+            pdf.set_text_color(*text_color)  # Restaurar color de texto
+            pdf.set_font("Arial", '', 10)
+            
+            # Crear una lista de habilidades con guiones en lugar de bullets (compatible con latin-1)
+            for skill in data.get('habilidades'):
+                pdf.cell(0, 6, txt=f"- {skill}", ln=True, align='L')
         
         app.logger.info("[DEBUG] PDF generado exitosamente")
         return pdf
