@@ -741,6 +741,10 @@ def generate_pdf(data):
 @app.route('/generar_resumen_ia', methods=['POST'])
 def generar_resumen_ia():
     try:
+        # Verificar variables de entorno
+        app.logger.info(f"[DEBUG] Entorno actual: {app.config['ENVIRONMENT']}")
+        app.logger.info(f"[DEBUG] OPENROUTER_API_KEY configurada: {'Sí' if os.getenv('OPENROUTER_API_KEY') else 'No'}")
+        
         # Obtener el prompt del request
         data = request.json
         prompt = data.get('prompt', '')
@@ -754,25 +758,42 @@ def generar_resumen_ia():
         
         # Configurar la solicitud a la API de OpenRouter usando OpenAI
         from openai import OpenAI
+        
+        # Depuración de credenciales
+        api_key = os.getenv('OPENROUTER_API_KEY')
+        api_url = os.getenv('OPENROUTER_API_URL', 'https://openrouter.ai/api/v1')
+        
+        app.logger.info(f"[DEBUG] API Key (primeros 5 caracteres): {api_key[:5] if api_key else 'No configurada'}")
+        app.logger.info(f"[DEBUG] API URL: {api_url}")
+        
+        # Verificar que la API key esté presente
+        if not api_key:
+            app.logger.error("[ERROR] No se encontró la API key de OpenRouter")
+            return jsonify({'error': 'Configuración de API incorrecta'}), 500
+        
         client = OpenAI(
-            api_key=OPENROUTER_API_KEY,
-            base_url=OPENROUTER_API_URL
+            api_key=api_key,
+            base_url=api_url
         )
 
         # Crear la solicitud de completación de chat
-        chat = client.chat.completions.create(
-            model="deepseek/deepseek-r1:free",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados, redactados en primera persona, resaltando mis logros, habilidades y experiencia de manera clara y efectiva."
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
-        )
+        try:
+            chat = client.chat.completions.create(
+                model="deepseek/deepseek-r1:free",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados, redactados en primera persona, resaltando mis logros, habilidades y experiencia de manera clara y efectiva."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+        except Exception as e:
+            app.logger.error(f"[ERROR] Error al llamar a la API de OpenRouter: {str(e)}")
+            return jsonify({'error': 'Error en la solicitud a la API'}), 500
         
         # Obtener la respuesta generada por la IA
         response_text = chat.choices[0].message.content
