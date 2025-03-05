@@ -9,6 +9,8 @@ from datetime import datetime
 from io import BytesIO
 from fpdf import FPDF
 import uuid
+import requests
+from openai import OpenAI
 
 try:
     from PIL import Image
@@ -51,6 +53,10 @@ else:
 
 app.config['PRECIO_BASICO'] = PRECIO_BASICO
 app.config['PRECIO_PROFESIONAL'] = PRECIO_PROFESIONAL
+
+# Configuración de la API de OpenRouter R1
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY', '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')
+OPENROUTER_API_URL = os.getenv('OPENROUTER_API_URL', 'https://openrouter.ai/api/v1')
 
 # Configuración de MercadoPago
 mp_access_token = os.getenv('MP_ACCESS_TOKEN')
@@ -592,6 +598,19 @@ def generate_pdf_content(data):
         pdf.set_text_color(*text_color)
         pdf.ln(5)  # Reducido de 20 a 5 para disminuir el espacio
         
+        # Resumen Profesional (si existe)
+        if data.get('resumen'):
+            pdf.set_font("Arial", 'B', 16)
+            pdf.set_text_color(*accent_color)
+            pdf.cell(0, 10, txt="Resumen Profesional", ln=True, align='L')
+            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+            pdf.ln(5)
+            
+            pdf.set_font("Arial", '', 11)
+            pdf.set_text_color(*text_color)
+            pdf.multi_cell(0, 6, txt=data.get('resumen', ''))
+            pdf.ln(5)
+        
         # Experiencia Laboral
         pdf.set_font("Arial", 'B', 16)
         pdf.set_text_color(*accent_color)
@@ -719,9 +738,62 @@ def generate_pdf(data):
         app.logger.error(f"[ERROR] Error en generate_pdf: {str(e)}")
         raise
 
+@app.route('/generar_resumen_ia', methods=['POST'])
+def generar_resumen_ia():
+    try:
+        # Obtener el prompt del request
+        data = request.json
+        prompt = data.get('prompt', '')
+        
+        app.logger.info(f"[DEBUG] Datos recibidos para generación de resumen: {str(data)[:200]}...")
+        app.logger.info(f"[DEBUG] Prompt recibido: {prompt[:200]}...")
+        
+        if not prompt:
+            app.logger.warning("[WARNING] No se proporcionó un prompt válido")
+            return jsonify({'error': 'No se proporcionó un prompt válido'}), 400
+        
+        # Configurar la solicitud a la API de OpenRouter usando OpenAI
+        from openai import OpenAI
+        client = OpenAI(
+            api_key=OPENROUTER_API_KEY,
+            base_url=OPENROUTER_API_URL
+        )
+
+        # Crear la solicitud de completación de chat
+        chat = client.chat.completions.create(
+            model="deepseek/deepseek-r1:free",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados, redactados en primera persona, resaltando mis logros, habilidades y experiencia de manera clara y efectiva."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
+        
+        # Obtener la respuesta generada por la IA
+        response_text = chat.choices[0].message.content
+        app.logger.info(f"[DEBUG] Respuesta IA: {str(response_text)[:200]}...")
+        
+        # Usar response_text en lugar de la respuesta JSON anterior
+        return jsonify({'resumen': response_text})
+            
+    except Exception as e:
+        app.logger.error(f"[ERROR] Error al generar resumen con IA: {str(e)}")
+        resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
+        return jsonify({'resumen': resumen_generico})
+
+@app.route('/condiciones')
+def condiciones():
+    return render_template('condiciones.html')
+
 if __name__ == '__main__':
     # En desarrollo
     app.run(host='0.0.0.0', port=5000)
 else:
     # En producción (Vercel)
+    app.debug = False
     application = app

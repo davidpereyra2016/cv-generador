@@ -22,7 +22,7 @@
                     <p class="text-muted">Diseña tu CV profesional en minutos</p>
                 </div>
                 
-                <form id="cvForm">
+                <form id="cvForm" onsubmit="return validarAceptacionTerminos()">
                     <!-- Selector de plantilla -->
                      
                     <div class="form-section">
@@ -89,7 +89,7 @@
                                     <i class="fas fa-upload me-2"></i> Seleccionar Foto
                                 </label>
                                 <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
-                                <small class="form-text text-muted mt-2">Tamaño máximo: 2MB. La imagen se redimensionará a 300x300px.</small>
+                                <small class="form-text text-muted mt-2">Tamaño máximo: 10MB. La imagen se redimensionará a 300x300px.</small>
                             </div>
                         </div>
                     </div>
@@ -124,6 +124,25 @@
                         <div class="form-floating mb-3">
                             <textarea class="form-control" id="direccion" name="direccion" placeholder=" " style="height: 100px"></textarea>
                             <label for="direccion">Dirección</label>
+                        </div>
+                    </div>
+
+                    <!-- Resumen Profesional -->
+                    <div class="form-section">
+                        <h3><i class="fas fa-graduation-cap me-2"></i>Resumen Profesional</h3>
+                        <div id="resumenContainer">
+                            <div class="resumen-item">
+                                <div class="row">
+                                    <div class="form-floating mb-3">
+                                        <textarea class="form-control" id="resumen" name="resumen" 
+                                        placeholder="Comentar sobre tu experiencia tanto personal como profesional" style="height: 100px"></textarea>
+                                        <label for="resumen">Resumen</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarResumen()">
+                                <i class="fas fa-plus me-2"></i>Agregar IA
+                            </button>
                         </div>
                     </div>
 
@@ -216,21 +235,29 @@
                         </button>
                     </div>
 
-                    <!-- Botón de pago -->
-                    <div class="form-section text-center">
-                        <h3><i class="fas fa-file-pdf me-2"></i>Pagar y descargar CV</h3>
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-primary btn-lg" onclick="procesarPago()">
-                                <i class="fas fa-credit-card me-2"></i>Continuar
-                            </button>
-                            {% if config.get('ENVIRONMENT', 'development') != 'production' %}
-                            <button type="button" class="btn btn-secondary btn-lg" onclick="descargarPDFDirecto()">
-                                <i class="fas fa-download me-2"></i>Descargar PDF
-                            </button>
-                            {% endif %}
-                        </div>
-                        <p style="color: gray" class="mt-2">*Antes de continuar, por favor, revise que los datos esten correctos.</p>
-                    </div>
+                    <!-- Sección del Botón de Pago -->
+    <div class="form-section text-center">
+        <h3><i class="fas fa-file-pdf me-2"></i>Pagar y descargar CV</h3>
+        <!-- Checkbox de Aceptación de Términos y Condiciones -->
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="aceptarTerminos">
+            <label class="form-check-label" for="aceptarTerminos">
+                He leído y acepto los <a href="{{ url_for('condiciones') }}" target="_blank">Términos y Condiciones</a>
+            </label>
+        </div>
+        <!-- Botones de Acción -->
+        <div class="d-flex gap-2 justify-content-center">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-credit-card me-2"></i>Continuar
+            </button>
+            {% if config.get('ENVIRONMENT', 'development') != 'production' %}
+            <button type="button" class="btn btn-secondary btn-lg" onclick="descargarPDFDirecto()">
+                <i class="fas fa-download me-2"></i>Descargar PDF
+            </button>
+            {% endif %}
+        </div>
+        <p style="color: gray" class="mt-2">*Antes de continuar, por favor, revise que los datos estén correctos.</p>
+    </div>
                 </form>
             </div>
 
@@ -253,6 +280,15 @@
                 document.getElementById('previewImage').src = profileImage;
             }
         });
+
+        function validarAceptacionTerminos() {
+        var checkbox = document.getElementById('aceptarTerminos');
+        if (!checkbox.checked) {
+            alert('Debe aceptar los Términos y Condiciones antes de continuar.');
+            return false;
+        }
+        return true;
+    }
     </script>
 </body>
 </html>
