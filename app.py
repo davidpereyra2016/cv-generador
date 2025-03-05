@@ -10,6 +10,7 @@ from io import BytesIO
 from fpdf import FPDF
 import uuid
 import requests
+from openai import OpenAI
 
 try:
     from PIL import Image
@@ -55,7 +56,7 @@ app.config['PRECIO_PROFESIONAL'] = PRECIO_PROFESIONAL
 
 # Configuración de la API de DeepSeek R1
 DEEPSEEK_API_URL = os.getenv('DEEPSEEK_API_URL', 'https://api.deepseek.com/v1/chat/completions')
-DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', '')
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY', 'sk-96d47eba0ab945178f790df8e8497cff')
 
 # Configuración de MercadoPago
 mp_access_token = os.getenv('MP_ACCESS_TOKEN')
@@ -753,41 +754,32 @@ def generar_resumen_ia():
             resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
             return jsonify({'resumen': resumen_generico})
         
-        # Configurar la solicitud a la API de DeepSeek R1
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {DEEPSEEK_API_KEY}'
-        }
-        
-        payload = {
-            'model': 'deepseek-chat',
-            'messages': [
-                {
-                    'role': 'system',
-                    'content': 'Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados.'
-                },
-                {
-                    'role': 'user',
-                    'content': prompt
-                }
-            ],
-            'temperature': 0.7,
-            'max_tokens': 300
-        }
+        # Configurar cliente OpenAI para DeepSeek
+        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com/v1")
         
         # Realizar la solicitud a la API
-        response = requests.post(DEEPSEEK_API_URL, headers=headers, json=payload)
+        response = client.chat.completions.create(
+            model="deepseek-reasoner",
+            messages=[
+                {
+                    "role": "system", 
+                    "content": "Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados."
+                },
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
         
-        # Procesar la respuesta
-        if response.status_code == 200:
-            response_data = response.json()
-            resumen = response_data.get('choices', [{}])[0].get('message', {}).get('content', '')
-            return jsonify({'resumen': resumen})
-        else:
-            # En caso de error, devolver un mensaje genérico
-            return jsonify({'error': f'Error al comunicarse con la IA: {response.status_code}'}), 500
+        # Obtener el resumen de la respuesta
+        resumen = response.choices[0].message.content
+        return jsonify({'resumen': resumen})
             
     except Exception as e:
+        app.logger.error(f"[ERROR] Error al generar resumen con IA: {str(e)}")
         return jsonify({'error': f'Error al generar el resumen: {str(e)}'}), 500
 
 if __name__ == '__main__':
