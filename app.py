@@ -10,7 +10,7 @@ from io import BytesIO
 from fpdf import FPDF
 import uuid
 import requests
-from openai import OpenAI
+import openai
 
 try:
     from PIL import Image
@@ -760,18 +760,24 @@ def generar_resumen_ia():
         
         app.logger.info(f"[DEBUG] Usando API key: {DEEPSEEK_API_KEY[:5]}...")
         
-        # Configurar el cliente de OpenAI con la URL y clave de DeepSeek
-        client = OpenAI(
-            api_key=DEEPSEEK_API_KEY,
-            base_url=DEEPSEEK_API_URL
-        )
+        # Modo de desarrollo - si está habilitado, usar resumen genérico en lugar de llamar a la API
+        # Esto es útil cuando se desarrolla sin acceso a la API o cuando hay problemas de saldo
+        MODO_DESARROLLO = os.getenv('MODO_DESARROLLO', 'False').lower() == 'true'
         
-        app.logger.info("[DEBUG] Iniciando solicitud a la API de DeepSeek")
+        if MODO_DESARROLLO:
+            app.logger.info("[INFO] Usando modo de desarrollo - generando resumen genérico")
+            resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
+            return jsonify({'resumen': resumen_generico})
         
-        # Realizar la solicitud a la API
-        response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=[
+        # Configurar la solicitud a la API de DeepSeek usando requests
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {DEEPSEEK_API_KEY}'
+        }
+        
+        payload = {
+            'model': 'deepseek-chat',
+            'messages': [
                 {
                     'role': 'system',
                     'content': 'Eres un asistente especializado en redactar resúmenes profesionales para currículums. Genera resúmenes concisos, profesionales y orientados a resultados.'
@@ -781,18 +787,32 @@ def generar_resumen_ia():
                     'content': prompt
                 }
             ],
-            temperature=0.7,
-            max_tokens=300
-        )
+            'temperature': 0.7,
+            'max_tokens': 300
+        }
         
-        app.logger.info(f"[DEBUG] Respuesta de la API recibida: {str(response)[:200]}...")
+        app.logger.info("[DEBUG] Iniciando solicitud a la API de DeepSeek")
         
-        if response.choices:
-            resumen = response.choices[0].message.content
+        # Realizar la solicitud a la API usando requests
+        api_url = f"{DEEPSEEK_API_URL}/v1/chat/completions"
+        response = requests.post(api_url, headers=headers, json=payload)
+        
+        app.logger.info(f"[DEBUG] Respuesta de la API recibida: {response.status_code}")
+        
+        if response.status_code == 200:
+            response_data = response.json()
+            app.logger.info(f"[DEBUG] Respuesta JSON: {str(response_data)[:200]}...")
+            
+            resumen = response_data.get('choices', [{}])[0].get('message', {}).get('content', '')
             app.logger.info(f"[DEBUG] Resumen generado: {resumen[:200]}...")
             return jsonify({'resumen': resumen})
+        elif response.status_code == 402:
+            # Error específico de saldo insuficiente
+            app.logger.warning("[WARNING] Saldo insuficiente en la cuenta de DeepSeek. Utilizando resumen genérico.")
+            resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
+            return jsonify({'resumen': resumen_generico})
         else:
-            app.logger.warning("[WARNING] No se recibieron opciones en la respuesta de la API")
+            app.logger.warning(f"[WARNING] Error en la API: {response.status_code} - {response.text}")
             resumen_generico = "Profesional con experiencia en el sector, enfocado en resultados y mejora continua. Combina habilidades técnicas con capacidad de liderazgo y trabajo en equipo. Comprometido con la excelencia y el aprendizaje constante."
             return jsonify({'resumen': resumen_generico})
             
