@@ -487,6 +487,7 @@ function obtenerDatosFormulario() {
     const descripciones = formData.getAll('descripcion[]');
     const trabajoActual = formData.getAll('trabajo_actual[]');
 
+    // Procesar Experiencia Laboral
     empresas.forEach((empresa, index) => {
         if (empresa) {
             cvData.experiencia.push({
@@ -684,7 +685,8 @@ async function generarPDF() {
             direccion: formData.get('direccion'),
             experiencia: [],
             educacion: [],
-            habilidades: []
+            habilidades: [],
+            resumen: formData.get('resumen')
         };
         
         // Procesar experiencia
@@ -803,7 +805,7 @@ document.addEventListener('DOMContentLoaded', function() {
         generarPDF();
     }
 });
-
+// Función para agregar experiencia
 function agregarExperiencia() {
     const container = document.getElementById('experienciaContainer');
     const nuevaExperiencia = document.createElement('div');
@@ -843,7 +845,7 @@ function agregarExperiencia() {
     `;
     container.insertBefore(nuevaExperiencia, container.lastElementChild);
 }
-
+// Función para agregar educación
 function agregarEducacion() {
     const container = document.getElementById('educacionContainer');
     const nuevaEducacion = document.createElement('div');
@@ -877,7 +879,7 @@ function agregarEducacion() {
     `;
     container.insertBefore(nuevaEducacion, container.lastElementChild);
 }
-
+// Función para agregar habilidad
 function agregarHabilidad() {
     const container = document.getElementById('habilidadesContainer');
     const habilidadItem = document.createElement('div');
