@@ -491,7 +491,7 @@ def generate_pdf_content(data):
         
         # Encabezado con datos personales
         pdf.set_fill_color(*header_color)
-        pdf.rect(0, 0, 210, 50, 'F')  # Aumentamos la altura del encabezado
+        pdf.rect(0, 0, 210, 50, 'F')  # Reducimos la altura del encabezado de 50 a 40
         
         # Si es plantilla profesional y hay imagen, agregarla
         if template_type == 'profesional' and data.get('profile_image'):
@@ -571,7 +571,7 @@ def generate_pdf_content(data):
         
         # Información de contacto secundaria (uno debajo del otro)
         pdf.set_font("Arial", '', 11)
-        pdf.set_xy(10, 30)
+        pdf.set_xy(10, 25)  # Reducido de 30 a 25
         if data.get('dni'):
             pdf.cell(160, 5, txt=f"DNI: {data.get('dni')}", ln=True, align='L')
         if data.get('fecha_nacimiento'):
@@ -590,7 +590,7 @@ def generate_pdf_content(data):
         
         # Resetear color de texto y continuar con el resto del CV
         pdf.set_text_color(*text_color)
-        pdf.ln(20)
+        pdf.ln(5)  # Reducido de 20 a 5 para disminuir el espacio
         
         # Experiencia Laboral
         pdf.set_font("Arial", 'B', 16)
@@ -628,10 +628,10 @@ def generate_pdf_content(data):
                 pdf.set_font("Arial", '', 10)
                 pdf.multi_cell(0, 6, txt=exp.get('descripcion', ''))
             
-            pdf.ln(5)
+            pdf.ln(3)  # Reducido de 5 a 3
         
         # Educación
-        pdf.ln(5)
+        pdf.ln(2)  # Reducido de 5 a 2
         pdf.set_font("Arial", 'B', 16)
         pdf.set_text_color(*accent_color)
         pdf.cell(0, 10, txt="Educación", ln=True, align='L')
@@ -662,22 +662,21 @@ def generate_pdf_content(data):
             pdf.set_text_color(*text_color)
             pdf.cell(0, 6, txt=capitalize_text(edu.get('institucion', '')), ln=True, align='L')
             
-            pdf.ln(5)
+            pdf.ln(3)  # Reducido de 5 a 3
         
         # Habilidades
-        if data.get('habilidades'):
-            pdf.ln(5)
-            pdf.set_font("Arial", 'B', 16)
-            pdf.set_text_color(*accent_color)
-            pdf.cell(0, 10, txt="Habilidades", ln=True, align='L')
-            pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-            pdf.ln(5)
-            
-            # Crear lista de habilidades
-            pdf.set_font("Arial", '', 11)
-            pdf.set_text_color(*text_color)
-            for habilidad in data.get('habilidades', []):
-                pdf.cell(0, 6, txt="- " + habilidad, ln=True, align='L')  # Usando guión en lugar de bullet point
+        pdf.ln(2)  # Reducido de 5 a 2
+        pdf.set_font("Arial", 'B', 16)
+        pdf.set_text_color(*accent_color)
+        pdf.cell(0, 10, txt="Habilidades", ln=True, align='L')
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(5)
+        
+        # Crear lista de habilidades
+        pdf.set_font("Arial", '', 11)
+        pdf.set_text_color(*text_color)
+        for habilidad in data.get('habilidades', []):
+            pdf.cell(0, 6, txt="- " + habilidad, ln=True, align='L')  # Usando guión en lugar de bullet point
         
         app.logger.info("[DEBUG] PDF generado exitosamente")
         return pdf
