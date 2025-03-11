@@ -1127,6 +1127,9 @@ body {
     opacity: 0;
     transition: opacity 0.3s ease;
 }
+.formulario__grupo-incorrecto input[type="date"] {
+    border-color: #bb2929;
+}
 
 .formulario__grupo-correcto .fa-check-circle {
     color: #1ed12d;
@@ -1136,6 +1139,15 @@ body {
 .formulario__grupo-incorrecto .fa-times-circle {
     color: #bb2929;
     opacity: 1;
+}
+.formulario__input-error {
+    color: #bb2929;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+.formulario__grupo-incorrecto .formulario__input-error {
+    display: block;
 }
 
 /* Estilos responsivos adicionales */
