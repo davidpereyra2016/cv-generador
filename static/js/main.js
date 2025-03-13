@@ -41,9 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Actualizar vista previa del CV
                     updateCVPreview();
                     
-                    // Para depuración
-                    console.log('[DEBUG] Imagen guardada en localStorage:', optimizedImage.substring(0, 50) + '...');
-                });
+                 });
             };
             reader.readAsDataURL(file);
         }
@@ -129,7 +127,6 @@ function updateCVPreview() {
         const profileImage = localStorage.getItem('profile_image');
         if (profileImage) {
             formData.profile_image = profileImage;
-            console.log('[DEBUG] Imagen recuperada del localStorage para vista previa');
         }
         
         // Generar HTML según el tipo de plantilla
@@ -143,7 +140,7 @@ function updateCVPreview() {
         // Actualizar el contenedor de vista previa
         document.getElementById('cvPreview').innerHTML = previewHTML;
     } catch (error) {
-        console.error('Error al actualizar la vista previa:', error);
+        console.error('Error al actualizar la vista previa:', error.message);
     }
 }
 
@@ -322,10 +319,7 @@ function handleImageUpload(event) {
                 
                 // Actualizar vista previa del CV
                 updateCVPreview();
-                
-                // Para depuración
-                console.log('[DEBUG] Imagen guardada en handleImageUpload:', optimizedImage.substring(0, 50) + '...');
-            });
+                 });
         };
         reader.readAsDataURL(file);
     }
@@ -356,7 +350,6 @@ function updatePreview() {
         const colorSelected = document.querySelector('input[name="template_color"]:checked');
         if (colorSelected) {
             templateColor = colorSelected.value;
-            console.log('[DEBUG] Color seleccionado:', templateColor);
         }
     }
 
@@ -440,7 +433,7 @@ async function guardarDatosFormulario() {
         const data = await response.json();
         return data.form_id;
     } catch (error) {
-        console.error('Error:', error);
+        
         throw error;
     }
 }
@@ -459,7 +452,7 @@ function obtenerDatosFormulario() {
         const colorSelected = document.querySelector('input[name="template_color"]:checked');
         if (colorSelected) {
             templateColor = colorSelected.value;
-            console.log('[DEBUG] Color seleccionado:', templateColor);
+            
         }
     }
     
@@ -520,15 +513,10 @@ function obtenerDatosFormulario() {
     const profileImage = localStorage.getItem('profile_image');
     if (profileImage) {
         cvData.profile_image = profileImage;
-        console.log('[DEBUG] Imagen recuperada del localStorage en obtenerDatosFormulario, longitud:', profileImage.length);
-    } else {
-        console.log('[DEBUG] No se encontró imagen en localStorage');
     }
 
     // Guardar datos completos en localStorage incluyendo el color
     localStorage.setItem('cv_data', JSON.stringify(cvData));
-    console.log('[DEBUG] Datos guardados en localStorage con color:', templateColor);
-
     return cvData;
 }
 
@@ -554,13 +542,12 @@ async function procesarPago() {
             habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
         };
 
-        console.log('[DEBUG] Datos básicos recopilados:', data);
 
         // Procesar experiencia
         const empresas = formData.getAll('empresa[]');
         empresas.forEach((empresa, index) => {
             if (empresa.trim()) {
-                console.log(`[DEBUG] Procesando experiencia ${index}:`, empresa);
+                
                 data.experiencia.push({
                     empresa: empresa.trim(),
                     cargo: formData.getAll('cargo[]')[index]?.trim() || '',
@@ -578,7 +565,7 @@ async function procesarPago() {
         const titulos = formData.getAll('titulo[]');
         titulos.forEach((titulo, index) => {
             if (titulo.trim()) {
-                console.log(`[DEBUG] Procesando educación ${index}:`, titulo);
+                
                 data.educacion.push({
                     titulo: titulo.trim(),
                     institucion: formData.getAll('institucion[]')[index]?.trim() || '',
@@ -590,8 +577,6 @@ async function procesarPago() {
                 });
             }
         });
-
-        console.log('[DEBUG] Datos completos a enviar:', JSON.stringify(data, null, 2));
         
         // Guardar en localStorage
         localStorage.setItem('cv_data', JSON.stringify(data));
@@ -668,7 +653,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 async function generarPDF() {
     try {
-        console.log('[DEBUG] Iniciando generación de PDF');
         
         // Recuperar datos del formulario
         const form = document.getElementById('cvForm');
@@ -738,8 +722,6 @@ async function generarPDF() {
             await new Promise((resolve) => {
                 optimizeImage(previewImage.src, (optimizedImage) => {
                     cvData.profile_image = optimizedImage;
-                    console.log('[DEBUG] Imagen optimizada para PDF, longitud:', optimizedImage.length);
-                    console.log('[DEBUG] Formato de imagen:', optimizedImage.substring(0, 30));
                     resolve();
                 });
             });
@@ -748,19 +730,11 @@ async function generarPDF() {
             const storedImage = localStorage.getItem('profile_image');
             if (storedImage) {
                 cvData.profile_image = storedImage;
-                console.log('[DEBUG] Imagen obtenida del localStorage, longitud:', storedImage.length);
-            } else {
-                console.log('[DEBUG] No se encontró imagen');
             }
         }
         
         // Guardar en localStorage para futuras referencias
         localStorage.setItem('cv_data', JSON.stringify(cvData));
-        
-        // Enviar datos al servidor para generar PDF
-        console.log('[DEBUG] Enviando datos al servidor para generar PDF');
-        console.log('[DEBUG] Tipo de plantilla:', cvData.template_type);
-        console.log('[DEBUG] ¿Incluye imagen?:', cvData.profile_image ? 'Sí' : 'No');
         
         const response = await fetch('/download_pdf', {
             method: 'POST',
@@ -769,8 +743,6 @@ async function generarPDF() {
             },
             body: JSON.stringify(cvData)
         });
-
-        console.log('[DEBUG] Respuesta del servidor:', response.status);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -900,7 +872,6 @@ function agregarHabilidad() {
 
 // Función para optimizar la imagen
 function optimizeImage(base64Image, callback) {
-    console.log('[DEBUG] Optimizando imagen, longitud original:', base64Image.length);
     
     // Detectar el formato de la imagen
     let imageFormat = 'image/jpeg'; // Formato predeterminado
@@ -908,7 +879,6 @@ function optimizeImage(base64Image, callback) {
         const match = base64Image.match(/data:image\/([a-zA-Z]+);/);
         if (match && match[1]) {
             imageFormat = 'image/' + match[1].toLowerCase();
-            console.log('[DEBUG] Formato de imagen detectado:', imageFormat);
         }
     }
     
@@ -922,8 +892,6 @@ function optimizeImage(base64Image, callback) {
         let width = img.width;
         let height = img.height;
         
-        console.log('[DEBUG] Dimensiones originales:', width, 'x', height);
-        
         if (width > height) {
             if (width > maxWidth) {
                 height = Math.round(height * maxWidth / width);
@@ -935,8 +903,6 @@ function optimizeImage(base64Image, callback) {
                 height = maxHeight;
             }
         }
-        
-        console.log('[DEBUG] Dimensiones optimizadas:', width, 'x', height);
         
         // Crear canvas para redimensionar
         const canvas = document.createElement('canvas');
@@ -954,14 +920,12 @@ function optimizeImage(base64Image, callback) {
             // Para PNG, mantener transparencia si es necesario
             if (imageFormat === 'image/png') {
                 const optimizedImage = canvas.toDataURL('image/png');
-                console.log('[DEBUG] Imagen optimizada como PNG, longitud:', optimizedImage.length);
                 callback(optimizedImage);
                 return;
             }
             
             // Para JPEG, usar alta calidad
             const optimizedImage = canvas.toDataURL('image/jpeg', 0.95);
-            console.log('[DEBUG] Imagen optimizada como JPEG, longitud:', optimizedImage.length);
             callback(optimizedImage);
         } catch (error) {
             console.error('[ERROR] Error al convertir imagen:', error);
@@ -970,18 +934,16 @@ function optimizeImage(base64Image, callback) {
                 // Si falló JPEG, intentar PNG
                 if (imageFormat === 'image/jpeg') {
                     const pngImage = canvas.toDataURL('image/png');
-                    console.log('[DEBUG] Imagen convertida a PNG (fallback), longitud:', pngImage.length);
                     callback(pngImage);
                 } else {
                     // Si falló PNG u otro, intentar JPEG
                     const jpegImage = canvas.toDataURL('image/jpeg', 0.95);
-                    console.log('[DEBUG] Imagen convertida a JPEG (fallback), longitud:', jpegImage.length);
                     callback(jpegImage);
                 }
             } catch (error2) {
                 console.error('[ERROR] Error al convertir con formato alternativo:', error2);
                 // Devolver la imagen original si todo falla
-                console.log('[DEBUG] Usando imagen original como fallback');
+                
                 callback(base64Image);
             }
         }
@@ -1019,13 +981,10 @@ async function iniciarPago() {
             habilidades: formData.getAll('habilidades[]').filter(h => h.trim())
         };
 
-        console.log('[DEBUG] Datos básicos recopilados:', data);
-
         // Procesar experiencia
         const empresas = formData.getAll('empresa[]');
         empresas.forEach((empresa, index) => {
             if (empresa.trim()) {
-                console.log(`[DEBUG] Procesando experiencia ${index}:`, empresa);
                 data.experiencia.push({
                     empresa: empresa.trim(),
                     cargo: formData.getAll('cargo[]')[index]?.trim() || '',
@@ -1043,7 +1002,6 @@ async function iniciarPago() {
         const titulos = formData.getAll('titulo[]');
         titulos.forEach((titulo, index) => {
             if (titulo.trim()) {
-                console.log(`[DEBUG] Procesando educación ${index}:`, titulo);
                 data.educacion.push({
                     titulo: titulo.trim(),
                     institucion: formData.getAll('institucion[]')[index]?.trim() || '',
@@ -1056,8 +1014,6 @@ async function iniciarPago() {
             }
         });
 
-        console.log('[DEBUG] Datos completos a enviar:', JSON.stringify(data, null, 2));
-        
         // Guardar en localStorage
         localStorage.setItem('cv_data', JSON.stringify(data));
 
@@ -1111,7 +1067,6 @@ async function iniciarPago() {
 // Función para descargar PDF directamente sin pago
 async function descargarPDFDirecto() {
     try {
-        console.log('[DEBUG] Iniciando descarga directa de PDF');
         
         // Recuperar datos del formulario
         const cvData = obtenerDatosFormulario();
@@ -1120,12 +1075,7 @@ async function descargarPDFDirecto() {
         const profileImage = localStorage.getItem('profile_image');
         if (profileImage) {
             cvData.profile_image = profileImage;
-            console.log('[DEBUG] Imagen recuperada del localStorage para PDF, longitud:', profileImage.length);
-        } else {
-            console.log('[DEBUG] No se encontró imagen en localStorage para PDF');
-        }
-        
-        console.log('[DEBUG] Enviando datos para generar PDF:', JSON.stringify(cvData).substring(0, 100) + '...');
+        } 
         
         // Enviar solicitud al servidor
         const response = await fetch('/download_pdf', {
@@ -1160,8 +1110,6 @@ async function descargarPDFDirecto() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         
-        console.log('[DEBUG] PDF descargado correctamente');
-        
     } catch (error) {
         console.error('[ERROR] Error al descargar PDF:', error);
         alert('Error al generar el PDF: ' + error.message);
@@ -1185,9 +1133,6 @@ function agregarResumen() {
     // Preparar los datos para la IA
     const prompt = generarPromptParaIA(datosFormulario);
     
-    // Agregar logs para depuración
-    console.log('[DEBUG] Datos del formulario para IA:', datosFormulario);
-    console.log('[DEBUG] Prompt generado para IA:', prompt);
     
     // Llamar a la API de DeepSeek R1
     fetch('/generar_resumen_ia', {
