@@ -1,302 +1,1360 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Generador de CV</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
     <script src="https://sdk.mercadopago.com/js/v2"></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container-fluid py-5">
-        <div class="row">
-            <!-- Formulario -->
-            <div class="col-md-6 p-4">
-                <div class="text-center mb-4">
-                    <h2 class="main-title">Crea tu Currículum Vitae</h2>
-                    <p class="text-muted">Diseña tu CV profesional en minutos</p>
-                </div>
-                
-                <form id="cvForm">
-                    <!-- Selector de plantilla -->
-                     
-                    <div class="form-section">
-                        <h3><i class="fas fa-palette me-2"></i>Elige tu Plantilla</h3>
-                        <div class="template-selector">
-                            <label class="template-option">
-                                <input type="radio" name="template_type" value="basico" checked>
-                                <div class="template-card">
-                                    
-                                    <h3>Plantilla Básica</h3>
-                                    <p>Diseño clásico y minimalista, perfecto para un CV tradicional</p>
-                                    <div class="price-amount my-3">
-                                        <span class="h3 text-primary">${{ precio_basico }}</span>
-                                        <span class="text-muted">ARS</span>
-                                    </div>
-                                </div>
-                            </label>
-                            <label class="template-option">
-                                <input type="radio" name="template_type" value="profesional">
-                                <div class="template-card">
-                                    
-                                    <h3>Plantilla Profesional</h3>
-                                    <p>Diseño moderno y elegante, ideal para destacar tu perfil</p>
-                                    <div class="price-amount my-3">
-                                        <span class="h3 text-primary">${{ precio_profesional }}</span>
-                                        <span class="text-muted">ARS</span>
-                                    </div>
-                                    <div class="color-selector mt-3">
-                                        <p class="text-muted mb-2">Selecciona un color:</p>
-                                        <div class="d-flex justify-content-center gap-2">
-                                            <label class="color-option">
-                                                <input type="radio" name="template_color" value="azul-marino" checked>
-                                                <span class="color-circle" style="background-color: #1a4971;"></span>
-                                            </label>
-                                            <label class="color-option">
-                                                <input type="radio" name="template_color" value="amarillo-claro">
-                                                <span class="color-circle" style="background-color: #f9d56e;"></span>
-                                            </label>
-                                            <label class="color-option">
-                                                <input type="radio" name="template_color" value="rosado-pastel">
-                                                <span class="color-circle" style="background-color: #f8c8dc;"></span>
-                                            </label>
-                                            <label class="color-option">
-                                                <input type="radio" name="template_color" value="morado">
-                                                <span class="color-circle" style="background-color: #8e44ad;"></span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                    
+      <div class="row">
+        <!-- Formulario -->
+        <div class="col-md-6 p-4">
+          <div class="text-center mb-4">
+            <h2 class="main-title">Crea tu Currículum Vitae</h2>
+            <p class="text-muted">Diseña tu CV profesional en minutos</p>
+          </div>
 
-                    <!-- Foto de perfil -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-camera me-2"></i>Foto de Perfil</h3>
-                        <div class="profile-upload">
-                            <div class="profile-preview">
-                                <img id="previewImage" src="/static/img/default-profile.png" alt="Vista previa">
-                            </div>
-                            <div class="upload-button">
-                                <label for="profileImageInput" class="btn btn-outline-primary">
-                                    <i class="fas fa-upload me-2"></i> Seleccionar Foto
-                                </label>
-                                <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
-                                <small class="form-text text-muted mt-2">Tamaño máximo: 10MB. La imagen se redimensionará a 300x300px.</small>
-                            </div>
-                        </div>
-                    </div>
+          <form id="cvForm">
+            <!-- Selector de plantilla -->
 
-                    <!-- Información Personal -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-user me-2"></i>Información Personal</h3>
-                        <div class="form-floating mb-3">
-                            <input type="text" style="text-transform: capitalize" class="form-control" id="nombre" name="nombre" placeholder=" ">
-                            <label for="nombre">Nombre Completo</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="number" class="form-control" id="dni" name="dni" placeholder=" " min="1000000" max="99999999">
-                            <label for="dni">DNI</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento">
-                            <label for="fecha_nacimiento">Fecha de Nacimiento</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="number" class="form-control" id="edad" name="edad" placeholder=" ">
-                            <label for="edad">Edad</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="email" class="form-control" id="email" name="email" placeholder=" ">
-                            <label for="email">Email</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <input type="tel" class="form-control" id="telefono" name="telefono" placeholder=" ">
-                            <label for="telefono">Teléfono</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <textarea class="form-control" id="direccion" name="direccion" placeholder=" " style="height: 100px"></textarea>
-                            <label for="direccion">Dirección</label>
-                        </div>
+            <div class="form-section">
+              <h3><i class="fas fa-palette me-2"></i>Elige tu Plantilla</h3>
+              <div class="template-selector">
+                <label class="template-option">
+                  <input
+                    type="radio"
+                    name="template_type"
+                    value="basico"
+                    checked
+                  />
+                  <div class="template-card">
+                    <h3>Plantilla Básica</h3>
+                    <p>
+                      Diseño clásico y minimalista, perfecto para un CV
+                      tradicional
+                    </p>
+                    <!-- <div class="price-amount my-3">
+                      <span class="h3 text-primary">${{ precio_basico }}</span>
+                      <span class="text-muted">ARS</span>
+                    </div> -->
+                  </div>
+                </label>
+                <label class="template-option">
+                  <input
+                    type="radio"
+                    name="template_type"
+                    value="profesional"
+                  />
+                  <div class="template-card">
+                    <h3>Plantilla Profesional</h3>
+                    <p>
+                      Diseño moderno y elegante, ideal para destacar tu perfil
+                    </p>
+                    <!-- <div class="price-amount my-3">
+                      <span class="h3 text-primary"
+                        >${{ precio_profesional }}</span
+                      >
+                      <span class="text-muted">ARS</span>
+                    </div> -->
+                    <div class="color-selector mt-3">
+                      <p class="text-muted mb-2">Selecciona un color:</p>
+                      <div class="d-flex justify-content-center gap-2">
+                        <label class="color-option">
+                          <input
+                            type="radio"
+                            name="template_color"
+                            value="azul-marino"
+                            checked
+                          />
+                          <span
+                            class="color-circle"
+                            style="background-color: #1a4971"
+                          ></span>
+                        </label>
+                        <label class="color-option">
+                          <input
+                            type="radio"
+                            name="template_color"
+                            value="amarillo-claro"
+                          />
+                          <span
+                            class="color-circle"
+                            style="background-color: #f9d56e"
+                          ></span>
+                        </label>
+                        <label class="color-option">
+                          <input
+                            type="radio"
+                            name="template_color"
+                            value="rosado-pastel"
+                          />
+                          <span
+                            class="color-circle"
+                            style="background-color: #f8c8dc"
+                          ></span>
+                        </label>
+                        <label class="color-option">
+                          <input
+                            type="radio"
+                            name="template_color"
+                            value="morado"
+                          />
+                          <span
+                            class="color-circle"
+                            style="background-color: #8e44ad"
+                          ></span>
+                        </label>
+                      </div>
                     </div>
-
-                    <!-- Educación -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-graduation-cap me-2"></i>Educación</h3>
-                        <div id="educacionContainer">
-                            <div class="educacion-item">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="titulo">Título</label>
-                                        <input type="text" class="form-control" name="titulo[]" placeholder="Título obtenido">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="institucion">Institución</label>
-                                        <input type="text" class="form-control" name="institucion[]" placeholder="Nombre de la institución">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="fecha_inicio_edu">Fecha de Inicio</label>
-                                        <input type="date" class="form-control" name="fecha_inicio_edu[]">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="fecha_fin_edu">Fecha de Fin</label>
-                                        <input type="date" class="form-control" name="fecha_fin_edu[]">
-                                        <div class="form-check mt-2">
-                                            <input class="form-check-input" type="checkbox" name="en_curso[]">
-                                            <label class="form-check-label">En curso</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarEducacion()">
-                                <i class="fas fa-plus me-2"></i>Agregar Educación
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Experiencia Laboral -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-briefcase me-2"></i>Experiencia Laboral</h3>
-                        <div id="experienciaContainer">
-                            <div class="experiencia-item">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="empresa">Empresa</label>
-                                        <input type="text" class="form-control" name="empresa[]" placeholder="Nombre de la empresa">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="cargo">Cargo</label>
-                                        <input type="text" class="form-control" name="cargo[]" placeholder="Tu cargo">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="fecha_inicio">Fecha de Inicio</label>
-                                        <input type="date" class="form-control" name="fecha_inicio[]">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="fecha_fin">Fecha de Fin</label>
-                                        <input type="date" class="form-control" name="fecha_fin[]">
-                                        <div class="form-check mt-2">
-                                            <input class="form-check-input" type="checkbox" name="trabajo_actual[]">
-                                            <label class="form-check-label">Trabajo actual</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-12 mb-3">
-                                        <label for="descripcion">Descripción</label>
-                                        <textarea class="form-control" name="descripcion[]" rows="3" placeholder="Describe tus responsabilidades"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarExperiencia()">
-                                <i class="fas fa-plus me-2"></i>Agregar Experiencia
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Habilidades -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-star me-2"></i>Habilidades</h3>
-                        <div id="habilidadesContainer">
-                            <!-- Los elementos de habilidades se agregarán aquí -->
-                        </div>
-                        <button type="button" class="btn-add" onclick="agregarHabilidad()">
-                            <i class="fas fa-plus me-2"></i> Agregar Habilidad
-                        </button>
-                    </div>
-
-                    <!-- Resumen Profesional -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-graduation-cap me-2"></i>Resumen Profesional</h3>
-                        <div id="resumenContainer">
-                            <div class="resumen-item">
-                                <div class="row">
-                                    <div class="form-floating mb-3">
-                                        <textarea class="form-control" id="resumen" name="resumen" 
-                                        placeholder="Comentar sobre tu experiencia tanto personal como profesional" style="height: 100px"></textarea>
-                                        <label for="resumen">Resumen</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-secondary mb-3" onclick="agregarResumen()">
-                                <i class="fas fa-plus me-2"></i>Generar con IA
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Sección del Botón de Pago -->
-    <div class="form-section text-center">
-        <h3><i class="fas fa-file-pdf me-2"></i>Pagar y descargar CV</h3>
-        <!-- Checkbox de Aceptación de Términos y Condiciones -->
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="aceptarTerminos" required >
-            <label class="form-check-label" for="aceptarTerminos">
-                He leído y acepto los <a href="{{ url_for('condiciones') }}" target="_blank">Términos y Condiciones</a>
-            </label>
-        </div>
-        <!-- Botones de Acción -->
-        <div class="d-flex gap-2 justify-content-center" >
-            <button type="button" class="btn btn-primary btn-lg" onclick="manejarPago(event)">
-                <i class="fas fa-credit-card me-2"></i>Continuar
-            </button>
-            {% if config.get('ENVIRONMENT', 'development') != 'production' %}
-            <button type="button" class="btn btn-secondary btn-lg" onclick="descargarPDFDirecto()">
-                <i class="fas fa-download me-2"></i>Descargar PDF
-            </button>
-            {% endif %}
-        </div>
-        <p style="color: gray" class="mt-2">*Antes de continuar, por favor, revise que los datos estén correctos.</p>
-    </div>
-                </form>
+                  </div>
+                </label>
+              </div>
             </div>
 
-            <!-- Vista previa -->
-            <div class="col-md-6 p-4 preview-section">
-                <div class="preview-container">
-                    <h2 class="text-center mb-4">Vista Previa</h2>
-                    <div id="cvPreview" class="cv-preview-container"></div>
+            <!-- Foto de perfil -->
+            <div class="form-section">
+              <h3><i class="fas fa-camera me-2"></i>Foto de Perfil</h3>
+              <div class="profile-upload">
+                <div class="profile-preview">
+                  <img
+                    id="previewImage"
+                    src="/static/img/default-profile.png"
+                    alt="Vista previa"
+                  />
                 </div>
+                <div class="upload-button">
+                  <label
+                    for="profileImageInput"
+                    class="btn btn-outline-primary"
+                  >
+                    <i class="fas fa-upload me-2"></i> Seleccionar Foto
+                  </label>
+                  <input
+                    type="file"
+                    id="profileImageInput"
+                    accept="image/*"
+                    style="display: none"
+                  />
+                  <small class="form-text text-muted mt-2"
+                    >Tamaño máximo: 10MB. La imagen se redimensionará a
+                    300x300px.</small
+                  >
+                </div>
+              </div>
             </div>
+
+            <!-- Información Personal -->
+            <div class="form-section">
+              <h3><i class="fas fa-user me-2"></i>Información Personal</h3>
+              <div class="form-floating mb-3">
+                <input
+                  type="text"
+                  style="text-transform: capitalize"
+                  class="form-control"
+                  id="nombre"
+                  name="nombre"
+                  placeholder=" "
+                />
+                <label for="nombre">Nombre Completo</label>
+              </div>
+              <div class="form-floating mb-3">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="dni"
+                  name="dni"
+                  placeholder=" "
+                  min="1000000"
+                  max="99999999"
+                />
+                <label for="dni">DNI</label>
+              </div>
+              <!-- <div class="form-floating mb-3">
+                <input
+                  type="date"
+                  class="form-control"
+                  id="fecha_nacimiento"
+                  name="fecha_nacimiento"
+                />
+                <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+              </div> -->
+              <!-- Fecha de Nacimiento -->
+              <div class="form-floating mb-3">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="fecha_nacimiento"
+                  name="fecha_nacimiento"
+                  placeholder="dd/mm/yyyy"
+                />
+                <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                <i
+                  class="formulario__validacion-estado fas fa-times-circle"
+                ></i>
+                <!-- Ícono de error -->
+                <i
+                  class="formulario__validacion-estado fas fa-check-circle"
+                  style="display: none"
+                ></i>
+                <!-- Ícono de éxito -->
+              </div>
+              <div class="form-floating mb-3">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="edad"
+                  name="edad"
+                  placeholder=" "
+                />
+                <label for="edad">Edad</label>
+              </div>
+              <div class="form-floating mb-3">
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  name="email"
+                  placeholder=" "
+                />
+                <label for="email">Email</label>
+              </div>
+              <div class="form-floating mb-3">
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="telefono"
+                  name="telefono"
+                  placeholder=" "
+                />
+                <label for="telefono">Teléfono</label>
+              </div>
+              <div class="form-floating mb-3">
+                <textarea
+                  class="form-control"
+                  id="direccion"
+                  name="direccion"
+                  placeholder=" "
+                  style="height: 100px"
+                ></textarea>
+                <label for="direccion">Dirección</label>
+              </div>
+            </div>
+
+            <!-- Educación -->
+            <div class="form-section">
+              <h3><i class="fas fa-graduation-cap me-2"></i>Educación</h3>
+              <div id="educacionContainer">
+                <div class="educacion-item">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="titulo">Título</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="titulo[]"
+                        placeholder="Título obtenido"
+                      />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="institucion">Institución</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="institucion[]"
+                        placeholder="Nombre de la institución"
+                      />
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="fecha_inicio_edu">Fecha de Inicio</label>
+                      <input
+                        type="date"
+                        class="form-control"
+                        name="fecha_inicio_edu[]"
+                      />
+                      <i
+                        class="formulario__validacion-estado fas fa-times-circle"
+                      ></i>
+                      <i
+                        class="formulario__validacion-estado fas fa-check-circle"
+                        style="display: none"
+                      ></i>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="fecha_fin_edu">Fecha de Fin</label>
+                      <input
+                        type="date"
+                        class="form-control"
+                        name="fecha_fin_edu[]"
+                      />
+                      <i
+                        class="formulario__validacion-estado fas fa-times-circle"
+                      ></i>
+                      <i
+                        class="formulario__validacion-estado fas fa-check-circle"
+                        style="display: none"
+                      ></i>
+                      <div class="form-check mt-2">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          name="en_curso[]"
+                        />
+                        <label class="form-check-label">En curso</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-secondary mb-3"
+                  onclick="agregarEducacion()"
+                >
+                  <i class="fas fa-plus me-2"></i>Agregar Educación
+                </button>
+              </div>
+            </div>
+
+            <!-- Experiencia Laboral -->
+            <div class="form-section">
+              <h3><i class="fas fa-briefcase me-2"></i>Experiencia Laboral</h3>
+              <div id="experienciaContainer">
+                <div class="experiencia-item">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="empresa">Empresa</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="empresa[]"
+                        placeholder="Nombre de la empresa"
+                      />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="cargo">Cargo</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        name="cargo[]"
+                        placeholder="Tu cargo"
+                      />
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="fecha_inicio">Fecha de Inicio</label>
+                      <input
+                        type="date"
+                        class="form-control"
+                        name="fecha_inicio[]"
+                      />
+                      <i
+                        class="formulario__validacion-estado fas fa-times-circle"
+                      ></i>
+                      <i
+                        class="formulario__validacion-estado fas fa-check-circle"
+                        style="display: none"
+                      ></i>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="fecha_fin">Fecha de Fin</label>
+                      <input
+                        type="date"
+                        class="form-control"
+                        name="fecha_fin[]"
+                      />
+                      <i
+                        class="formulario__validacion-estado fas fa-times-circle"
+                      ></i>
+                      <i
+                        class="formulario__validacion-estado fas fa-check-circle"
+                        style="display: none"
+                      ></i>
+                      <div class="form-check mt-2">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          name="trabajo_actual[]"
+                        />
+                        <label class="form-check-label">Trabajo actual</label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-12 mb-3">
+                      <label for="descripcion">Descripción</label>
+                      <textarea
+                        class="form-control"
+                        name="descripcion[]"
+                        rows="3"
+                        placeholder="Describe tus responsabilidades"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-secondary mb-3"
+                  onclick="agregarExperiencia()"
+                >
+                  <i class="fas fa-plus me-2"></i>Agregar Experiencia
+                </button>
+              </div>
+            </div>
+
+            <!-- Habilidades -->
+            <div class="form-section">
+              <h3><i class="fas fa-star me-2"></i>Habilidades</h3>
+              <div id="habilidadesContainer">
+                <!-- Los elementos de habilidades se agregarán aquí -->
+              </div>
+              <button
+                type="button"
+                class="btn-add"
+                onclick="agregarHabilidad()"
+              >
+                <i class="fas fa-plus me-2"></i> Agregar Habilidad
+              </button>
+            </div>
+
+            <!-- Resumen Profesional -->
+            <div class="form-section">
+              <h3>
+                <i class="fas fa-graduation-cap me-2"></i>Resumen Profesional
+              </h3>
+              <div id="resumenContainer">
+                <div class="resumen-item">
+                  <div class="row">
+                    <div class="form-floating mb-3">
+                      <textarea
+                        class="form-control"
+                        id="resumen"
+                        name="resumen"
+                        placeholder="Comentar sobre tu experiencia tanto personal como profesional"
+                        style="height: 100px"
+                      ></textarea>
+                      <label for="resumen">Resumen</label>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-secondary mb-3"
+                  onclick="agregarResumen()"
+                >
+                  <i class="fas fa-plus me-2"></i>Generar con IA
+                </button>
+              </div>
+            </div>
+
+            <!-- Sección del Botón de Pago -->
+            <div class="form-section text-center">
+              <h3><i class="fas fa-file-pdf me-2"></i>Pagar y descargar CV</h3>
+              <!-- Checkbox de Aceptación de Términos y Condiciones -->
+              <div class="form-check mb-3">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="aceptarTerminos"
+                  required
+                />
+                <label class="form-check-label" for="aceptarTerminos">
+                  He leído y acepto los
+                  <a href="{{ url_for('condiciones') }}" target="_blank"
+                    >Términos y Condiciones</a
+                  >
+                </label>
+              </div>
+              <!-- Botones de Acción -->
+              <div class="d-flex gap-2 justify-content-center">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-lg"
+                  onclick="manejarPago(event)"
+                >
+                  <i class="fas fa-credit-card me-2"></i>Continuar
+                </button>
+                {% if config.get('ENVIRONMENT', 'development') != 'production'
+                %}
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-lg"
+                  onclick="descargarPDFDirecto()"
+                >
+                  <i class="fas fa-download me-2"></i>Descargar PDF
+                </button>
+                {% endif %}
+              </div>
+              <p style="color: gray" class="mt-2">
+                *Antes de continuar, por favor, revise que los datos estén
+                correctos.
+              </p>
+            </div>
+          </form>
         </div>
+
+        <!-- Vista previa -->
+        <div class="col-md-6 p-4 preview-section">
+          <div class="preview-container">
+            <h2 class="text-center mb-4">Vista Previa</h2>
+            <div id="cvPreview" class="cv-preview-container"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const profileImage = localStorage.getItem('profile_image');
-            if (profileImage) {
-                document.getElementById('previewImage').src = profileImage;
-            }
+    <!-- <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const profileImage = localStorage.getItem("profile_image");
+        const formulario = document.getElementById("cvForm");
+        const fechaNacimiento = document.getElementById("fecha_nacimiento");
+
+        // 1. Validación en tiempo real para fecha nacimiento (texto)
+        fechaNacimiento.addEventListener("input", function () {
+          validarFechaLatinoamericana(fechaNacimiento);
+        });
+        // 2. Validación para campos tipo date (Educación y Experiencia)
+        document.querySelectorAll('input[type="date"]').forEach((input) => {
+          input.addEventListener("change", function () {
+            validarFechaEstandar(this);
+            validarRelacionFechas(this);
+          });
         });
 
-        function manejarPago(event) {
-    event.preventDefault(); // Evita que la página se recargue
-    if (validarAceptacionTerminos()) {
-        procesarPago();
-    }
-}
+        const educacionContainer =
+          document.getElementById("educacionContainer");
+        educacionContainer.addEventListener("change", validarFechasEducacion);
 
-function validarAceptacionTerminos() {
-    var checkbox = document.getElementById('aceptarTerminos');
-    if (!checkbox.checked) {
-        alert('Debe aceptar los Términos y Condiciones antes de continuar.');
-        return false;
-    }
-    return true;
-}
+        const experienciaContainer = document.getElementById(
+          "experienciaContainer"
+        );
+        experienciaContainer.addEventListener(
+          "change",
+          validarFechasExperiencia
+        );
 
+        formulario.addEventListener("submit", function (e) {
+          if (!validarFormularioCompleto()) {
+            e.preventDefault();
+            alert(
+              "Por favor, corrige los errores en las fechas antes de enviar el formulario."
+            );
+          }
+        });
+
+        function validarFechaLatinoamericana(input) {
+          let valor = input.value;
+
+          // Limitar la longitud a 10 caracteres (dd/mm/yyyy)
+          if (valor.length > 10) {
+            input.value = valor.slice(0, 10);
+            return;
+          }
+
+          // Permitir solo números y "/"
+          input.value = valor.replace(/[^0-9\/]/g, "");
+
+          const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(\d{4})$/;
+          if (!regex.test(input.value)) {
+            mostrarIconoInvalido(input);
+            return false;
+          }
+
+          const [dia, mes, anio] = input.value.split("/").map(Number);
+          const fechaObj = new Date(anio, mes - 1, dia);
+
+          const esFechaValida =
+            fechaObj.getFullYear() === anio &&
+            fechaObj.getMonth() + 1 === mes &&
+            fechaObj.getDate() === dia;
+
+          if (!esFechaValida) {
+            mostrarIconoInvalido(input);
+            return false;
+          }
+          mostrarIconoValido(input);
+          return true;
+        }
+
+        function validarFechaEstandar(inputDate) {
+          const fecha = new Date(inputDate.value);
+
+          if (isNaN(fecha)) {
+            mostrarError(inputDate, "Fecha inválida");
+            return false;
+          }
+
+          mostrarExito(inputDate);
+          return true;
+        }
+
+        function validarRelacionFechas(input) {
+          const contenedor = input.closest(
+            ".educacion-item, .experiencia-item"
+          );
+          const fechaInicio = contenedor.querySelector(
+            'input[type="date"]:first-of-type'
+          );
+          const fechaFin = contenedor.querySelector(
+            'input[type="date"]:last-of-type'
+          );
+          const check = contenedor.querySelector('input[type="checkbox"]');
+
+          if (!check.checked && fechaInicio.value && fechaFin.value) {
+            const inicio = new Date(fechaInicio.value);
+            const fin = new Date(fechaFin.value);
+
+            if (inicio > fin) {
+              mostrarError(
+                fechaInicio,
+                "La fecha de inicio no puede ser posterior"
+              );
+              mostrarError(fechaFin, "La fecha de fin no puede ser anterior");
+              return false;
+            }
+          }
+          return true;
+        }
+        function mostrarError(input, mensaje) {
+          const grupo = input.closest(".mb-3");
+          grupo.classList.add("formulario__grupo-incorrecto");
+          grupo.querySelector(".fa-times-circle").style.display =
+            "inline-block";
+          grupo.querySelector(".fa-check-circle").style.display = "none";
+
+          // Agregar mensaje de error si no existe
+          if (!grupo.querySelector(".formulario__input-error")) {
+            const errorSpan = document.createElement("span");
+            errorSpan.className = "formulario__input-error";
+            errorSpan.textContent = mensaje;
+            grupo.appendChild(errorSpan);
+          }
+        }
+        function mostrarExito(input) {
+          const grupo = input.closest(".mb-3");
+          grupo.classList.remove("formulario__grupo-incorrecto");
+          grupo.querySelector(".fa-times-circle").style.display = "none";
+          grupo.querySelector(".fa-check-circle").style.display =
+            "inline-block";
+
+          // Eliminar mensaje de error si existe
+          const errorSpan = grupo.querySelector(".formulario__input-error");
+          if (errorSpan) errorSpan.remove();
+        }
+
+        function mostrarIconoValido(input) {
+          const grupo = input.closest(".form-floating, .mb-3");
+          grupo.classList.remove("formulario__grupo-incorrecto");
+          grupo.classList.add("formulario__grupo-correcto");
+          grupo.querySelector(".fa-times-circle").style.display = "none";
+          grupo.querySelector(".fa-check-circle").style.display =
+            "inline-block";
+        }
+
+        function mostrarIconoInvalido(input) {
+          const grupo = input.closest(".form-floating, .mb-3");
+          grupo.classList.remove("formulario__grupo-correcto");
+          grupo.classList.add("formulario__grupo-incorrecto");
+          grupo.querySelector(".fa-check-circle").style.display = "none";
+          grupo.querySelector(".fa-times-circle").style.display =
+            "inline-block";
+        }
+
+        function validarFechasEducacion(event) {
+          const target = event.target;
+          if (
+            target.name === "fecha_inicio_edu[]" ||
+            target.name === "fecha_fin_edu[]"
+          ) {
+            const fila = target.closest(".educacion-item");
+            const fechaInicio = fila.querySelector(
+              'input[name="fecha_inicio_edu[]"]'
+            );
+            const fechaFin = fila.querySelector(
+              'input[name="fecha_fin_edu[]"]'
+            );
+            const enCurso = fila.querySelector('input[name="en_curso[]"]');
+
+            if (fechaInicio.value && fechaFin.value && !enCurso.checked) {
+              if (new Date(fechaInicio.value) > new Date(fechaFin.value)) {
+                alert(
+                  "La fecha de inicio no puede ser posterior a la fecha de fin."
+                );
+                fechaInicio.value = "";
+                fechaFin.value = "";
+              }
+            }
+          }
+        }
+
+        function validarFechasExperiencia(event) {
+          const target = event.target;
+          if (
+            target.name === "fecha_inicio[]" ||
+            target.name === "fecha_fin[]"
+          ) {
+            const fila = target.closest(".experiencia-item");
+            const fechaInicio = fila.querySelector(
+              'input[name="fecha_inicio[]"]'
+            );
+            const fechaFin = fila.querySelector('input[name="fecha_fin[]"]');
+            const trabajoActual = fila.querySelector(
+              'input[name="trabajo_actual[]"]'
+            );
+
+            if (fechaInicio.value && fechaFin.value && !trabajoActual.checked) {
+              if (new Date(fechaInicio.value) > new Date(fechaFin.value)) {
+                alert(
+                  "La fecha de inicio no puede ser posterior a la fecha de fin."
+                );
+                fechaInicio.value = "";
+                fechaFin.value = "";
+              }
+            }
+          }
+        }
+
+        function validarFormularioCompleto() {
+          let valido = true;
+
+          // Validar fecha nacimiento
+          if (!validarFechaLatinoamericana(fechaNacimiento)) valido = false;
+
+          // Validar todos los campos date
+          document.querySelectorAll('input[type="date"]').forEach((input) => {
+            if (!validarFechaEstandar(input)) valido = false;
+            if (!validarRelacionFechas(input)) valido = false;
+          });
+
+          return valido;
+        }
+        if (profileImage) {
+          document.getElementById("previewImage").src = profileImage;
+        }
+      });
+
+      function manejarPago(event) {
+        event.preventDefault();
+        if (validarAceptacionTerminos()) {
+          procesarPago();
+        } else {
+          alert(
+            "Por favor, corrija los errores en las fechas antes de continuar con el pago."
+          );
+        }
+      }
+
+      function validarAceptacionTerminos() {
+        var checkbox = document.getElementById("aceptarTerminos");
+        if (!checkbox.checked) {
+          alert("Debe aceptar los Términos y Condiciones antes de continuar.");
+          return false;
+        }
+        return true;
+      }
+    </script> -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const profileImage = localStorage.getItem("profile_image");
+        const formulario = document.getElementById("cvForm");
+        const fechaNacimiento = document.getElementById("fecha_nacimiento");
+
+        // 1. Validación en tiempo real para fecha nacimiento (texto)
+        fechaNacimiento.addEventListener("input", function () {
+          validarFechaLatinoamericana(fechaNacimiento);
+        });
+
+        // 2. Modificar los inputs de tipo date para mostrar formato DD/MM/YYYY
+        const camposFecha = document.querySelectorAll('input[type="date"]');
+
+        // Convertir inputs date a text con máscara de fecha
+        camposFecha.forEach((input) => {
+          // Mantener el valor original para procesar
+          const originalValue = input.value;
+
+          // Cambiar type de "date" a "text"
+          input.type = "text";
+          input.placeholder = "DD/MM/AAAA";
+          input.autocomplete = "off";
+
+          // Si ya tenía un valor, convertirlo a formato latinoamericano
+          if (originalValue) {
+            const fecha = new Date(originalValue);
+            if (!isNaN(fecha)) {
+              input.value = formatearFecha(fecha);
+            }
+          }
+
+          // Agregar evento de validación
+          input.addEventListener("input", function () {
+            formatearInputFecha(this);
+          });
+
+          // Agregar evento blur para validación completa
+          input.addEventListener("blur", function () {
+            validarFechaCompleta(this);
+            if (this.value) {
+              validarRelacionFechas(this);
+            }
+          });
+        });
+
+        const educacionContainer =
+          document.getElementById("educacionContainer");
+        if (educacionContainer) {
+          educacionContainer.addEventListener("change", function (e) {
+            const target = e.target;
+            if (
+              target.type === "text" &&
+              (target.name === "fecha_inicio_edu[]" ||
+                target.name === "fecha_fin_edu[]")
+            ) {
+              validarRelacionFechasEducacion(target);
+            }
+
+            if (target.type === "checkbox" && target.name === "en_curso[]") {
+              manejarCheckboxEducacion(target);
+            }
+          });
+        }
+
+        const experienciaContainer = document.getElementById(
+          "experienciaContainer"
+        );
+        if (experienciaContainer) {
+          experienciaContainer.addEventListener("change", function (e) {
+            const target = e.target;
+            if (
+              target.type === "text" &&
+              (target.name === "fecha_inicio[]" ||
+                target.name === "fecha_fin[]")
+            ) {
+              validarRelacionFechasExperiencia(target);
+            }
+
+            if (
+              target.type === "checkbox" &&
+              target.name === "trabajo_actual[]"
+            ) {
+              manejarCheckboxExperiencia(target);
+            }
+          });
+        }
+
+        formulario.addEventListener("submit", function (e) {
+          if (!validarFormularioCompleto()) {
+            e.preventDefault();
+            alert(
+              "Por favor, corrige los errores en las fechas antes de enviar el formulario."
+            );
+          }
+        });
+
+        // Formatear input de fecha mientras el usuario escribe
+        function formatearInputFecha(input) {
+          let valor = input.value;
+
+          // Eliminar caracteres no numéricos ni /
+          valor = valor.replace(/[^0-9\/]/g, "");
+
+          // Limitar a máximo 10 caracteres
+          if (valor.length > 10) {
+            valor = valor.slice(0, 10);
+          }
+
+          // Formatear automáticamente añadiendo / después de DD y MM
+          if (valor.length === 2 && !valor.includes("/")) {
+            valor += "/";
+          } else if (
+            valor.length === 5 &&
+            valor.charAt(2) === "/" &&
+            !valor.includes("/", 3)
+          ) {
+            valor += "/";
+          }
+
+          // Actualizar valor
+          input.value = valor;
+        }
+
+        // Validar fecha completa cuando el usuario termina de escribir
+        function validarFechaCompleta(input) {
+          const valor = input.value;
+
+          if (!valor) return true; // Campo vacío es válido
+
+          const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(\d{4})$/;
+          if (!regex.test(valor)) {
+            mostrarError(input, "Formato debe ser DD/MM/AAAA");
+            return false;
+          }
+
+          const [dia, mes, anio] = valor.split("/").map(Number);
+          const fechaObj = new Date(anio, mes - 1, dia);
+
+          const esFechaValida =
+            fechaObj.getFullYear() === anio &&
+            fechaObj.getMonth() + 1 === mes &&
+            fechaObj.getDate() === dia &&
+            anio >= 1900 &&
+            anio <= 2100; // Rango razonable de años
+
+          if (!esFechaValida) {
+            mostrarError(input, "Fecha inválida");
+            return false;
+          }
+
+          mostrarExito(input);
+          return true;
+        }
+
+        function validarFechaLatinoamericana(input) {
+          let valor = input.value;
+
+          // Limitar la longitud a 10 caracteres (dd/mm/yyyy)
+          if (valor.length > 10) {
+            input.value = valor.slice(0, 10);
+          }
+
+          // Permitir solo números y "/"
+          input.value = valor.replace(/[^0-9\/]/g, "");
+
+          // Formatear automáticamente añadiendo / después de DD y MM
+          if (valor.length === 2 && !valor.includes("/")) {
+            input.value += "/";
+          } else if (
+            valor.length === 5 &&
+            valor.charAt(2) === "/" &&
+            !valor.includes("/", 3)
+          ) {
+            input.value += "/";
+          }
+
+          const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(\d{4})$/;
+          if (!regex.test(input.value) && input.value.length === 10) {
+            mostrarIconoInvalido(input);
+            return false;
+          }
+
+          if (input.value.length === 10) {
+            const [dia, mes, anio] = input.value.split("/").map(Number);
+            const fechaObj = new Date(anio, mes - 1, dia);
+
+            const esFechaValida =
+              fechaObj.getFullYear() === anio &&
+              fechaObj.getMonth() + 1 === mes &&
+              fechaObj.getDate() === dia &&
+              anio >= 1900 &&
+              anio <= 2100; // Rango razonable de años
+
+            if (!esFechaValida) {
+              mostrarIconoInvalido(input);
+              return false;
+            }
+            mostrarIconoValido(input);
+            return true;
+          }
+
+          return false;
+        }
+
+        function validarRelacionFechas(input) {
+          const contenedor = input.closest(
+            ".educacion-item, .experiencia-item"
+          );
+          if (!contenedor) return true;
+
+          const campos = contenedor.querySelectorAll(
+            'input[type="text"][name*="fecha_"]'
+          );
+          if (campos.length < 2) return true;
+
+          const fechaInicio = campos[0];
+          const fechaFin = campos[1];
+          const check = contenedor.querySelector('input[type="checkbox"]');
+
+          if (!check.checked && fechaInicio.value && fechaFin.value) {
+            const inicio = parsearFechaLatinoamericana(fechaInicio.value);
+            const fin = parsearFechaLatinoamericana(fechaFin.value);
+
+            if (inicio && fin && inicio > fin) {
+              mostrarError(
+                fechaInicio,
+                "La fecha de inicio no puede ser posterior"
+              );
+              mostrarError(fechaFin, "La fecha de fin no puede ser anterior");
+              return false;
+            }
+          }
+
+          return true;
+        }
+
+        function validarRelacionFechasEducacion(input) {
+          const fila = input.closest(".educacion-item");
+          if (!fila) return;
+
+          const fechaInicio = fila.querySelector(
+            'input[name="fecha_inicio_edu[]"]'
+          );
+          const fechaFin = fila.querySelector('input[name="fecha_fin_edu[]"]');
+          const enCurso = fila.querySelector('input[name="en_curso[]"]');
+
+          if (!enCurso || enCurso.checked) return;
+
+          if (fechaInicio && fechaFin && fechaInicio.value && fechaFin.value) {
+            const inicio = parsearFechaLatinoamericana(fechaInicio.value);
+            const fin = parsearFechaLatinoamericana(fechaFin.value);
+
+            if (inicio && fin && inicio > fin) {
+              alert(
+                "La fecha de inicio no puede ser posterior a la fecha de fin."
+              );
+              fechaInicio.value = "";
+              fechaFin.value = "";
+              mostrarError(fechaInicio, "");
+              mostrarError(fechaFin, "");
+            } else {
+              mostrarExito(fechaInicio);
+              mostrarExito(fechaFin);
+            }
+          }
+        }
+
+        function validarRelacionFechasExperiencia(input) {
+          const fila = input.closest(".experiencia-item");
+          if (!fila) return;
+
+          const fechaInicio = fila.querySelector(
+            'input[name="fecha_inicio[]"]'
+          );
+          const fechaFin = fila.querySelector('input[name="fecha_fin[]"]');
+          const trabajoActual = fila.querySelector(
+            'input[name="trabajo_actual[]"]'
+          );
+
+          if (!trabajoActual || trabajoActual.checked) return;
+
+          if (fechaInicio && fechaFin && fechaInicio.value && fechaFin.value) {
+            const inicio = parsearFechaLatinoamericana(fechaInicio.value);
+            const fin = parsearFechaLatinoamericana(fechaFin.value);
+
+            if (inicio && fin && inicio > fin) {
+              alert(
+                "La fecha de inicio no puede ser posterior a la fecha de fin."
+              );
+              fechaInicio.value = "";
+              fechaFin.value = "";
+              mostrarError(fechaInicio, "");
+              mostrarError(fechaFin, "");
+            } else {
+              mostrarExito(fechaInicio);
+              mostrarExito(fechaFin);
+            }
+          }
+        }
+
+        function manejarCheckboxEducacion(checkbox) {
+          const fila = checkbox.closest(".educacion-item");
+          const fechaFin = fila.querySelector('input[name="fecha_fin_edu[]"]');
+
+          if (checkbox.checked) {
+            fechaFin.value = "";
+            fechaFin.disabled = true;
+            mostrarExito(fechaFin);
+          } else {
+            fechaFin.disabled = false;
+          }
+        }
+
+        function manejarCheckboxExperiencia(checkbox) {
+          const fila = checkbox.closest(".experiencia-item");
+          const fechaFin = fila.querySelector('input[name="fecha_fin[]"]');
+
+          if (checkbox.checked) {
+            fechaFin.value = "";
+            fechaFin.disabled = true;
+            mostrarExito(fechaFin);
+          } else {
+            fechaFin.disabled = false;
+          }
+        }
+
+        function mostrarError(input, mensaje) {
+          const grupo = input.closest(".mb-3");
+          grupo.classList.add("formulario__grupo-incorrecto");
+          grupo.classList.remove("formulario__grupo-correcto");
+          grupo.querySelector(".fa-times-circle").style.opacity = "1";
+          grupo.querySelector(".fa-check-circle").style.opacity = "0";
+
+          // Agregar mensaje de error si no existe
+          let errorSpan = grupo.querySelector(".formulario__input-error");
+          if (!errorSpan && mensaje) {
+            errorSpan = document.createElement("span");
+            errorSpan.className = "formulario__input-error";
+            grupo.appendChild(errorSpan);
+          }
+
+          if (errorSpan && mensaje) {
+            errorSpan.textContent = mensaje;
+          }
+        }
+
+        function mostrarExito(input) {
+          const grupo = input.closest(".mb-3");
+          grupo.classList.remove("formulario__grupo-incorrecto");
+          grupo.classList.add("formulario__grupo-correcto");
+          grupo.querySelector(".fa-times-circle").style.opacity = "0";
+          grupo.querySelector(".fa-check-circle").style.opacity = "1";
+
+          // Eliminar mensaje de error si existe
+          const errorSpan = grupo.querySelector(".formulario__input-error");
+          if (errorSpan) errorSpan.remove();
+        }
+
+        function mostrarIconoValido(input) {
+          const grupo = input.closest(".form-floating, .mb-3");
+          grupo.classList.remove("formulario__grupo-incorrecto");
+          grupo.classList.add("formulario__grupo-correcto");
+          grupo.querySelector(".fa-times-circle").style.opacity = "0";
+          grupo.querySelector(".fa-check-circle").style.opacity = "1";
+        }
+
+        function mostrarIconoInvalido(input) {
+          const grupo = input.closest(".form-floating, .mb-3");
+          grupo.classList.remove("formulario__grupo-correcto");
+          grupo.classList.add("formulario__grupo-incorrecto");
+          grupo.querySelector(".fa-check-circle").style.opacity = "0";
+          grupo.querySelector(".fa-times-circle").style.opacity = "1";
+        }
+
+        function validarFormularioCompleto() {
+          let valido = true;
+
+          // Validar fecha nacimiento
+          if (
+            fechaNacimiento.value &&
+            !validarFechaLatinoamericana(fechaNacimiento)
+          ) {
+            valido = false;
+          }
+
+          // Validar todos los campos de fecha
+          document
+            .querySelectorAll('input[type="text"][name*="fecha_"]')
+            .forEach((input) => {
+              if (input.value && !validarFechaCompleta(input)) {
+                valido = false;
+              }
+
+              if (input.value && !validarRelacionFechas(input)) {
+                valido = false;
+              }
+            });
+
+          return valido;
+        }
+
+        // Función para formatear fecha de objeto Date a DD/MM/YYYY
+        function formatearFecha(fecha) {
+          const dia = fecha.getDate().toString().padStart(2, "0");
+          const mes = (fecha.getMonth() + 1).toString().padStart(2, "0");
+          const anio = fecha.getFullYear();
+          return `${dia}/${mes}/${anio}`;
+        }
+
+        // Función para parsear fecha en formato DD/MM/YYYY a objeto Date
+        function parsearFechaLatinoamericana(fechaStr) {
+          if (!fechaStr) return null;
+
+          const partes = fechaStr.split("/");
+          if (partes.length !== 3) return null;
+
+          const dia = parseInt(partes[0], 10);
+          const mes = parseInt(partes[1], 10) - 1; // Meses en JS van de 0-11
+          const anio = parseInt(partes[2], 10);
+
+          return new Date(anio, mes, dia);
+        }
+
+        // Configurar imagen de perfil si existe
+        if (profileImage) {
+          const previewImage = document.getElementById("previewImage");
+          if (previewImage) {
+            previewImage.src = profileImage;
+          }
+        }
+      });
+
+      function manejarPago(event) {
+        event.preventDefault();
+        if (validarAceptacionTerminos() && validarFormularioCompleto()) {
+          procesarPago();
+        } else {
+          alert(
+            "Por favor, corrija los errores en las fechas y acepte los términos antes de continuar con el pago."
+          );
+        }
+      }
+
+      function validarAceptacionTerminos() {
+        var checkbox = document.getElementById("aceptarTerminos");
+        if (!checkbox.checked) {
+          alert("Debe aceptar los Términos y Condiciones antes de continuar.");
+          return false;
+        }
+        return true;
+      }
+
+      // Asegurar que validarFormularioCompleto esté disponible globalmente
+      function validarFormularioCompleto() {
+        let valido = true;
+        const fechaNacimiento = document.getElementById("fecha_nacimiento");
+
+        // Validar fecha nacimiento si existe
+        if (fechaNacimiento && fechaNacimiento.value) {
+          const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(\d{4})$/;
+          if (!regex.test(fechaNacimiento.value)) {
+            valido = false;
+          }
+        }
+
+        // Validar todos los campos de fecha
+        document
+          .querySelectorAll('input[type="text"][name*="fecha_"]')
+          .forEach((input) => {
+            if (input.value) {
+              const regex =
+                /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/(\d{4})$/;
+              if (!regex.test(input.value)) {
+                valido = false;
+              }
+            }
+          });
+
+        return valido;
+      }
+
+      // Función para agregar nueva experiencia (asumiendo que existe en tu código)
+      function agregarExperiencia() {
+        const container = document.getElementById("experienciaContainer");
+        const items = container.querySelectorAll(".experiencia-item");
+        const ultimo = items[items.length - 1];
+
+        if (!ultimo) return;
+
+        const nuevo = ultimo.cloneNode(true);
+
+        // Limpiar valores
+        nuevo
+          .querySelectorAll("input[type='text'], textarea")
+          .forEach((input) => {
+            input.value = "";
+          });
+
+        nuevo.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+
+        // Habilitar todos los campos
+        nuevo.querySelectorAll("input").forEach((input) => {
+          input.disabled = false;
+        });
+
+        // Eliminar clases de validación
+        nuevo
+          .querySelectorAll(
+            ".formulario__grupo-correcto, .formulario__grupo-incorrecto"
+          )
+          .forEach((el) => {
+            el.classList.remove(
+              "formulario__grupo-correcto",
+              "formulario__grupo-incorrecto"
+            );
+          });
+
+        // Restablecer iconos
+        nuevo.querySelectorAll(".fa-check-circle").forEach((icon) => {
+          icon.style.opacity = "0";
+        });
+
+        nuevo.querySelectorAll(".fa-times-circle").forEach((icon) => {
+          icon.style.opacity = "0";
+        });
+
+        // Eliminar mensajes de error
+        nuevo.querySelectorAll(".formulario__input-error").forEach((span) => {
+          span.remove();
+        });
+
+        // Agregar eventos a los campos de fecha
+        nuevo
+          .querySelectorAll("input[type='text'][name*='fecha_']")
+          .forEach((input) => {
+            input.addEventListener("input", function () {
+              formatearInputFecha(this);
+            });
+
+            input.addEventListener("blur", function () {
+              validarFechaCompleta(this);
+              if (this.value) {
+                validarRelacionFechas(this);
+              }
+            });
+          });
+
+        // Insertar antes del botón
+        container.insertBefore(nuevo, container.querySelector("button"));
+      }
+
+      // Función auxiliar para formatear input de fecha
+      function formatearInputFecha(input) {
+        let valor = input.value;
+
+        // Eliminar caracteres no numéricos ni /
+        valor = valor.replace(/[^0-9\/]/g, "");
+
+        // Limitar a máximo 10 caracteres
+        if (valor.length > 10) {
+          valor = valor.slice(0, 10);
+        }
+
+        // Formatear automáticamente añadiendo / después de DD y MM
+        if (valor.length === 2 && !valor.includes("/")) {
+          valor += "/";
+        } else if (
+          valor.length === 5 &&
+          valor.charAt(2) === "/" &&
+          !valor.includes("/", 3)
+        ) {
+          valor += "/";
+        }
+        // Actualizar valor
+        input.value = valor;
+      }
     </script>
-</body>
+  </body>
 </html>

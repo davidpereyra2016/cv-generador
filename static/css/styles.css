@@ -1118,6 +1118,38 @@ body {
     max-width: 100%; /* Asegura que la imagen no sobresalga */
 }
 
+.formulario__validacion-estado {
+    position: absolute;
+    right: 10px;
+    bottom: 15px;
+    z-index: 100;
+    font-size: 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.formulario__grupo-incorrecto input[type="date"] {
+    border-color: #bb2929;
+}
+
+.formulario__grupo-correcto .fa-check-circle {
+    color: #1ed12d;
+    opacity: 1;
+}
+
+.formulario__grupo-incorrecto .fa-times-circle {
+    color: #bb2929;
+    opacity: 1;
+}
+.formulario__input-error {
+    color: #bb2929;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+.formulario__grupo-incorrecto .formulario__input-error {
+    display: block;
+}
+
 /* Estilos responsivos adicionales */
 @media (max-width: 768px) {
     .cv-preview-container {
